@@ -1,0 +1,128 @@
+1.3.4
+	-gSAFE ported to compile with Qt 5.X.
+	 Define COMPILED_WITH_QT4X macro if compiled with Qt 4.X
+	 (It's only changes some Qt include name)
+	-The encoding of the sources has been changed to utf8	
+	-Fix HFloating to sql bug
+	-Fix wrong popped warning message on saveRecord where the HTable where unchanged.
+	-XbaseIO: Makes the  HXBaseFileReader::getFieldFloat function more flexible
+	-XBaseIO: Fix an error in getFieldDate (returned null date)
+  
+1.3.3
+	-Added codepage 850 to the XBase IO module
+  
+1.3.2
+	-Guilib: Fix a segfault possibility in HTableBrowser
+	-Guilib: Added functions to colorize HDispPlainDataMatrix
+	-Documentation fixes
+  
+1.3.1
+	-DocGen: Fix an error when insert a condition to another condition in a template.
+	-Datalib: Changed hsqli_varcharhkeylength value from 0 to 25 when in sqlite mode.
+
+1.3.0	
+	-Datalib: Added HDynTable class with the related Sql class.
+	-Datalib: Added some set... method to HDataField -class
+	-Guilib: Added HDynTable related QTableWidget builder class.
+	-Guilib: Makes it possible to change some static field value when displayed.
+	-Guilib: HTableBrowser gui improvements
+
+1.2.2	
+	-Datalib: Added clearData and clearAll functions to HPlainDataMatrix class.
+	-Documentation improvements
+
+1.2.1
+	-Guilib: Text typed fields only refresh (from memory) if real change happening.
+		(Eliminate reposition the cursor in that kind text fields when editing in case of
+		 we use a continously update slot attached to dataChanged() signal)
+1.2.0
+	-Datalib: Added MySQL database interface.
+	-Guilib: Significant speed up drawing of big(drawing size) HTableBrowsers with pixmap caches.
+	-Guilib: Add some customisation possibility to HTableBrowser
+	-Datalib: HDataChangeLogger class now requires "cuser" column instead "user" (Was disabled in pgsql)
+	-Datalib: Add UTF-8 encoding text to HXmlWriter
+	-Datalib: Changed sqlite timestamp query text from 
+		"current_timestamp" to "datetime(current_timestamp,'localtime')"
+		so the current timestamp is now comes in local time zone not gmt.
+	-Datalib: Added currentDefaultSqlInterface and getSqlInterface static function to HSqlInterface class.
+	-Datalib: Added getKeyOfValue and getValueOfKey function to H*Hash datafields.
+	-Guilib: Now the HDispList and HDispTable can show the title of the data 
+		if you enabled it with gui_showtabletitle HTableBase attribute.
+	-HFactory: Added showfieldeasy attribute which is same as showfield but can define more easy
+			(showfield:"alpha||'|'||beta" looks like showfieldeasy-"alpha|beta")
+	-HFactory: Added "showtitle" table level modifier to enable gui_showtabletitle attribute.
+	-Xmlolib: Set utf-8 encoding in HExcelXmlGenerator::generate.
+	-Xmlolib: Buxfing in generate()
+	-Xml Schema: Related changes...
+	
+1.1.5
+	-XBase IO: fix an error in HXBaseFileReader
+	-Guilib: In HTableBrowser you can custom colorize single rows if you want.
+	-DataLib: Now you can add attributes to an empty node in HXmlWriter
+	-DataLib: Add fieldCount function to HTableBase, and recordCount to HList/HTable
+	-XmloLib: Added HExcelXmlGenerator class to generate directly Excel 2003 xml from metadata
+	-XmloLib: Rewrited the xml generator code.
+	-Dialib: The HDialog now can handle HPlainDataMatrix as data container too.
+	-Datalib: Added keyfield attribute to HPlainDataMatrix which can redefine 
+		the key element when HPlainDataMatrix is used in HPDisplainDataMatrix
+	-Datalib: Added actionOnRecord and alternateActionOnRecord signals to HPlainDataMatrix class.
+	
+1.1.4
+	-Datalib: Now you can use datalib with more than one opened database same time
+	 (even in different sql interface too).
+	 See HSqlHandler::setCustomSqlDatabase()
+    	-Datalib: Fix resulted false positive error in HSqlHandler::submitNResultQuery() on some interfaces
+	-DConsole: Makes the console refresh even if the program is busy
+	-DConsole: Possibility to change database in console.
+	-Documentation fixes
+	-Upload a new tutorial program named "pRepo". See http://hyperprog.com
+	
+1.1.3
+	-Datalib: added "role system" to easely use single meta table different ways in different situations.
+	-Datalib: added "data change logger" system to automatically log the necessary data changes to an sql table.
+	-Datalib: added guienabled/guidisables attribute to HDataField
+	-Datalib: Eliminate some sql query in HSqlChoose with deferred key/value refresh.
+	-Datalib: added returnToDefault() function to the HDataField class
+	-Datalib: add returnToDefaultAllMarked function to the HTableBase class
+	-Datalib: add resetafterinsert parameter to HTable::insertRecord
+	-Datalib: fixes around HDate unknown value
+	-Datalib: add alternateActionOnRecord to haldle right mouse clicks on HList in Display.
+	-Dialib: add possibility of using multi lined text editor in HGetTextBox class
+	-Guilib: related changes to role system and guidisabled attributes
+	-Guilib: fix enable/disable gui element bug in HDispDate
+	-Guilib: Add the possibility to redefine the html generation parameter in HDispPlainDataMatrix
+	-Guilib: If you define WEBKITBASED_HTMLSHOW the HShowPrintHtml uses webkit baset viewer.
+	-HFactory: the table level "readonly" "logging" and "color" modifiers now works as table wide defaults. 
+		   (they can be redefined in fields)
+	-HFactory: Add sqlCreateString function.
+	-HFactory: improved xml parser error messages.
+	-HFactory: related changes of role system and data logging system.
+	-Added XBase based import/exprot library/interface (xbio.h/xbio.cpp) 
+	 It uses XBase library to read dbf files http://linux.techass.com/projects/xdb/
+        -Added a minimal XBase-gSAFE import/export api. (xbioconn.h/xbioconn.cpp)
+
+1.1.2 
+	-Datalib: HFloating Display format: You can set the minimum, maximum numbers of fragments, and the three grouping
+	-Datalib: Fixed a debug text typo in HFloatTablesAsHList::refreshValuesKeys
+	-Datalib: SqlChoose work good if you forget to specify the default value with empty target table 
+	 (It caused an assert before)
+	-Datalib: Add setGuiDisableAllMarked(QString mark) and setGuiEnabledAllMarked(QString mark) functions to HTableBase
+	-Datalib: Add setFilterPart(QString fp) to HSqlChoose
+	-Guilib: Make QLineEdit of HDispFloating to right aligned. (Because it contains numbers)
+	-Guilib: Fix a setRenderHint warning in HTableBrowser::paintEvent
+	-HFactory: You can add <displayformat minfrag="0" maxfrag="2" group="1"/> node to floating to set
+	 the displaying format.
+	-HFactory: Now the hfactory emits an error signal fi the requested block not found.
+	-DocGen-HyperDoc: fix that iteration does not find the data sources.
+	-Documentation fixes
+	-HFactory XML Schema (.xsd file) improvments.
+    
+1.1.1
+	-Dialib:Changed some initial parameter text from 0 to "" in dialib.h
+	 (QString something=0  to QString something="")
+	 Because the Qt 4.7.0 worried about it.
+	-HFactory:Added gsafemetadata schema file.
+
+1.1.0 
+	First release on hyperprog.com.
+

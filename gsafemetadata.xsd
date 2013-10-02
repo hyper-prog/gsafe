@@ -1,0 +1,344 @@
+<?xml version="1.0" ?>
+<!--  gSAFE HFactory Schema 
+ 
+ gSAFE - LIB http://hyperprog.com/gsafe/
+ general Sql dAtabase FrontEnd
+
+ (C) 2010 Peter Deak
+ License: GPLv2  http://www.gnu.org/licenses/gpl-2.0.html -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:complexType name="emptyindicatornode">
+  </xs:complexType>
+      
+  <!-- Modifier groups of data fields --> 
+  
+  <xs:group name="fieldmodifier">
+    <xs:choice>
+      <!-- I repeat the shortened version of this nodes (explain-ex,title-ti)
+           I can't use the substitutionGroup attribute to use this because
+           the substitutionGroup only allowed in toplevel, but I don't want
+           to allow these element at toplevel. Abstract modifier denies the using here too.
+           If you have better idea, don't hesitate to tell me! -->
+      <xs:element name="explain" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="ex" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="title" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="ti" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="tail" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="ta" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="default" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="de" minOccurs="0" maxOccurs="1"/>
+  
+      <xs:element name="mark" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element name="m" maxOccurs="unbounded" minOccurs="0"/>
+      
+      <xs:element name="valid" type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="notvalid" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element name="specialsort" maxOccurs="1" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value=""/>
+            <xs:enumeration value="dropchar"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>  
+         
+      <xs:element name="meldwithnext" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="nomiddlestretch" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="editmaxwidth" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+         
+      <xs:element name="function" type="xs:string" minOccurs="0" maxOccurs="1"/>
+      
+      <xs:element name="role" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:attribute name="name" type="xs:string" use="required"/>
+          <xs:attribute name="mod" use="required">
+            <xs:simpleType>
+              <xs:restriction base="xs:string" >
+                <xs:pattern value="(((show|hide);)|((editable|readonly);)|((guienabled|guidisabled);)|((reset|setval);))+"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:attribute>
+          <xs:attribute name="val" type="xs:string"/>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- The following fields have table level modifiers. Those the specify the defaults. This can be redefine that default -->
+      <xs:element name="color" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:attribute name="r" type="xs:positiveInteger" use="required"/>
+          <xs:attribute name="g" type="xs:positiveInteger" use="required"/>
+          <xs:attribute name="b" type="xs:positiveInteger" use="required"/>
+        </xs:complexType> 
+      </xs:element>
+      
+      <xs:element name="logging" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="nologging" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      
+      <xs:element name="readonly" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="editable" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+         
+      <xs:element name="show" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="hide" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      
+    </xs:choice>
+  </xs:group>
+ 
+  <!-- extended datafield groups -->  
+  
+  <xs:group name="connect_fielddef_group">
+    <xs:choice>
+      <xs:group ref="fieldmodifier" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="connected_table" type="xs:string" minOccurs="1" maxOccurs="1"/>
+    </xs:choice>
+  </xs:group>
+  
+  <xs:group name="hash_fielddef_group">
+    <xs:choice>
+      <xs:group ref="fieldmodifier" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="hash" minOccurs="1" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="key" type="xs:string" use="required"/>
+          <xs:attribute name="value" type="xs:string" use="required"/>
+        </xs:complexType> 
+      </xs:element>  
+    </xs:choice>
+  </xs:group>
+  
+  <xs:group name="number_fielddef_group">
+    <xs:choice>
+      <xs:group ref="fieldmodifier" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="minimum" type="xs:integer" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="maximum" type="xs:integer" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="floating_fielddef_group">
+    <xs:choice>
+      <xs:group ref="fieldmodifier" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="minimum" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="maximum" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+   	  <xs:element name="displayformat" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:attribute name="minfrag" type="xs:decimal" use="required"/>
+          <xs:attribute name="maxfrag" type="xs:decimal" use="required"/>
+          <xs:attribute name="group" type="xs:decimal" use="required"/>
+        </xs:complexType> 
+      </xs:element>  
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="check_fielddef_group">
+    <xs:choice>
+      <xs:group ref="fieldmodifier" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="true" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="tr" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="false" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="fa" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="timestamp_fielddef_group">
+    <xs:choice>
+      <xs:group ref="fieldmodifier" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="controll" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="co" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+  </xs:group>
+  
+  <xs:group name="sqlchoose_fielddef_group">
+    <xs:choice>
+      <xs:group ref="fieldmodifier" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="connected_table" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="keyfield" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="showfield" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="showfieldeasy" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="showfieldhead" type="xs:string" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="filter_part" type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="orderby_part" type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="sortc" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="hashfunc" type="xs:string" minOccurs="0" maxOccurs="1"/>
+
+      <xs:element name="extended" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="popuptitle" type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="progress" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+  </xs:group>
+    
+  <!-- Types of data fields  -->  
+    
+  <xs:complexType name="base_fielddef">
+     <xs:sequence>
+     </xs:sequence>
+     <xs:attribute name="sqln" type="xs:string" use="required"/>
+  </xs:complexType>
+  
+  <xs:complexType name="fielddef_withmodifiers">
+    <xs:complexContent>
+      <xs:extension base="base_fielddef">
+        <xs:sequence>
+          <xs:group ref="fieldmodifier" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+   <xs:complexType name="connect_fielddef">
+    <xs:complexContent>
+      <xs:extension base="base_fielddef">
+        <xs:sequence>
+          <xs:group ref="connect_fielddef_group" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="hash_fielddef">
+    <xs:complexContent>
+      <xs:extension base="base_fielddef">  
+        <xs:sequence>
+          <xs:group ref="hash_fielddef_group" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+    
+  <xs:complexType name="number_fielddef">
+    <xs:complexContent>
+      <xs:extension base="base_fielddef">  
+        <xs:sequence>
+          <xs:group ref="number_fielddef_group" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>        
+  </xs:complexType>
+
+  <xs:complexType name="floating_fielddef">
+    <xs:complexContent>
+      <xs:extension base="base_fielddef">
+        <xs:sequence>
+          <xs:group ref="floating_fielddef_group" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="check_fielddef">
+   <xs:complexContent>
+      <xs:extension base="base_fielddef">    
+        <xs:sequence>
+          <xs:group ref="check_fielddef_group" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="timestamp_fielddef">
+   <xs:complexContent>
+      <xs:extension base="base_fielddef">      
+        <xs:sequence>
+          <xs:group ref="timestamp_fielddef_group" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType> 
+
+  <xs:complexType name="sqlchoose_fielddef">
+   <xs:complexContent>
+      <xs:extension base="base_fielddef">    
+        <xs:sequence>
+          <xs:group ref="sqlchoose_fielddef_group" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>        
+  </xs:complexType>
+
+  <!-- Non datafield  groups and definitions -->  
+
+  <xs:group name="tablemodifier">
+    <xs:choice>
+      <xs:element name="tabletitle" type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="depend" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="extrafeatures" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="showtitle" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      
+      <!-- "Default like" table wide attributes. The following modifiers can be redefined in fields. -->
+      <xs:element name="color" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:attribute name="r" type="xs:positiveInteger" use="required"/>
+          <xs:attribute name="g" type="xs:positiveInteger" use="required"/>
+          <xs:attribute name="b" type="xs:positiveInteger" use="required"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="readonly" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="editable" type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="logging"  type="emptyindicatornode" minOccurs="0" maxOccurs="1"/>
+    </xs:choice>
+  </xs:group>
+  
+  <xs:group name="fields">
+    <xs:choice>
+      <xs:element name="key" type="fielddef_withmodifiers"/>
+      <xs:element name="connect" type="connect_fielddef"/>
+      <xs:element name="smalltext" type="fielddef_withmodifiers"/>
+      <xs:element name="largetext" type="fielddef_withmodifiers"/>
+      <xs:element name="charhash" type="hash_fielddef"/>
+      <xs:element name="numhash" type="hash_fielddef"/>
+      <xs:element name="number" type="number_fielddef"/>
+      <xs:element name="static" type="fielddef_withmodifiers"/>
+      <xs:element name="check" type="check_fielddef"/>
+      <xs:element name="floating" type="floating_fielddef"/>
+      <xs:element name="date" type="fielddef_withmodifiers"/>
+      <xs:element name="dateu" type="fielddef_withmodifiers"/>
+      <xs:element name="timestamp" type="timestamp_fielddef"/>
+      <xs:element name="sqlchoose" type="sqlchoose_fielddef"/>
+      <xs:element name="usefield" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="name" type="xs:string" use="required"/>
+          <xs:attribute name="mode" type="xs:string"/>
+          <xs:attribute name="default" type="xs:string"/>
+          <xs:attribute name="sqln" type="xs:string"/>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:group>
+
+  <!-- Main data elements -->
+  
+  <xs:element name="templates">
+    <xs:complexType>
+      <xs:sequence>
+        <!-- Field definition (Can be used later) -->                    
+        <xs:element name="field" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:group ref="fields" minOccurs="1" maxOccurs="1"/>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+          </xs:complexType>    
+        </xs:element>
+        <!-- Element definitions -->       
+        <xs:element name="element" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:sequence>
+
+              <!-- A table/list data -->
+              <xs:element name="table" minOccurs="1" maxOccurs="1">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:group ref="tablemodifier" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:group ref="fields" minOccurs="1" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="sqln" type="xs:string" use="required"/>
+                </xs:complexType> 
+              </xs:element>
+              
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+          </xs:complexType>
+        </xs:element>
+                
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+    
+</xs:schema>
+<!-- End of gSAFE HFactory Schema -->

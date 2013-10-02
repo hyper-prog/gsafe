@@ -1,0 +1,293 @@
+Definition of the HFactory XML format:
+
+ lowercase     : fix
+ UPPERCASE     : variable part
+ {something}   : later extracted definition
+--something--  : a definition extraction
+------------------------------------------------------
+
+
+--Data content---------------
+
+<templates>
+
+    {FIELDDEFS}
+    ..
+    {FIELDDEFS}
+    
+    {TEMPLATE}
+    ..
+    {TEMPLATE}
+    
+</templates>
+
+--FIELDDEFS---------------------
+
+<field name="FIELD_NAME">
+
+    {FIELD}
+    
+</field>
+
+--TEMPLATE----------------------
+
+<element name="FIELD_NAME">
+    
+    <table sqln="SQL_NAME">
+    
+        <color r="RED_VALUE" g="GREEN_VALUE" b="BLUE_VALUE"/>
+        
+        <readonly/>
+        <editable/>
+        
+        <tabletitle>TABLE_TITLE</tabletitle>
+        
+        <extrafeatures/>
+        
+        <showtitle/>
+        
+        <depend>TABLE_NAME</depend>
+        
+        <logging/>
+        
+        {USEFIELD}
+        ..
+        {USEFIELD}
+    
+        {FIELD}
+        ..
+        {FIELD}
+        
+    </table>
+    
+</emelent>
+
+--USEFIELD----------------------
+
+<usefield name="NAME" mode="rw,ro,hide,show" default="DEFAULT_VALUE" sqln="SQL_NAME"/>
+
+--FIELDMOD---------------------
+
+<explain>DETAIL EXPLANATION</explain>
+<ex>DETAIL EXPLANATION</ex>
+
+<title>SHORT EXPLANATION</title>
+<ti>SHORT EXPLANATION</ti>
+
+<tail>TEXT APPENDED AFTER THE VALUE</tail>
+<ta>TEXT APPENDED AFTER THE VALUE</ta>
+
+<default>DEFAULT_VALUE</default>
+<de>DEFAULT_VALUE</de>
+
+<role name="rolename"  mod="show;editable;guienabled;reset;" />
+<role name="rolename2" mod="hide;readonly;guidisabled;setval;" val="valuetoset" />
+
+<mark>MARKER_NAME</mark>
+<m>MARKER_NAME</m>
+
+<logging/>
+<nologging/>
+
+<readonly/>
+<editable/>
+
+<valid>REGEX</valid>
+
+<notvalid>A not valid string</notvalid>
+
+<specialsort>dropchar</specialsort>
+
+<color r="RED_VALUE" g="GREEN_VALUE" b="BLUE_VALUE"/>
+
+<show/>
+
+<hide/>
+
+<meldwithnext/>
+
+<nomiddlestretch/>
+
+<editmaxwidth>VALUE</guieditmaxwidth>
+
+<function>SQLFUNCTION</function>
+
+--FIELD-------------------------
+
+<key>
+
+    {FIELDMOD}
+    
+</key>
+
+--FIELD-------------------------
+
+<connect>
+
+    {FIELDMOD}
+
+    <connected_table>NAME OF THE CONNECTED TABLE NAME</connected_table>
+    
+</connect>
+
+--FIELD-------------------------
+
+<smalltext>
+
+    {FIELDMOD}
+
+
+</smalltext>
+
+--FIELD-------------------------
+
+<largetext>
+
+    {FIELDMOD}
+
+
+</largetext>
+
+--FIELD-------------------------
+
+<charhash>
+
+    {FIELDMOD}
+    
+    <hash key="KEY" value="VALUE"/>
+    ..
+    <hash key="KEY" value="VALUE"/>
+
+</charhash>
+
+--FIELD-------------------------
+
+<numhash>
+
+    {FIELDMOD}
+
+    <hash key="KEY" value="VALUE"/>
+    ..
+    <hash key="KEY" value="VALUE"/>
+
+</numhash>
+
+--FIELD-------------------------
+
+<number>
+
+    {FIELDMOD}
+    
+    <maximum>VALUE</maximum>
+    <minimum>VALUE</minimum>
+
+
+</number>
+
+--FIELD-------------------------
+
+<static>
+
+    {FIELDMOD}
+
+
+</static>
+
+--FIELD-------------------------
+
+<check>
+
+    {FIELDMOD}
+
+    <true>TRUE TEXT</true>
+    
+    <tr>TRUE TEXT</tr>
+    
+    <false>FALSE TEXT</false>
+    
+    <fa>FALSE TEXT</fa>
+
+</check>
+
+--FIELD-------------------------
+
+<floating>
+
+    {FIELDMOD}
+
+    <displayformat minfrag="0" maxfrag="4" group="0"/>
+    <maximum>VALUE</maximum>
+    <minimum>VALUE</minimum>
+
+</floating>
+
+--FIELD-------------------------
+
+<date>
+
+    {FIELDMOD}
+
+
+</date>
+
+--FIELD-------------------------
+
+<dateu>
+
+    {FIELDMOD}
+
+
+</dateu>
+
+--FIELD-------------------------
+
+<timestamp>
+
+    {FIELDMOD}
+
+    <controll/>
+    
+    <co/>
+
+</timestamp>
+
+--FIELD-------------------------
+
+<sqlchoose>
+
+    {FIELDMOD}
+    
+    <connected_table>NAME OF THE CONNECTED TABLE</connected_table>
+    
+    <keyfield>NAME OF THE FIELD USED TO CONNECTION</keyfield>
+    
+    <showfield>FIELD_SQL_NAME1 || '|' || FIELD_SQL_NAME2 || '|' ||...</showfield>
+    <!-- or (but only one!) -->
+    <showfieldeasy>FIELD_SQL_NAME1 | FIELD_SQL_NAME2 | ...</showfieldeasy>
+    
+    <showfieldhead>FIELD_TEXT_HEADER1|FIELD_TEXT_HEADER1|...</showfieldhead>
+    
+    <filter_part>FILTER IN THE QUERY SELECT</filter_part>
+    
+    <orderby_part>ORDER BY SOMETHING</orderby_part>
+
+    <sortc>COLUMN TO SORT</sortc>
+    
+    <hashfunc>nullhash</hashfunc>
+    <hashfunc>charcodehash</hashfunc>
+    <hashfunc>dropchar</hashfunc>
+
+    <extended/>
+    
+    <popuptitle>TITLE OF THE POPUPDIALOG</popuptitle>
+    
+    <progress/>
+    
+</sqlchoose>
+
+----------------------------------
+
+
+
+
+
