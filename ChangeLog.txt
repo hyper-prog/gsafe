@@ -1,3 +1,8 @@
+1.3.5
+	-Created HConsolePanel universal console class
+	-Rewritten DebugConsole to use HConsolePanel.
+	 It works/run faster, and has much more functionality.
+  
 1.3.4
 	-gSAFE ported to compile with Qt 5.X.
 	 Define COMPILED_WITH_QT4X macro if compiled with Qt 4.X
