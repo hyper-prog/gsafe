@@ -22,10 +22,13 @@
 /** \defgroup dconsole dconsole */
 /*  @{  */
 
+#ifndef DCONSOLE_NO_SQL
 /** Puts a debug/info text as sql text.
  *  If there is no started HDebugConsole this function does nothing.
  *  @see HDebugConsole*/
 void sqldebug(QString s);
+#endif // DCONSOLE_NO_SQL
+
 /** Puts a debug/info text as normal text.
  *  If there is no started HDebugConsole this function does nothing.
  *  @see HDebugConsole*/
@@ -89,7 +92,11 @@ class HConsolePanel;
     sdebug("First phase passed.");
     ...
     sdebug("N-th phase passed.");
- \endcode   */
+ \endcode
+ *
+ * If you don't need the sql functionality,
+ * so you would like to drop the QtSql dependency define the DCONSOLE_NO_SQL macro.
+ */
 class HDebugConsole : public QWidget
  {
 
@@ -106,8 +113,10 @@ class HDebugConsole : public QWidget
         ~HDebugConsole(void);
         /** Write a text to the console. Don't use it directly. Use the sdebug() and sqldebug() instead */
         void add_text(QString s,int type); //0-sql,1-txt
+#ifndef DCONSOLE_NO_SQL
         /** Write an sql text to the console */
         static void debug_sql(QString s);
+#endif // DCONSOLE_NO_SQL
         /** Write a normal text to the console */
         static void debug_txt(QString s);
         /** Popups a warning text */
@@ -117,12 +126,15 @@ class HDebugConsole : public QWidget
         void closeEvent(QCloseEvent *e);
 
     public slots:
-        int execSql(QString query);
+        int execCommand(QString query);
         /** You can call this slot anytime you want. If this slot can't find any toplevel widget
          *  in this program which is different from this console and visible, it closes the debugwindow. */
         int checkIfIClose();
     private:
-        QPushButton *pushSql,*pushText,*pushSyncwrite,*pushClear;
+#ifndef DCONSOLE_NO_SQL
+        QPushButton *pushSql;
+#endif // DCONSOLE_NO_SQL
+        QPushButton *pushText,*pushSyncwrite,*pushClear;
         HConsolePanel *cf;
 
  };
@@ -206,6 +218,10 @@ public:
      *  @see addText */
     void setTextTypeColor(char type,QColor color);
 
+    /** Sets the command line prompt */
+    void setPromptString(QString prm);
+    /** Returns the current active command line prompt */
+    QString promptString(void);
     /** Returns the current active command line text */
     QString commandLineText(void);
     /** Moves the cursor in the command line text to left with charCount position */

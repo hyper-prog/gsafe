@@ -2,6 +2,7 @@
 	-Created HConsolePanel universal console class
 	-Rewritten DebugConsole to use HConsolePanel.
 	 It works/run faster, and has much more functionality.
+	-Removed sql dependency from HConsolePanel if DCONSOLE_NO_SQL defined
   
 1.3.4
 	-gSAFE ported to compile with Qt 5.X.
