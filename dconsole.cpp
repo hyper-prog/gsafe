@@ -603,16 +603,18 @@ private:
     HConsoleLine *first,*top,*viewtop,*last;
     HConsoleLine *cfirst,*ctop,*clast;
 
-    QColor bgColor,selectionColor,fontColor,cmdLineColor,cursorColor,marginColor;
+    QColor bgColor,selectionColor,fontColor,cmdLineColor,cursorColor,marginColor,marginBgColor;
     QMap<char,QColor> typeColors;
     QList<QString> history;
     QList<QString>::iterator history_it;
     QFontMetrics *fm;
     QString promptStr;
+    QString marginStr;
 
     int oldWindowWidth;
-    int marginXl,marginXr;
+    int marginXl,marginXlfix,marginXr;
     bool fastfix;
+    int fontsize;
     int lineCapacity;
     int lineHeight;
     int letterWidth;
@@ -676,6 +678,7 @@ HConsolePanel::HConsolePanel(QWidget *parent) : QFrame(parent)
     setFocusPolicy(Qt::StrongFocus);
     setFocus();
 
+
     QFont f = font();
     f.setFamily("Monospace");
     f.setStyleHint(QFont::TypeWriter);
@@ -689,11 +692,13 @@ HConsolePanel::HConsolePanel(QWidget *parent) : QFrame(parent)
     p = new HConsolePanelPrivate(this);
     p->fm = new QFontMetrics(font(),this);
 
+    p->fontsize = 14;
     p->bgColor = Qt::black;
     p->selectionColor = Qt::blue;
     p->fontColor = Qt::yellow;
     p->cmdLineColor = Qt::green;
     p->marginColor = QColor(240,240,240);
+    p->marginBgColor = Qt::black;
     p->cursorColor = Qt::yellow;
 
     p->last = p->top = p->first = NULL;
@@ -703,7 +708,8 @@ HConsolePanel::HConsolePanel(QWidget *parent) : QFrame(parent)
     p->cursorPos[0] = p->cfirst->serial;
     p->cursorPos[1] = 0;
     p->promptStr = "Console>";
-    p->marginXl = 5;
+    p->marginStr = "";
+    p->marginXl = p->marginXlfix = 5;
     p->marginXr = 10;
 
     if(QFontInfo(font()).fixedPitch())
@@ -745,6 +751,12 @@ int HConsolePanelPrivate::calcStringBreakPos(QString s)
     return ll;
 }
 
+void HConsolePanel::setMarginText(QString margin)
+{
+     p->marginStr = margin;
+     p->fitConsole();
+}
+
 void HConsolePanelPrivate::fitConsole(void)
 {
     QString str;
@@ -763,7 +775,7 @@ void HConsolePanelPrivate::fitConsole(void)
     lhascdiffhalf = (int) floor((lineHeight - fm->ascent()) / 2);
     selectionHeight = fm->ascent() + lhascdiffhalf;
     lineCapacity = (int) ((pp->height()-(2+1+fm->descent())) / lineHeight);
-
+    marginXl = marginXlfix + calcStringWidth(marginStr);
     maxLineLength = pp->width() - (4 + marginXr + marginXl);
     lineBreakPosition = (int)floor( maxLineLength / letterWidth );
     mousePressedArea = 0;
@@ -991,7 +1003,13 @@ void HConsolePanelPrivate::paintRows(QPainter *p)
                 p->setPen(marginColor);
                 if(!cmdline)
                 {
-                    //p->drawText(0,y,QString().sprintf("%04d",r->serial + 1));
+                    if(!marginStr.isEmpty())
+                    {
+                        QString s = marginStr;
+                        s.replace(QRegExp("%[0]*s"),QString("%1").arg(r->serial+1));
+                        p->fillRect(0,y-selectionHeight,marginXl-marginXlfix,lineHeight+lhascdiffhalf,marginBgColor);
+                        p->drawText(0,y,s);
+                    }
                     if(r->type == 0)
                         p->setPen(fontColor);
                     else
@@ -1045,6 +1063,8 @@ void HConsolePanel::setColor(QString section,QColor color)
         p->marginColor = color;
     if(section == "cursor")
         p->cursorColor = color;
+    if(section == "marginbg")
+        p->marginBgColor = color;
 }
 
 void HConsolePanel::setTextTypeColor(char type,QColor color)
@@ -2311,6 +2331,24 @@ void HConsolePanel::keyPressEvent(QKeyEvent *e)
         return;
     }
 
+    if(e->key() == Qt::Key_B &&  e->modifiers() == Qt::ControlModifier)
+    {
+        biggerFontSize();
+        return;
+    }
+
+    if(e->key() == Qt::Key_S && e->modifiers() == Qt::ControlModifier)
+    {
+        smallerFontSize();
+        return;
+    }
+
+    if(e->key() == Qt::Key_0 && e->modifiers() == Qt::ControlModifier)
+    {
+        normalFontSize();
+        return;
+    }
+
     if(e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter)
     {
         if(e->modifiers() == Qt::ShiftModifier)
@@ -2354,6 +2392,43 @@ void HConsolePanel::setPromptString(QString prm)
 QString HConsolePanel::promptString(void)
 {
     return p->promptStr;
+}
+
+void HConsolePanel::setFontSize(int point)
+{
+    p->fontsize = point;
+    QFont f = font();
+    f.setPixelSize(p->fontsize);
+    setFont(f);
+    delete p->fm;
+    p->fm = new QFontMetrics(font(),this);
+    p->fitConsole();
+}
+
+int  HConsolePanel::fontSize(void)
+{
+    return p->fontsize;
+}
+
+void HConsolePanel::biggerFontSize(void)
+{
+    int s = fontSize() + 1;
+    if(s > 25)
+        s = 25;
+    setFontSize(s);
+}
+
+void HConsolePanel::smallerFontSize(void)
+{
+    int s = fontSize() - 1;
+    if(s < 10)
+        s = 10;
+    setFontSize(s);
+}
+
+void HConsolePanel::normalFontSize(void)
+{
+    setFontSize(14);
 }
 
 #endif //GSAFE_DISABLE_DEBUG

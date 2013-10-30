@@ -172,6 +172,9 @@ class HConsolePanelPrivate;
  *  - SHIFT+RIGHT	Moves Cursor to right/front while expand the selection
  *  - ENTER         Send the command
  *  - SHIFT+ENTER	Starts a new line in command line (without sending the command)
+ *  - CTRL+B        Sets bigger font size
+ *  - CTRL+0        Sets normal font size
+ *  - CTRL+S        Sets smaller font size
 */
 class HConsolePanel : public QFrame
 {
@@ -207,9 +210,12 @@ public:
      *  The default value is 8. */
     void setTabStop(int count);
 
+    /** Sets a margin text, which is displayed on the left margin of all readonly line (every line except command lines) */
+    void setMarginText(QString margin);
+
     /** Sets the color of a specified console area
      *  @param section One of
-            "background","selection","standardtext","cmdtext","cursor","margin"
+            "background","selection","standardtext","cmdtext","cursor","margin","marginbg"
      *  @param color the color to set */
     void setColor(QString section,QColor color);
     /** Sets the color of the type coded text.
@@ -247,6 +253,11 @@ public:
             If false the function deletes the character before the cursor and steps the cursor back (Backspace). */
     void deleteFromCursor(bool forwardDel = false);
 
+    /** Sets the font size used by HConsolePanel */
+    void setFontSize(int point);
+    /** Returns the font point size used by HConsolePanel */
+    int  fontSize(void);
+
 public slots:
     /** Adds a text to the readonly/view part. Means: addText(text,0); */
     void addNormalText(QString text);
@@ -266,6 +277,10 @@ public slots:
     void pasteToCommandLine(void);
     /** Deletes the current selected text from the command line */
     void deleteCmdLineSelection(void);
+
+    void biggerFontSize(void);
+    void smallerFontSize(void);
+    void normalFontSize(void);
 
 protected:
     void paintEvent(QPaintEvent *e);
