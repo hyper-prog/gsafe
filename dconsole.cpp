@@ -1286,9 +1286,9 @@ QString HConsolePanel::selectedText(void)
     if(!p->selection && !p->cselection)
         return QString();
 
-    int *mSelRange;
+    int *mSelRange=NULL;
     QString sel="";
-    HConsoleLine* r;
+    HConsoleLine* r=NULL;
 
     if(p->cselection)
     {
@@ -1300,7 +1300,8 @@ QString HConsolePanel::selectedText(void)
         mSelRange = p->selectionRange;
         r = p->first;
     }
-
+    if(mSelRange == NULL)
+        return QString();
     while(r != NULL)
     {
         if(mSelRange[0] == r->serial && mSelRange[2] == r->serial) //selection begin-end
@@ -1570,8 +1571,8 @@ void HConsolePanel::mouseMoveEvent(QMouseEvent *e)
     if(type == 0)
         return;
 
-    int *mSelRange;
-    bool sel;
+    int *mSelRange = NULL;
+    bool sel=false;
     if(type == 1)
     {
         sel = p->selection;
@@ -1583,6 +1584,8 @@ void HConsolePanel::mouseMoveEvent(QMouseEvent *e)
         mSelRange = p->cselectionRange;
     }
 
+    if(mSelRange == NULL)
+        return;
     if(!sel || mSelRange[2] != l || mSelRange[3] != c)
     {
         if(mSelRange[4] < l || (mSelRange[4] == l && mSelRange[5] < c))
@@ -1612,7 +1615,7 @@ void HConsolePanel::mouseDoubleClickEvent(QMouseEvent *e)
         return;
 
     int l,c,i,s;
-    int *mSelRange;
+    int *mSelRange = NULL;
     char type;
     type = 0;
     p->getLCfromXY(e->x(),e->y(),l,c,s,type);
@@ -1627,8 +1630,8 @@ void HConsolePanel::mouseDoubleClickEvent(QMouseEvent *e)
     QString line;
     if(type == 1)
     {
-            line = lineBySerial(l);
-            mSelRange = p->selectionRange;
+        line = lineBySerial(l);
+        mSelRange = p->selectionRange;
     }
     if(type == 2)
     {
@@ -1643,6 +1646,9 @@ void HConsolePanel::mouseDoubleClickEvent(QMouseEvent *e)
         update();
         return;
     }
+
+    if(mSelRange == NULL)
+        return;
 
     mSelRange[0] = l;
     mSelRange[2] = l;
