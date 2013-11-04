@@ -196,8 +196,11 @@ public:
     int  topSerial(void);
     /** Returns the line which has the parameter passed serial number
      *  @param serial the requested line's serial
+     *  @param withWraps if this parameter true, the next autowrapped lines
+     *      are concatenated to the returned line
      *  @param onDisplay If this parameter true the searching is started on the current display (much faster) */
-    QString lineBySerial(int serial,bool onDisplay = true);
+    QString lineBySerial(int serial,bool withWraps =false,bool onDisplay = true);
+
     /** Scrolls up the readonly/view textual part by the lineCount number line */
     void scrollUp(int lineCount = 1);
     /** Scrolls down the readonly/view textual part by the lineCount number line */

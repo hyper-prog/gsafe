@@ -1246,7 +1246,7 @@ int HConsolePanel::topSerial(void)
     return p->viewtop == NULL ? p->top->serial : p->viewtop->serial;
 }
 
-QString HConsolePanel::lineBySerial(int serial,bool onDisplay)
+QString HConsolePanel::lineBySerial(int serial,bool withWraps,bool onDisplay)
 {
     HConsoleLine* r = p->first;
     if(onDisplay)
@@ -1256,7 +1256,19 @@ QString HConsolePanel::lineBySerial(int serial,bool onDisplay)
     while(r != NULL)
     {
         if(r->serial == serial)
+        {
+            if(withWraps && r->autole)
+            {
+                QString rline = r->line;
+                while(r->autole && r->next != NULL )
+                {
+                    rline += r->next->line;
+                    r = r->next;
+                }
+                return rline;
+            }
             return r->line;
+        }
         r = r->next;
     }
     return QString();
@@ -1630,7 +1642,7 @@ void HConsolePanel::mouseDoubleClickEvent(QMouseEvent *e)
     QString line;
     if(type == 1)
     {
-        line = lineBySerial(l);
+        line = lineBySerial(l,false,true);
         mSelRange = p->selectionRange;
     }
     if(type == 2)
