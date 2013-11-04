@@ -68,6 +68,11 @@ void clear_dconsole_commands();
 
 #ifndef GSAFE_DISABLE_DEBUG
 
+#define DCONSOLE_TYPE_TEXT      0
+#define DCONSOLE_TYPE_MESSAGE   1
+#define DCONSOLE_TYPE_SQL       2
+#define DCONSOLE_TYPE_RESULT    3
+
 class QFontMetrics;
 class QCloseEvent;
 class HConsolePanel;
@@ -112,7 +117,7 @@ class HDebugConsole : public QWidget
         /** Destructor */
         ~HDebugConsole(void);
         /** Write a text to the console. Don't use it directly. Use the sdebug() and sqldebug() instead */
-        void add_text(QString s,int type); //0-sql,1-txt
+        void add_text(QString s,int type);
 #ifndef DCONSOLE_NO_SQL
         /** Write an sql text to the console */
         static void debug_sql(QString s);

@@ -157,7 +157,15 @@ HDebugConsole::HDebugConsole(QWidget *parent)
     connect(cf,SIGNAL(commandEntered(QString)),this,SLOT(execCommand(QString)));
     cf->setTextTypeColor(1,QColor(255,150,150));
     cf->setTextTypeColor(2,QColor(200,200,200));
-    cf->addText("START");
+
+    cf->setColor("cursor",Qt::white);
+    cf->setColor("cmdtext",QColor(0,255,0));
+    cf->setTextTypeColor(DCONSOLE_TYPE_MESSAGE ,QColor(210,210,210));
+    cf->setTextTypeColor(DCONSOLE_TYPE_TEXT    ,QColor(200,200,0));
+    cf->setTextTypeColor(DCONSOLE_TYPE_SQL     ,QColor(255,0,0));
+    cf->setTextTypeColor(DCONSOLE_TYPE_RESULT  ,QColor(100,100,255));
+
+    cf->addText("START",DCONSOLE_TYPE_MESSAGE);
 
     resize(660,420);
     #ifdef FILE_DEBUG
@@ -189,16 +197,13 @@ void HDebugConsole::add_text(QString s,int type)
     }
 
 #ifndef DCONSOLE_NO_SQL
-    if(pushSql->isChecked() && type == 0)
-    {
-        cf->addText(s,1);
-    }
+    if(pushSql->isChecked() && type == DCONSOLE_TYPE_SQL)
+        cf->addText(s,DCONSOLE_TYPE_SQL);
+
 #endif // DCONSOLE_NO_SQL
 
-    if(pushText->isChecked() && type == 1)
-    {
-        cf->addText(s,0);
-    }
+    if(pushText->isChecked() && type == DCONSOLE_TYPE_TEXT)
+        cf->addText(s,DCONSOLE_TYPE_TEXT);
 
     QApplication::processEvents();
 }
@@ -213,62 +218,63 @@ void HDebugConsole::closeEvent(QCloseEvent *e)
 void HDebugConsole::debug_sql(QString s)
 {
     if(myself != NULL)
-        myself->add_text(s,0);
+        myself->add_text(s,DCONSOLE_TYPE_SQL);
 }
 #endif // DCONSOLE_NO_SQL
 
 void HDebugConsole::debug_txt(QString s)
 {
     if(myself != NULL)
-        myself->add_text(s,1);
+        myself->add_text(s,DCONSOLE_TYPE_TEXT);
 }
 
 int HDebugConsole::execCommand(QString query)
 {
+#define OUT(a) cf->addText(a,DCONSOLE_TYPE_MESSAGE)
     if(query == "")
     {
-        cf->addText(".");
+        OUT(".");
         return 0;
     }
     if(query == "help")
     {
-        cf->addText("");
-        cf->addText("exit - Exit main program (The debugged program too)");
-        cf->addText("close - Close the debug window (only)");
-        cf->addText("clear - Clear the debug window");
+        OUT("");
+        OUT("exit - Exit main program (The debugged program too)");
+        OUT("close - Close the debug window (only)");
+        OUT("clear - Clear the debug window");
 #ifndef DCONSOLE_NO_SQL
-        cf->addText("alldb - Show all available database connections");
-        cf->addText("dbinfo - Show the current connected database information");
-        cf->addText("setdb - Set the current database to the default (not the program but console)");
-        cf->addText("setdb name - Set the current database to \"name\" (not the program but console)");
+        OUT("alldb - Show all available database connections");
+        OUT("dbinfo - Show the current connected database information");
+        OUT("setdb - Set the current database to the default (not the program but console)");
+        OUT("setdb name - Set the current database to \"name\" (not the program but console)");
 #endif // DCONSOLE_NO_SQL
-        cf->addText("filters - Show available debug filters");
-        cf->addText("state <filter> - Show the state of the specified filter");
-        cf->addText("enable <filter> - Enable the specified kind of output");
-        cf->addText("disable <filter> - Disable the specified kind of output");
-        cf->addText("synw - Query the state of syndebug");
-        cf->addText("synw [off|on] - Set the state of syndebug");
-        cf->addText("synw clear - Clear the file syndebug.txt");
-        cf->addText("write <text> - Write the text to the console");
-        cf->addText("save - Save the content of debug window to debug.txt");
-        cf->addText("run <command> - Run (custom) a program command");
+        OUT("filters - Show available debug filters");
+        OUT("state <filter> - Show the state of the specified filter");
+        OUT("enable <filter> - Enable the specified kind of output");
+        OUT("disable <filter> - Disable the specified kind of output");
+        OUT("synw - Query the state of syndebug");
+        OUT("synw [off|on] - Set the state of syndebug");
+        OUT("synw clear - Clear the file syndebug.txt");
+        OUT("write <text> - Write the text to the console");
+        OUT("save - Save the content of debug window to debug.txt");
+        OUT("run <command> - Run (custom) a program command");
 #ifndef DCONSOLE_NO_SQL
-        cf->addText("\"SQL\" - Execute the SQL command");
+        OUT("\"SQL\" - Execute the SQL command");
 #endif // DCONSOLE_NO_SQL
         if(user_commands.size() > 0)
         {
-            cf->addText("  -- CUSTOM/PROGRAM COMMANDS --  ");
+            OUT("  -- CUSTOM/PROGRAM COMMANDS --  ");
             QMultiMap<QString,HDConsoleCommandHolder *>::const_iterator i = user_commands.constBegin();
             while(i != user_commands.constEnd())
             {
-                cf->addText(QString(" run %1%2%3")
+                OUT(QString(" run %1%2%3")
                             .arg(i.key())
                             .arg( user_commands_descr.value(i.key()) == "" ? "" : " - ")
                             .arg(user_commands_descr.value(i.key())));
                 ++i;
             }
         }
-        cf->addText("\n");
+        OUT("\n");
         return 0;
     }
     if(query == "exit")
@@ -290,7 +296,7 @@ int HDebugConsole::execCommand(QString query)
         fprintf(dbgf,"\n%s\n",cf->selectedText().toLocal8Bit().constData());
         cf->clearSelection();
         fclose(dbgf);
-        cf->addText("Saving console text to debug.txt is done.\n");
+        OUT("Saving console text to debug.txt is done.\n");
         return 0;
     }
 
@@ -304,7 +310,7 @@ int HDebugConsole::execCommand(QString query)
             db = QSqlDatabase::database(databasename);
         if(db.isOpen())
         {
-            cf->addText(QString(".\nCurrent OPENED database connection is:\nConnection name=%1\nDriver=%2\nName=%3\nHost=%4\nUser=%5\n")
+            OUT(QString(".\nCurrent OPENED database connection is:\nConnection name=%1\nDriver=%2\nName=%3\nHost=%4\nUser=%5\n")
                 .arg(db.connectionName())
                 .arg(db.driverName())
                 .arg(db.databaseName())
@@ -314,7 +320,7 @@ int HDebugConsole::execCommand(QString query)
         }
         else
         {
-            cf->addText(QString(".\nThere is no opened database!\n"));
+            OUT(QString(".\nThere is no opened database!\n"));
             return 0;
         }
 
@@ -324,10 +330,10 @@ int HDebugConsole::execCommand(QString query)
     {
         QStringList l = QSqlDatabase::connectionNames();
         QStringList::iterator i=l.begin();
-        cf->addText(QString(".\nAvailable databases (%1) :").arg(l.count()));
+        OUT(QString(".\nAvailable databases (%1) :").arg(l.count()));
         while(i != l.end())
         {
-            cf->addText("  " + *i);
+            OUT("  " + *i);
             ++i;
         }
         return 0;
@@ -339,28 +345,28 @@ int HDebugConsole::execCommand(QString query)
         c = query.mid(6);
         if(c.isEmpty())
             c=""; //default will be used
-        cf->addText(QString("Setting database to default (in console) \"%1\"...").arg(c));
+        OUT(QString("Setting database to default (in console) \"%1\"...").arg(c));
         databasename = c;
-        cf->addText("");
+        OUT("");
         return 0;
     }
 #endif // DCONSOLE_NO_SQL
 
     if(query == "synw")
     {
-        cf->addText(QString(".\nSyncronized backup file writing: %1.\n").arg(pushSyncwrite->isChecked() ? "on" : "off"));
+        OUT(QString(".\nSyncronized backup file writing: %1.\n").arg(pushSyncwrite->isChecked() ? "on" : "off"));
         return 0;
     }
     if(query == "synw on")
     {
         pushSyncwrite->setChecked(true);
-        cf->addText(QString(".\nEnabled syncronized backup file writing (syndebug.txt).\n"));
+        OUT(QString(".\nEnabled syncronized backup file writing (syndebug.txt).\n"));
         return 0;
     }
     if(query == "synw off")
     {
-        cf->addText(QString(".\nDisabled syncronized backup file writing.\n"));
         pushSyncwrite->setChecked(false);
+        OUT(QString(".\nDisabled syncronized backup file writing.\n"));
         return 0;
     }
     if(query == "synw clear")
@@ -370,7 +376,7 @@ int HDebugConsole::execCommand(QString query)
         fseek(dbgf,0,SEEK_SET);
         fprintf(dbgf,"\n");
         fclose(dbgf);
-        cf->addText(QString(".\nThe content of syndebug.txt has been cleared.\n"));
+        OUT(QString(".\nThe content of syndebug.txt has been cleared.\n"));
         return 0;
     }
     if(query.startsWith("write"))
@@ -385,28 +391,28 @@ int HDebugConsole::execCommand(QString query)
         QMultiMap<QString,HDConsoleCommandHolder *>::iterator i;
 
         c = query.mid(4);
-        cf->addText(QString("Starting command \"%1\"...").arg(c));
+        OUT(QString("Starting command \"%1\"...").arg(c));
         i = user_commands.find(c);
         if(i == user_commands.end())
         {
-            cf->addText(" Error: Command not found!");
+            OUT(" Error: Command not found!");
         }
         else
         {
             HDConsoleCommandHolder *dcch = *i;
             sdebug(dcch->donsole_command_interpreter(c));
-            cf->addText("finished.\n");
+            OUT("finished.\n");
         }
-        cf->addText("");
+        OUT("");
         return 0;
     }
 
     if(query.startsWith("filters"))
     {
 #ifndef DCONSOLE_NO_SQL
-        cf->addText(".\nAvailable filters: sql text\n");
+        OUT(".\nAvailable filters: sql text\n");
 #else
-        cf->addText(".\nAvailable filters: text\n");
+        OUT(".\nAvailable filters: text\n");
 #endif // DCONSOLE_NO_SQL
         return 0;
     }
@@ -416,17 +422,17 @@ int HDebugConsole::execCommand(QString query)
         if(query == "enable sql")
         {
             pushSql->setChecked(true);
-            cf->addText(".\nSQL output is enabled.");
+            OUT(".\nSQL output is enabled.");
             return 0;
         }
 #endif // DCONSOLE_NO_SQL
         if(query == "enable text")
         {
             pushText->setChecked(true);
-            cf->addText(".\nTEXT output is enabled.");
+            OUT(".\nTEXT output is enabled.");
             return 0;
         }
-        cf->addText(".\nUnknown or missing filter name. Exec \"filters\" command!\n");
+        OUT(".\nUnknown or missing filter name. Exec \"filters\" command!\n");
         return 0;
     }
     if(query.startsWith("disable"))
@@ -435,17 +441,17 @@ int HDebugConsole::execCommand(QString query)
         if(query == "disable sql")
         {
             pushSql->setChecked(false);
-            cf->addText(".\nSQL output is disabled.");
+            OUT(".\nSQL output is disabled.");
             return 0;
         }
 #endif // DCONSOLE_NO_SQL
         if(query == "disable text")
         {
             pushText->setChecked(false);
-            cf->addText(".\nTEXT output is disabled.");
+            OUT(".\nTEXT output is disabled.");
             return 0;
         }
-        cf->addText(".\nUnknown or missing filter name. Exec \"filters\" command!\n");
+        OUT(".\nUnknown or missing filter name. Exec \"filters\" command!\n");
         return 0;
     }
     if(query.startsWith("state"))
@@ -453,16 +459,16 @@ int HDebugConsole::execCommand(QString query)
 #ifndef DCONSOLE_NO_SQL
         if(query == "state sql")
         {
-            cf->addText(QString(".\nSQL output is %1.").arg(pushSql->isChecked() ? "enabled" : "disabled"));
+            OUT(QString(".\nSQL output is %1.").arg(pushSql->isChecked() ? "enabled" : "disabled"));
             return 0;
         }
 #endif // DCONSOLE_NO_SQL
         if(query == "state text")
         {
-            cf->addText(QString(".\nTEXT output is %1.").arg(pushText->isChecked() ? "enabled" : "disabled"));
+            OUT(QString(".\nTEXT output is %1.").arg(pushText->isChecked() ? "enabled" : "disabled"));
             return 0;
         }
-        cf->addText(".\nUnknown or missing filter name. Exec \"filters\" command!\n");
+        OUT(".\nUnknown or missing filter name. Exec \"filters\" command!\n");
         return 0;
     }
 
@@ -473,8 +479,8 @@ int HDebugConsole::execCommand(QString query)
     QVariant v;
 
     cn=0;
-    cf->addText("\nExec Console sumbitted query...\n");
-    cf->addText("\""+query+"\"\n",1);
+    OUT("\nExec Console sumbitted query...\n");
+    OUT("\""+query+"\"\n");
 
     QSqlDatabase db;
     if(databasename.isEmpty())
@@ -489,7 +495,7 @@ int HDebugConsole::execCommand(QString query)
 
     if(q.lastError().type() == QSqlError::NoError)
     {
-        cf->addText("Succesfull executed. Dumping data:\n");
+        cf->addText("Succesfull executed. Dumping data:\n",DCONSOLE_TYPE_RESULT);
 
         while(q.next())
         {
@@ -509,18 +515,18 @@ int HDebugConsole::execCommand(QString query)
                 }
             }
         }
-        cf->addText(result,2);
-        cf->addText(QString("\n\n (%1 rows affected/%2 size)").arg(q.numRowsAffected()).arg(q.size()));
-        cf->addText("\n End query: \""+query+"\"");
+        cf->addText(result,DCONSOLE_TYPE_RESULT);
+        OUT(QString("\n\n (%1 rows affected/%2 size)").arg(q.numRowsAffected()).arg(q.size()));
+        OUT("\n End query: \""+query+"\"");
         db.commit();
     }
     else
     {
-        cf->addText(QString("\nError: %1").arg(q.lastError().text()));
+        OUT(QString("\nError: %1").arg(q.lastError().text()));
         db.rollback();
     }
     #else
-    cf->addText(QString("Unknown command: %1").arg(query));
+    OUT(QString("Unknown command: %1").arg(query));
     #endif // DCONSOLE_NO_SQL
     return 0;
 }
