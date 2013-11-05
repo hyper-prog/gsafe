@@ -147,7 +147,9 @@ class HConsoleLine;
 class HConsolePanelPrivate;
 
 /** HConsolePanel is an universal console panel which has a readonly textual history part,
- *  and an editable command line part. It designed to handle a large amount of text fastly.
+ *  and an editable command line part.
+ *  \image html pictures_doc/hdebugconsole.png
+ *  It designed to handle a large amount of text fastly.
  *  It supports text selections, clipboard functions,
  *  basic editing functionality on command line and command history.
  *      Available key commands:
