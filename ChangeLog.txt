@@ -1,8 +1,9 @@
 1.3.5
 	-Created HConsolePanel universal console class
-	-Rewritten DebugConsole to use HConsolePanel.
+	-Rewritten HDebugConsole to use HConsolePanel.
 	 It works/run faster, and has much more functionality.
 	-Removed sql dependency from HConsolePanel if DCONSOLE_NO_SQL defined
+	-Added show command to view tables and table definitions of the database
   
 1.3.4
 	-gSAFE ported to compile with Qt 5.X.

@@ -89,7 +89,6 @@ void dconsole_popup(QString t,QString txt)
     #endif //GSAFE_DISABLE_DEBUG
 }
 
-
 QMultiMap<QString,HDConsoleCommandHolder *> user_commands;
 QMultiMap<QString,QString> user_commands_descr;
 
@@ -119,53 +118,164 @@ void clear_dconsole_commands()
 
 #ifndef GSAFE_DISABLE_DEBUG
 
+/* *********************************************************************************
+ * HDebugConsole related class
+ * ********************************************************************************* */
+
+/* pimpl class of HDebugConsole */
+class HDebugConsolePrivate
+{
+    friend class HDebugConsole;
+
+private:
+    HDebugConsolePrivate(HDebugConsole *parent)
+        { pp = parent; }
+    ~HDebugConsolePrivate()
+        { pp = NULL; }
+
+private:
+    HDebugConsole *pp;
+    QString databasename;
+
+#ifndef DCONSOLE_NO_SQL
+    QPushButton *pushSql;
+#endif // DCONSOLE_NO_SQL
+    QPushButton *pushText,*pushSyncwrite,*pushClear;
+    HConsolePanel *cf;
+
+    QMap<QString,void (HDebugConsolePrivate::*)(QString)> commands_exec;
+    QMap<QString,QString>                                 commands_dscr;
+
+    //console command handlers:
+    void command_help(QString fcl);
+    void command_exit(QString fcl);
+    void command_close(QString fcl);
+    void command_clear(QString fcl);
+    void command_filters(QString fcl);
+    void command_state(QString fcl);
+    void command_enable(QString fcl);
+    void command_disable(QString fcl);
+    void command_synw(QString fcl);
+    void command_write(QString fcl);
+    void command_save(QString fcl);
+    void command_run(QString fcl);
+
+#ifndef DCONSOLE_NO_SQL
+    void command_alldb(QString fcl);
+    void command_dbinfo(QString fcl);
+    void command_setdb(QString fcl);
+    void command_show(QString fcl);
+#endif // DCONSOLE_NO_SQL
+
+};
+
 HDebugConsole::HDebugConsole(QWidget *parent)
 :QWidget(parent)
 {
+    p = new HDebugConsolePrivate(this);
     setWindowTitle("HDebugConsole");
-    databasename = "";
+    p->databasename = "";
     myself = this;
 
     QVBoxLayout *qvbl = new QVBoxLayout(this);
-    QHBoxLayout *qhbl = new QHBoxLayout(this);
-    cf = new HConsolePanel(this);
+    QHBoxLayout *qhbl = new QHBoxLayout(0);
+    p->cf = new HConsolePanel(this);
 
 #ifndef DCONSOLE_NO_SQL
-    pushSql = new QPushButton(tr("Sql"),this);
-    pushSql->setCheckable(true);
-    pushSql->setChecked(true);
-    qhbl->addWidget(pushSql);
+    p->pushSql = new QPushButton(tr("Sql"),this);
+    p->pushSql->setCheckable(true);
+    p->pushSql->setChecked(true);
+    qhbl->addWidget(p->pushSql);
 #endif // DCONSOLE_NO_SQL
-    pushText = new QPushButton(tr("Text"),this);
-    pushText->setCheckable(true);
-    pushText->setChecked(true);
-    pushSyncwrite = new QPushButton(tr("SyncWrite:\"syndebug.txt\""),this);
-    pushSyncwrite->setCheckable(true);
-    pushSyncwrite->setChecked(true);
-    pushClear = new QPushButton(tr("Clear"),this);
-    qhbl->addWidget(pushText);
-    qhbl->addWidget(pushSyncwrite);
+    p->pushText = new QPushButton(tr("Text"),this);
+    p->pushText->setCheckable(true);
+    p->pushText->setChecked(true);
+    p->pushSyncwrite = new QPushButton(tr("SyncWrite:\"syndebug.txt\""),this);
+    p->pushSyncwrite->setCheckable(true);
+    p->pushSyncwrite->setChecked(false);
+    p->pushClear = new QPushButton(tr("Clear"),this);
+    qhbl->addWidget(p->pushText);
+    qhbl->addWidget(p->pushSyncwrite);
     qhbl->addStretch();
-    qhbl->addWidget(pushClear);
+    qhbl->addWidget(p->pushClear);
 
     qvbl->setMargin(0);
     qvbl->setSpacing(0);
     qvbl->addLayout(qhbl);
-    qvbl->addWidget(cf);
+    qvbl->addWidget(p->cf);
 
-    connect(pushClear,SIGNAL(clicked()),cf,SLOT(clearText()));
-    connect(cf,SIGNAL(commandEntered(QString)),this,SLOT(execCommand(QString)));
-    cf->setTextTypeColor(1,QColor(255,150,150));
-    cf->setTextTypeColor(2,QColor(200,200,200));
+    connect(p->pushClear,SIGNAL(clicked()),p->cf,SLOT(clearText()));
+    connect(p->cf,SIGNAL(commandEntered(QString)),this,SLOT(execCommand(QString)));
+    connect(p->cf,SIGNAL(tabPressed(QString)),this,SLOT(tabPressed(QString)));
+    p->cf->setTextTypeColor(1,QColor(255,150,150));
+    p->cf->setTextTypeColor(2,QColor(200,200,200));
 
-    cf->setColor("cursor",Qt::white);
-    cf->setColor("cmdtext",QColor(0,255,0));
-    cf->setTextTypeColor(DCONSOLE_TYPE_MESSAGE ,QColor(210,210,210));
-    cf->setTextTypeColor(DCONSOLE_TYPE_TEXT    ,QColor(200,200,0));
-    cf->setTextTypeColor(DCONSOLE_TYPE_SQL     ,QColor(255,0,0));
-    cf->setTextTypeColor(DCONSOLE_TYPE_RESULT  ,QColor(100,100,255));
+    p->cf->setColor("cursor",Qt::white);
+    p->cf->setColor("cmdtext",QColor(0,255,0));
+    p->cf->setTextTypeColor(DCONSOLE_TYPE_MESSAGE ,QColor(210,210,210));
+    p->cf->setTextTypeColor(DCONSOLE_TYPE_TEXT    ,QColor(200,200,0));
+    p->cf->setTextTypeColor(DCONSOLE_TYPE_SQL     ,QColor(255,0,0));
+    p->cf->setTextTypeColor(DCONSOLE_TYPE_RESULT  ,QColor(100,100,255));
+    p->cf->setTextTypeColor(DCONSOLE_TYPE_CMD     ,QColor(0,230,0));
 
-    cf->addText("START",DCONSOLE_TYPE_MESSAGE);
+    p->cf->addText("START",DCONSOLE_TYPE_MESSAGE);
+
+    //Registering console commands
+    p->commands_exec["help"]    = &HDebugConsolePrivate::command_help;
+    p->commands_dscr["help"]    = " help - List the available commands";
+
+    p->commands_exec["exit"]    = &HDebugConsolePrivate::command_exit;
+    p->commands_dscr["exit"]    = " exit - Exit main program (The debugged program too)";
+
+    p->commands_exec["close"]   = &HDebugConsolePrivate::command_close;
+    p->commands_dscr["close"]   = " close - Close the debug window (only)";
+
+    p->commands_exec["clear"]   = &HDebugConsolePrivate::command_clear;
+    p->commands_dscr["clear"]   = " clear - Clears the debug window\'s text";
+
+    p->commands_exec["filters"] = &HDebugConsolePrivate::command_filters;
+    p->commands_dscr["filters"] = " filters - Show available debug filters";
+
+    p->commands_exec["state"]   = &HDebugConsolePrivate::command_state;
+    p->commands_dscr["state"]   = " state <filter> - Show the state of the \"filter\" kind of output filter";
+
+    p->commands_exec["enable"]  = &HDebugConsolePrivate::command_enable;
+    p->commands_dscr["enable"]  = " enable <filter> - Enable the \"filter\" kind of output";
+
+    p->commands_exec["disable"] = &HDebugConsolePrivate::command_disable;
+    p->commands_dscr["disable"] = " disable <filter> - Disable the \"filter\" kind of output";
+
+    p->commands_exec["synw"]    = &HDebugConsolePrivate::command_synw;
+    p->commands_dscr["synw"]    = " synw - Query the state or clear the content of syndebug.txt\n"
+                                  " synw off - Disable the writing of syndebug.txt\n"
+                                  " synw on - Enable the writing of syndebug.txt\n"
+                                  " synw clear - Clear the content of syndebug.txt";
+
+    p->commands_exec["write"]   = &HDebugConsolePrivate::command_write;
+    p->commands_dscr["write"]   = " write <text> - Write \"text\" to the console";
+
+    p->commands_exec["save"]    = &HDebugConsolePrivate::command_save;
+    p->commands_dscr["save"]    = " save - Save the content of debug window to debug.txt";
+
+    p->commands_exec["run"]     = &HDebugConsolePrivate::command_run;
+    p->commands_dscr["run"]     = " run <custom> - Run the \"custom\" program command";
+
+#ifndef DCONSOLE_NO_SQL
+    p->commands_exec["alldb"]   = &HDebugConsolePrivate::command_alldb;
+    p->commands_dscr["alldb"]   = " alldb - Show all available database connections";
+
+    p->commands_exec["dbinfo"]  = &HDebugConsolePrivate::command_dbinfo;
+    p->commands_dscr["dbinfo"]  = " dbinfo - Show the current connected database information";
+
+    p->commands_exec["setdb"]   = &HDebugConsolePrivate::command_setdb;
+    p->commands_dscr["setdb"]   = " setdb - Sets the current database to default (not the program but console)\n"
+                                  " setdb <dbname> - Sets the current database to \"dbname\"";
+
+    p->commands_exec["show"]   = &HDebugConsolePrivate::command_show;
+    p->commands_dscr["show"]   = " show - Show all table in the current database\n"
+                                 " show <tablename> - Show the fields of table named \"tablename\"";
+
+#endif // DCONSOLE_NO_SQL
 
     resize(660,420);
     #ifdef FILE_DEBUG
@@ -175,6 +285,8 @@ HDebugConsole::HDebugConsole(QWidget *parent)
 
 HDebugConsole::~HDebugConsole(void)
 {
+    delete p;
+    p = NULL;
     myself = NULL;
 }
 
@@ -186,7 +298,7 @@ void HDebugConsole::popup(QString title,QString str)
 //#define FILE_DEBUG
 void HDebugConsole::add_text(QString s,int type)
 {
-    if(pushSyncwrite->isChecked())
+    if(p->pushSyncwrite->isChecked())
     {
         FILE *dbgf;
 
@@ -197,13 +309,13 @@ void HDebugConsole::add_text(QString s,int type)
     }
 
 #ifndef DCONSOLE_NO_SQL
-    if(pushSql->isChecked() && type == DCONSOLE_TYPE_SQL)
-        cf->addText(s,DCONSOLE_TYPE_SQL);
+    if(p->pushSql->isChecked() && type == DCONSOLE_TYPE_SQL)
+        p->cf->addText(s,DCONSOLE_TYPE_SQL);
 
 #endif // DCONSOLE_NO_SQL
 
-    if(pushText->isChecked() && type == DCONSOLE_TYPE_TEXT)
-        cf->addText(s,DCONSOLE_TYPE_TEXT);
+    if(p->pushText->isChecked() && type == DCONSOLE_TYPE_TEXT)
+        p->cf->addText(s,DCONSOLE_TYPE_TEXT);
 
     QApplication::processEvents();
 }
@@ -230,263 +342,41 @@ void HDebugConsole::debug_txt(QString s)
 
 int HDebugConsole::execCommand(QString query)
 {
-#define OUT(a) cf->addText(a,DCONSOLE_TYPE_MESSAGE)
+    query = query.simplified();
     if(query == "")
     {
-        OUT(".");
-        return 0;
-    }
-    if(query == "help")
-    {
-        OUT("");
-        OUT("exit - Exit main program (The debugged program too)");
-        OUT("close - Close the debug window (only)");
-        OUT("clear - Clear the debug window");
-#ifndef DCONSOLE_NO_SQL
-        OUT("alldb - Show all available database connections");
-        OUT("dbinfo - Show the current connected database information");
-        OUT("setdb - Set the current database to the default (not the program but console)");
-        OUT("setdb name - Set the current database to \"name\" (not the program but console)");
-#endif // DCONSOLE_NO_SQL
-        OUT("filters - Show available debug filters");
-        OUT("state <filter> - Show the state of the specified filter");
-        OUT("enable <filter> - Enable the specified kind of output");
-        OUT("disable <filter> - Disable the specified kind of output");
-        OUT("synw - Query the state of syndebug");
-        OUT("synw [off|on] - Set the state of syndebug");
-        OUT("synw clear - Clear the file syndebug.txt");
-        OUT("write <text> - Write the text to the console");
-        OUT("save - Save the content of debug window to debug.txt");
-        OUT("run <command> - Run (custom) a program command");
-#ifndef DCONSOLE_NO_SQL
-        OUT("\"SQL\" - Execute the SQL command");
-#endif // DCONSOLE_NO_SQL
-        if(user_commands.size() > 0)
-        {
-            OUT("  -- CUSTOM/PROGRAM COMMANDS --  ");
-            QMultiMap<QString,HDConsoleCommandHolder *>::const_iterator i = user_commands.constBegin();
-            while(i != user_commands.constEnd())
-            {
-                OUT(QString(" run %1%2%3")
-                            .arg(i.key())
-                            .arg( user_commands_descr.value(i.key()) == "" ? "" : " - ")
-                            .arg(user_commands_descr.value(i.key())));
-                ++i;
-            }
-        }
-        OUT("\n");
-        return 0;
-    }
-    if(query == "exit")
-        QApplication::exit(0);
-    if(query == "close")
-        close();
-    if(query == "clear")
-    {
-        cf->clearText();
-        return 0;
-    }
-    if(query == "save")
-    {
-        FILE *dbgf;
-
-        dbgf = fopen("debug.txt","w");
-        fseek(dbgf,0,SEEK_SET);
-        cf->selectAll();
-        fprintf(dbgf,"\n%s\n",cf->selectedText().toLocal8Bit().constData());
-        cf->clearSelection();
-        fclose(dbgf);
-        OUT("Saving console text to debug.txt is done.\n");
+        p->cf->addText(".",DCONSOLE_TYPE_MESSAGE);
         return 0;
     }
 
-#ifndef DCONSOLE_NO_SQL
-    if(query.startsWith("dbinfo"))
+    QStringList qparts = query.split(" ",QString::SkipEmptyParts);
+    if(qparts.count() > 0)
     {
-        QSqlDatabase db;
-        if(databasename.isEmpty())
-            db = QSqlDatabase::database();
-        else
-            db = QSqlDatabase::database(databasename);
-        if(db.isOpen())
+        if(p->commands_exec.find(qparts[0]) != p->commands_exec.end())
         {
-            OUT(QString(".\nCurrent OPENED database connection is:\nConnection name=%1\nDriver=%2\nName=%3\nHost=%4\nUser=%5\n")
-                .arg(db.connectionName())
-                .arg(db.driverName())
-                .arg(db.databaseName())
-                .arg(db.hostName())
-                .arg(db.userName()));
+            void (HDebugConsolePrivate::*cmdFunc)(QString);
+
+            p->cf->addText(p->cf->promptString() + query , DCONSOLE_TYPE_CMD);
+            cmdFunc = p->commands_exec[qparts[0]];
+            (*p.*cmdFunc)(query.mid(qparts[0].length(),-1).simplified());
             return 0;
         }
-        else
-        {
-            OUT(QString(".\nThere is no opened database!\n"));
-            return 0;
-        }
-
-        return 0;
     }
-    if(query == "alldb")
-    {
-        QStringList l = QSqlDatabase::connectionNames();
-        QStringList::iterator i=l.begin();
-        OUT(QString(".\nAvailable databases (%1) :").arg(l.count()));
-        while(i != l.end())
-        {
-            OUT("  " + *i);
-            ++i;
-        }
-        return 0;
-    }
-    if(query.startsWith("setdb"))
-    {
-        QString c;
-
-        c = query.mid(6);
-        if(c.isEmpty())
-            c=""; //default will be used
-        OUT(QString("Setting database to default (in console) \"%1\"...").arg(c));
-        databasename = c;
-        OUT("");
-        return 0;
-    }
-#endif // DCONSOLE_NO_SQL
-
-    if(query == "synw")
-    {
-        OUT(QString(".\nSyncronized backup file writing: %1.\n").arg(pushSyncwrite->isChecked() ? "on" : "off"));
-        return 0;
-    }
-    if(query == "synw on")
-    {
-        pushSyncwrite->setChecked(true);
-        OUT(QString(".\nEnabled syncronized backup file writing (syndebug.txt).\n"));
-        return 0;
-    }
-    if(query == "synw off")
-    {
-        pushSyncwrite->setChecked(false);
-        OUT(QString(".\nDisabled syncronized backup file writing.\n"));
-        return 0;
-    }
-    if(query == "synw clear")
-    {
-        FILE *dbgf;
-        dbgf = fopen("syndebug.txt","w");
-        fseek(dbgf,0,SEEK_SET);
-        fprintf(dbgf,"\n");
-        fclose(dbgf);
-        OUT(QString(".\nThe content of syndebug.txt has been cleared.\n"));
-        return 0;
-    }
-    if(query.startsWith("write"))
-    {
-        sdebug(query.mid(6));
-        return 0;
-    }
-    if(query.startsWith("run"))
-    {
-
-        QString c;
-        QMultiMap<QString,HDConsoleCommandHolder *>::iterator i;
-
-        c = query.mid(4);
-        OUT(QString("Starting command \"%1\"...").arg(c));
-        i = user_commands.find(c);
-        if(i == user_commands.end())
-        {
-            OUT(" Error: Command not found!");
-        }
-        else
-        {
-            HDConsoleCommandHolder *dcch = *i;
-            sdebug(dcch->donsole_command_interpreter(c));
-            OUT("finished.\n");
-        }
-        OUT("");
-        return 0;
-    }
-
-    if(query.startsWith("filters"))
-    {
-#ifndef DCONSOLE_NO_SQL
-        OUT(".\nAvailable filters: sql text\n");
-#else
-        OUT(".\nAvailable filters: text\n");
-#endif // DCONSOLE_NO_SQL
-        return 0;
-    }
-    if(query.startsWith("enable"))
-    {
-#ifndef DCONSOLE_NO_SQL
-        if(query == "enable sql")
-        {
-            pushSql->setChecked(true);
-            OUT(".\nSQL output is enabled.");
-            return 0;
-        }
-#endif // DCONSOLE_NO_SQL
-        if(query == "enable text")
-        {
-            pushText->setChecked(true);
-            OUT(".\nTEXT output is enabled.");
-            return 0;
-        }
-        OUT(".\nUnknown or missing filter name. Exec \"filters\" command!\n");
-        return 0;
-    }
-    if(query.startsWith("disable"))
-    {
-#ifndef DCONSOLE_NO_SQL
-        if(query == "disable sql")
-        {
-            pushSql->setChecked(false);
-            OUT(".\nSQL output is disabled.");
-            return 0;
-        }
-#endif // DCONSOLE_NO_SQL
-        if(query == "disable text")
-        {
-            pushText->setChecked(false);
-            OUT(".\nTEXT output is disabled.");
-            return 0;
-        }
-        OUT(".\nUnknown or missing filter name. Exec \"filters\" command!\n");
-        return 0;
-    }
-    if(query.startsWith("state"))
-    {
-#ifndef DCONSOLE_NO_SQL
-        if(query == "state sql")
-        {
-            OUT(QString(".\nSQL output is %1.").arg(pushSql->isChecked() ? "enabled" : "disabled"));
-            return 0;
-        }
-#endif // DCONSOLE_NO_SQL
-        if(query == "state text")
-        {
-            OUT(QString(".\nTEXT output is %1.").arg(pushText->isChecked() ? "enabled" : "disabled"));
-            return 0;
-        }
-        OUT(".\nUnknown or missing filter name. Exec \"filters\" command!\n");
-        return 0;
-    }
-
-    //end
 
 #ifndef DCONSOLE_NO_SQL
     int i,cn;
     QVariant v;
 
     cn=0;
-    OUT("\nExec Console sumbitted query...\n");
-    OUT("\""+query+"\"\n");
+    p->cf->addText(p->cf->promptString() + query , DCONSOLE_TYPE_CMD);
+    p->cf->addText("Exec Console sumbitted query...",DCONSOLE_TYPE_MESSAGE);
+    p->cf->addText("\""+query+"\"",DCONSOLE_TYPE_SQL);
 
     QSqlDatabase db;
-    if(databasename.isEmpty())
+    if(p->databasename.isEmpty())
         db = QSqlDatabase::database();
     else
-        db = QSqlDatabase::database(databasename);
+        db = QSqlDatabase::database(p->databasename);
 
     db.transaction();
     QSqlQuery q(db);
@@ -495,7 +385,7 @@ int HDebugConsole::execCommand(QString query)
 
     if(q.lastError().type() == QSqlError::NoError)
     {
-        cf->addText("Succesfull executed. Dumping data:\n",DCONSOLE_TYPE_RESULT);
+        p->cf->addText("Succesfull executed. Dumping data:",DCONSOLE_TYPE_MESSAGE);
 
         while(q.next())
         {
@@ -515,21 +405,373 @@ int HDebugConsole::execCommand(QString query)
                 }
             }
         }
-        cf->addText(result,DCONSOLE_TYPE_RESULT);
-        OUT(QString("\n\n (%1 rows affected/%2 size)").arg(q.numRowsAffected()).arg(q.size()));
-        OUT("\n End query: \""+query+"\"");
+        p->cf->addText(result,DCONSOLE_TYPE_RESULT);
+        p->cf->addText(QString("(%1 rows affected/%2 size)")
+                        .arg(q.numRowsAffected())
+                        .arg(q.size())
+                       ,DCONSOLE_TYPE_MESSAGE);
+        p->cf->addText("End query: \""+query+"\"",DCONSOLE_TYPE_MESSAGE);
         db.commit();
     }
     else
     {
-        OUT(QString("\nError: %1").arg(q.lastError().text()));
+        p->cf->addText(QString("\nError: %1").arg(q.lastError().text()),DCONSOLE_TYPE_MESSAGE);
         db.rollback();
     }
     #else
-    OUT(QString("Unknown command: %1").arg(query));
+    p->cf->addText(QString("Unknown command: %1").arg(query),DCONSOLE_TYPE_MESSAGE);
     #endif // DCONSOLE_NO_SQL
     return 0;
 }
+
+int HDebugConsole::tabPressed(QString query)
+{
+    if(query.isEmpty())
+        return 0;
+
+    int mnum=0;
+    QString cmd;
+    QStringList cmds = p->commands_dscr.keys();
+    QList<QString>::iterator i;
+    for(i = cmds.begin();i != cmds.end();++i)
+        if(i->startsWith(query))
+        {
+            ++mnum;
+            cmd = *i;
+        }
+
+    if(mnum == 1)
+    {
+        p->cf->setCommandLineText(cmd);
+        return 0;
+    }
+
+    if(mnum > 1)
+    {
+        p->cf->addText("",DCONSOLE_TYPE_MESSAGE);
+        for(i = cmds.begin();i != cmds.end();++i)
+            if(i->startsWith(query))
+                p->cf->addText((QString("%1").arg(p->commands_dscr[*i])),DCONSOLE_TYPE_MESSAGE);
+    }
+    return 0;
+}
+
+/* **************************************************************************
+ * HDebugConsole command handlers
+ * ************************************************************************** */
+#define MOUT(a) cf->addText(a,DCONSOLE_TYPE_MESSAGE)
+
+void HDebugConsolePrivate::command_help(QString fcl)
+{
+    if(!fcl.isEmpty())
+    {
+        MOUT("This function doesn\'t accept parameters");
+        return;
+    }
+    MOUT("HDebugConsole, commands:");
+    QStringList keys = commands_dscr.keys();
+    keys.sort();
+    QList<QString>::iterator i;
+    for(i=keys.begin();i != keys.end();++i)
+        MOUT(QString("%1").arg(commands_dscr.value(*i)));
+
+#ifndef DCONSOLE_NO_SQL
+    MOUT(" \"SQL\" - Execute the SQL command");
+#endif // DCONSOLE_NO_SQL
+    if(user_commands.size() > 0)
+    {
+        MOUT("  -- CUSTOM/PROGRAM COMMANDS --  ");
+        QMultiMap<QString,HDConsoleCommandHolder *>::const_iterator i = user_commands.constBegin();
+        while(i != user_commands.constEnd())
+        {
+            MOUT(QString(" run %1%2%3")
+                            .arg(i.key())
+                            .arg( user_commands_descr.value(i.key()) == "" ? "" : " - ")
+                            .arg(user_commands_descr.value(i.key())));
+            ++i;
+        }
+    }
+    MOUT("");
+}
+
+void HDebugConsolePrivate::command_exit(QString fcl)
+{
+    if(!fcl.isEmpty())
+    {
+        MOUT("This function doesn\'t accept parameters");
+        return;
+    }
+    QApplication::exit(0);
+}
+
+void HDebugConsolePrivate::command_close(QString fcl)
+{
+    if(!fcl.isEmpty())
+    {
+        MOUT("This function doesn\'t accept parameters");
+        return;
+    }
+    pp->close();
+}
+
+void HDebugConsolePrivate::command_clear(QString fcl)
+{
+    if(!fcl.isEmpty())
+    {
+        MOUT("This function doesn\'t accept parameters");
+        return;
+    }
+    cf->clearText();
+}
+
+void HDebugConsolePrivate::command_filters(QString fcl)
+{
+    if(!fcl.isEmpty())
+    {
+        MOUT("This function doesn\'t accept parameters");
+        return;
+    }
+#ifndef DCONSOLE_NO_SQL
+    MOUT(".\nAvailable filters: sql text\n");
+#else
+    MOUT(".\nAvailable filters: text\n");
+#endif // DCONSOLE_NO_SQL
+}
+
+void HDebugConsolePrivate::command_state(QString fcl)
+{
+#ifndef DCONSOLE_NO_SQL
+    if(fcl == "sql")
+    {
+        MOUT(QString("SQL output is %1").arg(pushSql->isChecked() ? "enabled" : "disabled"));
+        return;
+    }
+#endif // DCONSOLE_NO_SQL
+    if(fcl == "text")
+    {
+        MOUT(QString("TEXT output is %1.").arg(pushText->isChecked() ? "enabled" : "disabled"));
+        return;
+    }
+    MOUT("Unknown or missing filter name. Exec \"filters\" command to see available filters!");
+}
+
+void HDebugConsolePrivate::command_enable(QString fcl)
+{
+#ifndef DCONSOLE_NO_SQL
+    if(fcl == "sql")
+    {
+        pushSql->setChecked(true);
+        MOUT("SQL output is enabled");
+        return;
+    }
+#endif // DCONSOLE_NO_SQL
+
+    if(fcl == "text")
+    {
+        pushText->setChecked(true);
+        MOUT("TEXT output is enabled");
+        return;
+    }
+    MOUT("Unknown or missing filter name. Exec \"filters\" command to see available filters!");
+}
+
+void HDebugConsolePrivate::command_disable(QString fcl)
+{
+#ifndef DCONSOLE_NO_SQL
+    if(fcl == "sql")
+    {
+        pushSql->setChecked(false);
+        MOUT("SQL output is disabled");
+        return;
+    }
+#endif // DCONSOLE_NO_SQL
+    if(fcl == "text")
+    {
+        pushText->setChecked(false);
+        MOUT("TEXT output is disabled");
+        return;
+    }
+    MOUT("Unknown or missing filter name. Exec \"filters\" command to see available filters!");
+}
+
+void HDebugConsolePrivate::command_synw(QString fcl)
+{
+    Q_UNUSED(fcl);
+
+    if(fcl.isEmpty())
+    {
+        MOUT(QString("Syncronized backup file writing: %1")
+                .arg(pushSyncwrite->isChecked() ? "on" : "off"));
+        return;
+    }
+    if(fcl == "on")
+    {
+        pushSyncwrite->setChecked(true);
+        MOUT(QString("Enabled syncronized backup file writing (syndebug.txt)"));
+        return;
+    }
+    if(fcl == "off")
+    {
+        pushSyncwrite->setChecked(false);
+        MOUT(QString("Disabled syncronized backup file writing"));
+        return;
+    }
+    if(fcl == "clear")
+    {
+        FILE *dbgf;
+        dbgf = fopen("syndebug.txt","w");
+        fseek(dbgf,0,SEEK_SET);
+        fprintf(dbgf,"\n");
+        fclose(dbgf);
+        MOUT(QString("The content of syndebug.txt has been cleared"));
+        return;
+    }
+    MOUT("Wrong parameter! Accepted parameters: <empty>,on,off,clear");
+}
+
+void HDebugConsolePrivate::command_write(QString fcl)
+{
+    sdebug(fcl);
+}
+
+void HDebugConsolePrivate::command_save(QString fcl)
+{
+    if(!fcl.isEmpty())
+    {
+        MOUT("This function doesn\'t accept parameters");
+        return;
+    }
+    FILE *dbgf;
+    dbgf = fopen("debug.txt","w");
+    fseek(dbgf,0,SEEK_SET);
+    cf->selectAll();
+    fprintf(dbgf,"\n%s\n",cf->selectedText().toLocal8Bit().constData());
+    cf->clearSelection();
+    fclose(dbgf);
+    MOUT("Saving console text to debug.txt is done.\n");
+}
+
+void HDebugConsolePrivate::command_run(QString fcl)
+{
+    QMultiMap<QString,HDConsoleCommandHolder *>::iterator i;
+
+    i = user_commands.find(fcl);
+    if(i == user_commands.end())
+    {
+        MOUT(" Error: Command not found!");
+    }
+    else
+    {
+        MOUT(QString("Starting command \"%1\"...").arg(fcl));
+        HDConsoleCommandHolder *dcch = *i;
+        sdebug(dcch->donsole_command_interpreter(fcl));
+        MOUT("finished.");
+    }
+    MOUT("");
+}
+
+#ifndef DCONSOLE_NO_SQL
+void HDebugConsolePrivate::command_alldb(QString fcl)
+{
+    if(!fcl.isEmpty())
+    {
+        MOUT("This function doesn\'t accept parameters");
+        return;
+    }
+    QStringList l = QSqlDatabase::connectionNames();
+    QStringList::iterator i=l.begin();
+    MOUT(QString("Available databases (%1) :").arg(l.count()));
+    while(i != l.end())
+    {
+        MOUT("  " + *i);
+        ++i;
+    }
+}
+
+void HDebugConsolePrivate::command_dbinfo(QString fcl)
+{
+    if(!fcl.isEmpty())
+    {
+        MOUT("This function doesn\'t accept parameters");
+        return;
+    }
+    QSqlDatabase db;
+    if(databasename.isEmpty())
+        db = QSqlDatabase::database();
+    else
+        db = QSqlDatabase::database(databasename);
+    if(db.isOpen())
+    {
+        MOUT(QString("Current OPENED database connection is:\nConnection name=%1\nDriver=%2\nName=%3\nHost=%4\nUser=%5\n")
+            .arg(db.connectionName())
+            .arg(db.driverName())
+            .arg(db.databaseName())
+            .arg(db.hostName())
+            .arg(db.userName()));
+    }
+    else
+    {
+        MOUT(QString("There is no opened database!"));
+    }
+}
+
+void HDebugConsolePrivate::command_setdb(QString fcl)
+{
+    QStringList l = QSqlDatabase::connectionNames();
+    if(!fcl.isEmpty())
+    {
+        if(l.indexOf(fcl) == -1)
+        {
+            MOUT("Unknown database name. Exec \"alldb\" command to see available databases!");
+            return;
+        }
+    }
+    MOUT(QString("Setting database to default (in console) \"%1\"...").arg(fcl));
+    databasename = fcl;
+}
+
+void HDebugConsolePrivate::command_show(QString fcl)
+{
+    QSqlDatabase db;
+    if(databasename.isEmpty())
+        db = QSqlDatabase::database();
+    else
+        db = QSqlDatabase::database(databasename);
+
+    if(!db.isOpen())
+    {
+        MOUT("There is no opened database!");
+        return;
+    }
+
+    if(fcl.isEmpty())
+    {
+        MOUT(QString("Tables in the \"%1\"database:").arg(databasename));
+        cf->addText(db.tables().join("\n"),DCONSOLE_TYPE_RESULT);
+        MOUT("");
+    }
+    else
+    {
+        QSqlRecord r = db.record(fcl);
+        if(r.isEmpty())
+            MOUT(QString("There is no %1 table in %2 database").arg(fcl).arg(databasename));
+        int i = 0;
+        MOUT(QString("Fields of table:%1").arg(fcl));
+        for(i=0;i<r.count();++i)
+        {
+            cf->addText(QString("%1\t\t%2\t\t(default:%3)")
+                        .arg(r.field(i).name())
+                        .arg(QVariant::typeToName(r.field(i).type()))
+                        .arg(r.field(i).defaultValue().toString())
+                       ,DCONSOLE_TYPE_RESULT);
+        }
+        MOUT("");
+    }
+}
+
+#endif // DCONSOLE_NO_SQL
+
+#undef MOUT
 
 int HDebugConsole::checkIfIClose(void)
 {
@@ -547,9 +789,13 @@ int HDebugConsole::checkIfIClose(void)
 }
 
 /* *****************************************************************************
+ * *****************************************************************************
  * HConsolePanel and related classes                                           *
- * *****************************************************************************/
-class HConsoleLine //Holds a console line in memory. Only used by HConsoleLine(Private)
+ * *****************************************************************************
+ * ***************************************************************************** */
+
+//Holds a console line in memory. Only used by HConsoleLine(Private)
+class HConsoleLine
 {
     friend class HConsolePanel;
     friend class HConsolePanelPrivate;
@@ -569,7 +815,8 @@ private:
     HConsoleLine *prev;
 };
 
-class HConsolePanelPrivate //pimpl class of HConsolePanel.
+//pimpl class of HConsolePanel.
+class HConsolePanelPrivate
 {
     friend class HConsolePanel;
 
@@ -2345,16 +2592,6 @@ void HConsolePanel::keyPressEvent(QKeyEvent *e)
         return;
     }
 
-    if(e->key() == Qt::Key_Tab)
-    {
-        p->viewtop = NULL;
-        p->calcScrollBar();
-        QString send = commandLineText();
-        update();
-        emit tabPressed(send);
-        return;
-    }
-
     if(e->key() == Qt::Key_B &&  e->modifiers() == Qt::ControlModifier)
     {
         biggerFontSize();
@@ -2364,12 +2601,6 @@ void HConsolePanel::keyPressEvent(QKeyEvent *e)
     if(e->key() == Qt::Key_S && e->modifiers() == Qt::ControlModifier)
     {
         smallerFontSize();
-        return;
-    }
-
-    if(e->key() == Qt::Key_0 && e->modifiers() == Qt::ControlModifier)
-    {
-        normalFontSize();
         return;
     }
 
@@ -2405,6 +2636,42 @@ void HConsolePanel::keyPressEvent(QKeyEvent *e)
         p->calcScrollBar();
         addTextToCursor(e->text());
     }
+}
+
+bool HConsolePanel::event(QEvent *e)
+{
+    if(e->type() == QEvent::KeyPress)
+    {
+        QKeyEvent *ke = static_cast<QKeyEvent *>(e);
+        if(ke->key() == Qt::Key_Tab)
+        {
+            p->viewtop = NULL;
+            p->calcScrollBar();
+            QString send = commandLineText();
+            update();
+            emit tabPressed(send);
+            return true;
+        }
+        if((ke->key() == Qt::Key_Plus && ke->modifiers() == Qt::ControlModifier) ||
+           (ke->key() == Qt::Key_Plus && ke->modifiers() == (Qt::ControlModifier | Qt::KeypadModifier)))
+        {
+            biggerFontSize();
+            return true;
+        }
+        if((ke->key() == Qt::Key_Minus && ke->modifiers() == Qt::ControlModifier) ||
+           (ke->key() == Qt::Key_Minus && ke->modifiers() == (Qt::ControlModifier | Qt::KeypadModifier)))
+        {
+            smallerFontSize();
+            return true;
+        }
+        if((ke->key() == Qt::Key_0 && ke->modifiers() == Qt::ControlModifier) ||
+           (ke->key() == Qt::Key_0 && ke->modifiers() == (Qt::ControlModifier | Qt::KeypadModifier)))
+        {
+            normalFontSize();
+            return true;
+        }
+    }
+    return QWidget::event(e);
 }
 
 void HConsolePanel::setPromptString(QString prm)

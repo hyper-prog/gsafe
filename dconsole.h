@@ -72,10 +72,12 @@ void clear_dconsole_commands();
 #define DCONSOLE_TYPE_MESSAGE   1
 #define DCONSOLE_TYPE_SQL       2
 #define DCONSOLE_TYPE_RESULT    3
+#define DCONSOLE_TYPE_CMD       4
 
 class QFontMetrics;
 class QCloseEvent;
 class HConsolePanel;
+class HDebugConsolePrivate;
 /** HDebugConsole is a debug/info console with a limited sql console and internal command handler functionality.
  *  \image html pictures_doc/hdebugconsole.png
  *  - This DebugConsole is an indepedent window from the main window. You can popup or close this window everywhere in the program code.
@@ -103,47 +105,43 @@ class HConsolePanel;
  * so you would like to drop the QtSql dependency define the DCONSOLE_NO_SQL macro.
  */
 class HDebugConsole : public QWidget
- {
-
+{
     Q_OBJECT
-    public:
-        /** The one pointer of the only one HDebugConsole */
-        static HDebugConsole *myself;
 
-    public:
-        QString databasename;
-        /** Creates a HDebugConsole. Don't create directly. Use the dconsole() global function instead */
-        HDebugConsole(QWidget *parent);
-        /** Destructor */
-        ~HDebugConsole(void);
-        /** Write a text to the console. Don't use it directly. Use the sdebug() and sqldebug() instead */
-        void add_text(QString s,int type);
+public:
+    /** The one pointer of the only one HDebugConsole */
+    static HDebugConsole *myself;
+
+public:
+    /** Creates a HDebugConsole. Don't create directly. Use the dconsole() global function instead */
+    HDebugConsole(QWidget *parent);
+    /** Destructor */
+    ~HDebugConsole(void);
+
+    /** Write a text to the console. Don't use it directly. Use the sdebug() and sqldebug() instead */
+    void add_text(QString s,int type);
 #ifndef DCONSOLE_NO_SQL
-        /** Write an sql text to the console */
-        static void debug_sql(QString s);
+    /** Write an sql text to the console */
+    static void debug_sql(QString s);
 #endif // DCONSOLE_NO_SQL
-        /** Write a normal text to the console */
-        static void debug_txt(QString s);
-        /** Popups a warning text */
-        static void popup(QString title,QString str);
+    /** Write a normal text to the console */
+    static void debug_txt(QString s);
+    /** Popups a warning text */
+    static void popup(QString title,QString str);
 
-    protected:
-        void closeEvent(QCloseEvent *e);
+protected:
+    void closeEvent(QCloseEvent *e);
 
-    public slots:
-        int execCommand(QString query);
-        /** You can call this slot anytime you want. If this slot can't find any toplevel widget
-         *  in this program which is different from this console and visible, it closes the debugwindow. */
-        int checkIfIClose();
-    private:
-#ifndef DCONSOLE_NO_SQL
-        QPushButton *pushSql;
-#endif // DCONSOLE_NO_SQL
-        QPushButton *pushText,*pushSyncwrite,*pushClear;
-        HConsolePanel *cf;
+public slots:
+    int execCommand(QString query);
+    int tabPressed(QString query);
+    /** You can call this slot anytime you want. If this slot can't find any toplevel widget
+     *  in this program which is different from this console and visible, it closes the debugwindow. */
+    int checkIfIClose();
+private:
 
- };
-
+    class HDebugConsolePrivate *p;
+};
 
 class HConsoleLine;
 class HConsolePanelPrivate;
@@ -177,8 +175,10 @@ class HConsolePanelPrivate;
  *  - SHIFT+RIGHT	Moves Cursor to right/front while expand the selection
  *  - ENTER         Send the command
  *  - SHIFT+ENTER	Starts a new line in command line (without sending the command)
+ *  - CTRL+<PLUS>
  *  - CTRL+B        Sets bigger font size
  *  - CTRL+0        Sets normal font size
+ *  - CTRL+<MINUS>
  *  - CTRL+S        Sets smaller font size
 */
 class HConsolePanel : public QFrame
@@ -300,6 +300,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *e);
     void mouseDoubleClickEvent(QMouseEvent *e);
     void wheelEvent(QWheelEvent *e);
+    bool event(QEvent *e);
 
 signals:
     /** Emitted when the user type a text to the command line and hit Enter/Return on it.
@@ -311,7 +312,6 @@ signals:
 
 private:
     class HConsolePanelPrivate *p;
-
 };
 
 #endif //GSAFE_DISABLE_DEBUG
