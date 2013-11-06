@@ -746,7 +746,8 @@ void HDebugConsolePrivate::command_show(QString fcl)
 
     if(fcl.isEmpty())
     {
-        MOUT(QString("Tables in the \"%1\"database:").arg(databasename));
+        MOUT(QString("Tables in the %1 database:")
+             .arg(databasename.isEmpty() ? QString("default") : QString("\"%1\"").arg(databasename)));
         cf->addText(db.tables().join("\n"),DCONSOLE_TYPE_RESULT);
         MOUT("");
     }
@@ -754,9 +755,11 @@ void HDebugConsolePrivate::command_show(QString fcl)
     {
         QSqlRecord r = db.record(fcl);
         if(r.isEmpty())
-            MOUT(QString("There is no %1 table in %2 database").arg(fcl).arg(databasename));
+            MOUT(QString("There is no %1 table in %2 database")
+                 .arg(fcl)
+                 .arg(databasename.isEmpty() ? QString("default") : QString("\"%1\"").arg(databasename)));
         int i = 0;
-        MOUT(QString("Fields of table:%1").arg(fcl));
+        MOUT(QString("Fields of table: %1").arg(fcl));
         for(i=0;i<r.count();++i)
         {
             cf->addText(QString("%1\t\t%2\t\t(default:%3)")
