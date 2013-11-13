@@ -177,6 +177,7 @@ HDebugConsole::HDebugConsole(QWidget *parent)
     p->databasename = "";
     myself = this;
 
+    setAttribute(Qt::WA_DeleteOnClose);
     QVBoxLayout *qvbl = new QVBoxLayout(this);
     QHBoxLayout *qhbl = new QHBoxLayout(0);
     p->cf = new HConsolePanel(this);
@@ -810,9 +811,9 @@ private:
 
     QString line;
     char type;
+    bool autole;
     short int width;
     int serial;
-    bool autole;
 
     HConsoleLine *next;
     HConsoleLine *prev;
@@ -987,7 +988,24 @@ HConsolePanel::HConsolePanel(QWidget *parent) : QFrame(parent)
 
 HConsolePanel::~HConsolePanel(void)
 {
-    delete p;
+    HConsoleLine *d,*r = p->first;
+    while(r != NULL)
+    {
+        d = r;
+        r = r->next;
+        delete d;
+    }
+
+    r = p->cfirst;
+    while(r != NULL)
+    {
+        d = r;
+        r = r->next;
+        delete d;
+    }
+
+    delete p->fm; //delete QFontMetrics
+    delete p; //delete pimpl object
 }
 
 int HConsolePanelPrivate::calcStringWidth(QString s)
