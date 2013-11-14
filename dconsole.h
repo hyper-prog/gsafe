@@ -19,6 +19,10 @@
 #include <QtCore>
 #include <QtGui>
 
+#ifndef COMPILED_WITH_QT4X
+#include <QtWidgets>
+#endif //COMPILED_WITH_QT4X
+
 /** \defgroup dconsole dconsole */
 /*  @{  */
 
@@ -73,6 +77,13 @@ void clear_dconsole_commands();
 #define DCONSOLE_TYPE_SQL       2
 #define DCONSOLE_TYPE_RESULT    3
 #define DCONSOLE_TYPE_CMD       4
+#define DCONSOLE_TYPE_QTDEBUG   5
+
+#ifndef COMPILED_WITH_QT4X
+void dconsoleMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
+#else
+void dconsoleMessageHandler(QtMsgType type, const char *msg);
+#endif
 
 class QFontMetrics;
 class QCloseEvent;

@@ -218,6 +218,7 @@ HDebugConsole::HDebugConsole(QWidget *parent)
     p->cf->setTextTypeColor(DCONSOLE_TYPE_SQL     ,QColor(255,0,0));
     p->cf->setTextTypeColor(DCONSOLE_TYPE_RESULT  ,QColor(100,100,255));
     p->cf->setTextTypeColor(DCONSOLE_TYPE_CMD     ,QColor(0,230,0));
+    p->cf->setTextTypeColor(DCONSOLE_TYPE_QTDEBUG ,QColor(255,127,30));
 
     p->cf->addText("START",DCONSOLE_TYPE_MESSAGE);
 
@@ -282,10 +283,22 @@ HDebugConsole::HDebugConsole(QWidget *parent)
     #ifdef FILE_DEBUG
     pushSyncwrite->setChecked(true);
     #endif
+
+#ifndef COMPILED_WITH_QT4X
+    qInstallMessageHandler(dconsoleMessageHandler);
+#else
+    qInstallMsgHandler(dconsoleMessageHandler);
+#endif
 }
 
 HDebugConsole::~HDebugConsole(void)
 {
+#ifndef COMPILED_WITH_QT4X
+    qInstallMessageHandler(0);
+#else
+    qInstallMsgHandler(0);
+#endif
+
     delete p;
     p = NULL;
     myself = NULL;
@@ -317,6 +330,9 @@ void HDebugConsole::add_text(QString s,int type)
 
     if(p->pushText->isChecked() && type == DCONSOLE_TYPE_TEXT)
         p->cf->addText(s,DCONSOLE_TYPE_TEXT);
+
+    if(type == DCONSOLE_TYPE_QTDEBUG)
+        p->cf->addText(s,DCONSOLE_TYPE_QTDEBUG);
 
     QApplication::processEvents();
 }
@@ -456,6 +472,75 @@ int HDebugConsole::tabPressed(QString query)
     }
     return 0;
 }
+
+#ifndef COMPILED_WITH_QT4X
+void dconsoleMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    QString mm;
+    QString contmsg;
+
+    contmsg = QString("(Category:%1, File:%2, Function:%3, Line:%4, Ver:%5)")
+            .arg(context.category)
+            .arg(context.file)
+            .arg(context.function)
+            .arg(context.line)
+            .arg(context.version);
+
+    switch (type)
+    {
+        case QtDebugMsg:
+            mm = QString("Qt-Debug: %1\n%2").arg(msg).arg(contmsg);
+        break;
+        case QtWarningMsg:
+            mm = QString("Qt-Warning: %1\n%2").arg(msg).arg(contmsg);
+        break;
+        case QtCriticalMsg:
+            mm = QString("Qt-Critical: %1\n%2").arg(msg).arg(contmsg);
+        break;
+        case QtFatalMsg:
+            mm = QString("Qt-Fatal: %1\n%2").arg(msg).arg(contmsg);
+        break;
+    }
+
+    if(HDebugConsole::myself == NULL)
+    {
+        fprintf(stderr,"%s",mm.toLocal8Bit().constData());
+        return;
+    }
+
+    HDebugConsole::myself->add_text(mm,DCONSOLE_TYPE_QTDEBUG);
+
+}
+#else
+void dconsoleMessageHandler(QtMsgType type, const char *msg)
+{
+    QString mm;
+    switch (type)
+    {
+        case QtDebugMsg:
+            mm = QString("Qt-Debug: %1").arg(msg);
+        break;
+        case QtWarningMsg:
+            mm = QString("Qt-Warning: %1").arg(msg);
+        break;
+        case QtCriticalMsg:
+            mm = QString("Qt-Critical: %1").arg(msg);
+        break;
+        case QtFatalMsg:
+            mm = QString("Qt-Fatal: %1").arg(msg);
+        break;
+    }
+
+    if(HDebugConsole::myself == NULL)
+    {
+        fprintf(stderr,"%s",mm.toLocal8Bit().constData());
+        return;
+    }
+
+    HDebugConsole::myself->add_text(mm,DCONSOLE_TYPE_QTDEBUG);
+}
+
+#endif //COMPILED_WITH_QT4X
 
 /* **************************************************************************
  * HDebugConsole command handlers
@@ -1192,6 +1277,7 @@ void HConsolePanelPrivate::calcCmdLnTop(void)
 
 void HConsolePanel::paintEvent(QPaintEvent *e)
 {
+    Q_UNUSED(e);
     QPainter *painter = new QPainter(this);
     p->paintRows(painter);
     p->paintBar(painter);
@@ -2047,10 +2133,10 @@ void HConsolePanel::setCommandLineText(QString t,bool disableupdate)
 void HConsolePanelPrivate::addCommandLineTextPart(QString t,bool hardend)
 {
     stringReplaceTabToSpace(t);
-    if(maxLineLength < calcStringWidth( (cfirst == clast ? promptStr : QString()) + t ))
+    if(maxLineLength < calcStringWidth( (cfirst == clast && cfirst->line.isEmpty() ? promptStr : QString()) + t ))
     {
-        int s = calcStringBreakPos( (cfirst == clast ? promptStr : QString()) + t );
-        s -= (cfirst == clast ? promptStr.length() : 0);
+        int s = calcStringBreakPos( (cfirst == clast && cfirst->line.isEmpty() ? promptStr : QString()) + t );
+        s -= (cfirst == clast && cfirst->line.isEmpty() ? promptStr.length() : 0);
         addCommandLineLine(t.left(s),false);
         addCommandLineTextPart(t.mid(s,-1),hardend);
         return;
