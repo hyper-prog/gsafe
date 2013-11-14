@@ -89,19 +89,25 @@ class QFontMetrics;
 class QCloseEvent;
 class HConsolePanel;
 class HDebugConsolePrivate;
-/** HDebugConsole is a debug/info console with a limited sql console and internal command handler functionality.
+/** HDebugConsole is a debug/info console with a limited sql console and internal command line functionality.
  *  \image html pictures_doc/hdebugconsole.png
- *  - This DebugConsole is an indepedent window from the main window. You can popup or close this window everywhere in the program code.
- *      100% independent from other codes.
- *  - You can use static global functions to start/stop this console and put texts. dconsole() dconsole_close() sdebug() sqldebug()
+ *  - This DebugConsole is a console window designed to work separatedly from any other window or dialog. You can popup or close this stuff everywhere in the program code.
+ *    It works 100% independent from other codes.
+ *  - If you want to use this debug console without gSAFE, you only need to add dconsole.h and dconsole.cpp to your project. They doesn't require any other gSAFE parts.\n
+ *  - You can use static global functions to start/stop this console dconsole() and dconsole_close()
+ *  - You can send debug messages from everywhere with sdebug(QString) and sqldebug(QString) or
+ *    alternatively you can send debug messages standard Qt way with qDebug. (see example below)
  *  - You can place sdebug("Debug message") and sqldebug("Sql command") functions everywhere in the program. You don't need
- *      to comment out these after the debugging! If there is no active debug console, this functions exits immediately.
-        So if you don't start the console this command does nothing and don't slow down your program.
+ *      to comment out these after the debugging. If there is no active debug console, this functions exits immediately.
+ *       It means that if you don't start the console this command does nothing and don't slow down your program.
  *  - You can run SQL command from this console.
- *  - You can register some function as a command.
+ *  - The console has a "show" command which can shows the tables of the database,
+ *    and describe the table definitions of a specified SQL table.
+ *  - You can register your own functions as a command with register_dconsole_command() function.
  *  - HDebugConsole can run in synchron write function. (Immediatly write every text to a log file with sync)
  *
  *
+ * An example to start console, and send some debug message:
  \code
     //somewhere in the code:
     ...
@@ -112,8 +118,59 @@ class HDebugConsolePrivate;
     sdebug("N-th phase passed.");
  \endcode
  *
- * If you don't need the sql functionality,
- * so you would like to drop the QtSql dependency define the DCONSOLE_NO_SQL macro.
+ * The HDebugConsole grabs the Qt's qDebug messages so you can see the Qt system messages/warnngs/errors\n
+ * The following messages are goes to the HDebugConsole (when opened):
+ \code
+    //somewhere in the code:
+    ...
+    qDebug() << "Start processing";
+    ...
+    qWarning() << "The string is:" << obj.toString();
+    ...
+ \endcode
+ *
+ * You can easely use this console in your project by adding dconsole.h and dconsole.cpp to your project file.\n
+ * If you don't need the Sql functionality, so you would like to drop the QtSql dependency define the DCONSOLE_NO_SQL macro in your project file:
+ \code
+    SOURCES += dconsole.cpp
+    HEADERS += dconsole.h
+
+    #define this below to stay Sql independent.
+    DEFINES += DCONSOLE_NO_SQL
+
+    #define this below if you use 4.X version of Qt (Not Qt 5.X)
+    DEFINES += COMPILED_WITH_QT4X
+ \endcode
+ * \n\n
+ *
+ * Current available commands (Console "help" command output):
+ \code
+    Console>help
+    HDebugConsole, commands:
+     alldb - Show all available database connections
+     clear - Clears the debug window's text
+     close - Close the debug window (only)
+     dbinfo - Show the current connected database information
+     disable <filter> - Disable the "filter" kind of output
+     enable <filter> - Enable the "filter" kind of output
+     exit - Exit main program (The debugged program too)
+     filters - Show available debug filters
+     help - List the available commands
+     run <custom> - Run the "custom" program command
+     save - Save the content of debug window to debug.txt
+     setdb - Sets the current database to default (not the program but console)
+     setdb <dbname> - Sets the current database to "dbname"
+     show - Show all table in the current database
+     show <tablename> - Show the fields of table named "tablename"
+     state <filter> - Show the state of the "filter" kind of output filter
+     synw - Query the state or clear the content of syndebug.txt
+     synw off - Disable the writing of syndebug.txt
+     synw on - Enable the writing of syndebug.txt
+     synw clear - Clear the content of syndebug.txt
+     write <text> - Write "text" to the console
+     "SQL" - Execute the SQL command
+ \endcode
+ *
  */
 class HDebugConsole : public QWidget
 {
@@ -143,7 +200,7 @@ public:
 protected:
     void closeEvent(QCloseEvent *e);
 
-public slots:
+private slots:
     int execCommand(QString query);
     int tabPressed(QString query);
     /** You can call this slot anytime you want. If this slot can't find any toplevel widget
