@@ -92,8 +92,10 @@ void error(QString s);
  *  @param min specified the minimum displayed decimal digit fragments.
  *  @param max specified the maximum displayed decimal digit fragments.
  *  @param group the displayed digits will be groupped by three digit.
- *      (if group==1 means "2334455.34" displayed "2 334 455.45" )      */
-void my_dtoa(double v,char *buffer,int bufflen,int min,int max,int group);
+ *      (if group==1 means "2334455.34" displayed "2 334 455.45" )
+ *  @return 1 if the buffer is smaller size than needed, 0 otherwise */
+int my_dtoa(double v,char *buffer,int bufflen,int min,int max,int group);
+
 /** Converts a double value to QString. It uses the my_dtoa function inside.
  *  @see my_dtoa */
 QString doubleToQString(double val,int min,int max,int group);

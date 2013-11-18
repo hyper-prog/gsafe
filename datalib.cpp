@@ -106,16 +106,49 @@ QString convNationalToHtmlCodes(QString input)
     return r;
 }
 
-void my_dtoa(double v,char *buffer,int bufflen,int min,int max,int group)
+int my_dtoa(double v,char *buffer,int bufflen,int min,int max,int group)
 {
-    int digitnum,f;
-    int length=0;
+    int digitnum;
+    int i,forlength;
+    int length=0; //the currnt filled length of the buffer
 
-    double ex10=1;
-    double digit_value;
-    short digit;
+    char digit;
     char *str = buffer;
 
+    unsigned long int i_ip,i_fp,idigit_value;
+    double ip,fp;
+
+    bufflen -= 2; //decrease bufflen value, to avoid decreasing in every if
+
+    if(isnan(v))
+    {
+        if(bufflen < 4)
+            return 1;
+        strcpy(str,"NaN");
+        return 0;
+    }
+    if(isinf(v))
+    {
+        if(bufflen < 4)
+            return 1;
+        strcpy(str,"Inf");
+        return 0;
+    }
+
+    //split the number to integer and fractional part.
+    fp = fabs(modf(v,&ip));
+    ip = fabs(ip);
+    if(fp != 0.0)
+    {
+        fp *= pow(10.0,max);
+        fp = floor(fp + 0.5);
+    }
+    i_ip=ip;
+    i_fp=fp;
+
+    //If the original (rounded) number is negative put the sign to front
+    v *= pow(10.0,max);
+    v = floor(v + 0.5);
     if (v < 0)
     {
         *(str++) = '-';
@@ -123,91 +156,118 @@ void my_dtoa(double v,char *buffer,int bufflen,int min,int max,int group)
         v = -v;
     }
 
-    digit_value = 1;
+    //Generate integer part (from i_ip)
+    idigit_value = 1;
     digitnum = 1;
-    while(digit_value*10 <= v)
+    while(idigit_value*10 <= i_ip)
     {
-        digit_value *= 10;
+        idigit_value *= 10;
         ++digitnum;
     }
-    f=0;
-    while(digit_value >= 1)
+    forlength=0;
+    while(idigit_value >= 1)
     {
-
-        if(group && f != 0 && digitnum % 3 == 0)
+        //put grouping space if set
+        if(group && forlength != 0 && digitnum % 3 == 0)
         {
             *(str++) = ' ';
             ++length;
-        }
-        digit = static_cast<short>( v / digit_value );
-        v -= digit * digit_value;
-        *(str++) = '0' + digit;
-        digit_value /= 10;
-        if(length >= bufflen-2)
-        {
-            *(str) = '\0';
-            return;
+            if(length >= bufflen)
+            {
+                *(str) = '\0';
+                return 1;
+            }
         }
 
+        digit = static_cast<char>((i_ip - i_ip%idigit_value) / idigit_value);
+        i_ip = i_ip%idigit_value;
+
+        *(str++) = '0' + digit%10;
         ++length;
         --digitnum;
-        ++f;
+        ++forlength;
+        idigit_value /= 10;
+
+        if(length >= bufflen)
+        {
+            *(str) = '\0';
+            return 1;
+        }
     }
 
-    for(digitnum=0;digitnum<max;++digitnum)
-        ex10 *= 10;
-
+    //Generate fractional part (from i_fp)
     digitnum=0;
-    if( v >= 1/ex10 )
+    if( i_fp > 0 )
     {
-        digit_value = ex10;
-
-        v *= digit_value * 10;
         *(str++) = '.';
         ++length;
-        while (digit_value > 1)
-        {
 
-            digit = static_cast<short>( v / digit_value );
-            v -= digit * digit_value;
+        idigit_value = 1;
+        for(i=0;i<max-1;++i)
+            idigit_value *= 10;
+
+        while (idigit_value >= 1)
+        {
             if(group && digitnum && digitnum%3 == 0)
             {
                 *(str++) = ' ';
                 ++length;
-            }
-            *(str++) = '0' + digit;
-            digit_value /= 10;
-
-            if(digitnum >= min && (int)v < 1)
-                break;
-            if(length >= bufflen-2)
-            {
-                *(str) = '\0';
-                return;
+                if(length >= bufflen)
+                {
+                    *(str) = '\0';
+                    return 1;
+                }
             }
 
+            digit = static_cast<char>((i_fp - i_fp%idigit_value) / idigit_value);
+            i_fp = i_fp%idigit_value;
+
+            *(str++) = '0' + digit%10;
             ++length;
             ++digitnum;
+            idigit_value /= 10;
+
+            if(length >= bufflen)
+            {
+                *(str) = '\0';
+                return 1;
+            }
+
+            if(digitnum >= min && i_fp == 0)
+                break;
         }
     }
-    else //v was an integer
-    {
+    else
+    {   //the original number was an integer, so we fill the minimal fractional part with zeros
         if(min > 0)
         {
             *(str++) = '.';
-            for(digitnum=0;digitnum<min;++digitnum)
+            ++length;
+            for(digitnum=0;digitnum<min;)
             {
+                if(group && digitnum && digitnum%3 == 0)
+                {
+                    *(str++) = ' ';
+                    ++length;
+                    if(length >= bufflen)
+                    {
+                        *(str) = '\0';
+                        return 1;
+                    }
+                }
                 *(str++) = '0';
-                if(length >= bufflen-2)
+                ++length;
+                ++digitnum;
+                if(length >= bufflen)
                 {
                     *(str) = '\0';
-                    return;
+                    return 1;
                 }
             }
         }
-
     }
     *str = '\0';
+    return 0;
 }
 
 QString doubleToQString(double val,int min,int max,int group)
