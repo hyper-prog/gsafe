@@ -446,6 +446,45 @@ int HDebugConsole::tabPressed(QString query)
     if(query.isEmpty())
         return 0;
 
+    //Handle special ommand "run" which executes user defined commands
+    //We search in these user defined commands
+    if(query.startsWith("run "))
+    {
+        if(user_commands.size() > 0)
+        {
+            int mnum = 0;
+            QString cmd;
+            QMultiMap<QString,HDConsoleCommandHolder *>::const_iterator i = user_commands.constBegin();
+            while(i != user_commands.constEnd())
+            {
+                if( QString("run %1").arg(i.key()).startsWith(query) )
+                {
+                    ++mnum;
+                    cmd = i.key();
+                }
+                ++i;
+            }
+
+            if(mnum == 1)
+            {
+                p->cf->setCommandLineText(QString("run %1").arg(cmd));
+                return 0;
+            }
+
+            if(mnum > 1)
+            {
+                p->cf->addText("",DCONSOLE_TYPE_MESSAGE);
+                for(i = user_commands.constBegin();i != user_commands.constEnd();++i)
+                    if(QString("run %1").arg(i.key()).startsWith(query))
+                        p->cf->addText((QString("run %1 - %2")
+                                        .arg(i.key())
+                                        .arg(user_commands_descr.value(i.key())))
+                                            ,DCONSOLE_TYPE_MESSAGE);
+            }
+        }
+        return 0;
+    }
+
     int mnum=0;
     QString cmd;
     QStringList cmds = p->commands_dscr.keys();
@@ -459,7 +498,7 @@ int HDebugConsole::tabPressed(QString query)
 
     if(mnum == 1)
     {
-        p->cf->setCommandLineText(cmd);
+        p->cf->setCommandLineText(cmd == "run" ? QString("run ") : cmd);
         return 0;
     }
 
