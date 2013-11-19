@@ -308,6 +308,22 @@ HDebugConsole::~HDebugConsole(void)
 
 void HDebugConsole::setCommandExecution(bool enabled)
 {
+    if(enabled)
+    {
+        p->pushText->setDisabled(false);
+        p->pushSyncwrite->setDisabled(false);
+#ifndef DCONSOLE_NO_SQL
+        p->pushSql->setDisabled(false);
+#endif // DCONSOLE_NO_SQL
+    }
+    else
+    {
+        p->pushText->setDisabled(true);
+        p->pushSyncwrite->setDisabled(true);
+#ifndef DCONSOLE_NO_SQL
+        p->pushSql->setDisabled(true);
+#endif // DCONSOLE_NO_SQL
+    }
     p->disabled = !enabled;
 }
 
