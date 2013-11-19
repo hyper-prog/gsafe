@@ -196,6 +196,12 @@ public:
     static void debug_txt(QString s);
     /** Popups a warning text */
     static void popup(QString title,QString str);
+    /** You can disable the command excution if this function called with FALSE.
+     *  @param enabled FALSE:The user can't execute any command.
+     *                 TRUE(Default state):The console execute the user's commands. */
+    void setCommandExecution(bool enabled = true);
+    /** Returns the console panel object */
+    HConsolePanel *consoleObject(void);
 
 protected:
     void closeEvent(QCloseEvent *e);
@@ -306,6 +312,11 @@ public:
     void setPromptString(QString prm);
     /** Returns the current active command line prompt */
     QString promptString(void);
+    /** If this function called with disable:true the user entered charaters
+     *  won't write back to the console.
+     *  You can reenable character echoing by calling this function with disable:false.
+     *  (This is the default case) */
+    void setCommandLineCharacterEcho(bool disable = false);
     /** Returns the current active command line text */
     QString commandLineText(void);
     /** Moves the cursor in the command line text to left with charCount position */

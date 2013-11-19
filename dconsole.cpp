@@ -136,6 +136,7 @@ private:
 private:
     HDebugConsole *pp;
     QString databasename;
+    bool disabled;
 
 #ifndef DCONSOLE_NO_SQL
     QPushButton *pushSql;
@@ -176,6 +177,7 @@ HDebugConsole::HDebugConsole(QWidget *parent)
     setWindowTitle("HDebugConsole");
     p->databasename = "";
     myself = this;
+    p->disabled = false;
 
     setAttribute(Qt::WA_DeleteOnClose);
     QVBoxLayout *qvbl = new QVBoxLayout(this);
@@ -304,6 +306,16 @@ HDebugConsole::~HDebugConsole(void)
     myself = NULL;
 }
 
+void HDebugConsole::setCommandExecution(bool enabled)
+{
+    p->disabled = !enabled;
+}
+
+HConsolePanel *HDebugConsole::consoleObject(void)
+{
+    return p->cf;
+}
+
 void HDebugConsole::popup(QString title,QString str)
 {
     QMessageBox::warning(NULL,title,str);
@@ -359,6 +371,9 @@ void HDebugConsole::debug_txt(QString s)
 
 int HDebugConsole::execCommand(QString query)
 {
+    if(p->disabled)
+        return 0;
+
     query = query.simplified();
     if(query == "")
     {
@@ -443,7 +458,7 @@ int HDebugConsole::execCommand(QString query)
 
 int HDebugConsole::tabPressed(QString query)
 {
-    if(query.isEmpty())
+    if(query.isEmpty() || p->disabled)
         return 0;
 
     //Handle special ommand "run" which executes user defined commands
@@ -1006,6 +1021,7 @@ private:
     int lhascdiffhalf;
     int tabstop;
     int addedSpaces;
+    bool clecho;
 
     int cursorPos[2];
     int origCursorPos2;
@@ -1071,6 +1087,7 @@ HConsolePanel::HConsolePanel(QWidget *parent) : QFrame(parent)
     setCursor(Qt::IBeamCursor);
 
     p = new HConsolePanelPrivate(this);
+    p->clecho = true;
     p->fm = new QFontMetrics(font(),this);
 
     p->fontsize = 14;
@@ -1314,6 +1331,11 @@ void HConsolePanelPrivate::calcCmdLnTop(void)
     ctop = cr;
 }
 
+void HConsolePanel::setCommandLineCharacterEcho(bool disable)
+{
+    p->clecho = !disable;
+}
+
 void HConsolePanel::paintEvent(QPaintEvent *e)
 {
     Q_UNUSED(e);
@@ -1351,6 +1373,12 @@ void HConsolePanelPrivate::paintRows(QPainter *p)
             r = ctop;
             mSelSign = cselection;
             mSelRange = cselectionRange;
+            if(!clecho)
+            {
+                r = NULL;
+                p->setPen(cmdLineColor);
+                p->drawText(x,y,promptStr);
+            }
         }
 
         if(cmdline || viewtop != NULL || lineCapacity > clast->serial + 1)
