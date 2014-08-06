@@ -2,7 +2,7 @@
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2005-2013 Peter Deak  (hyper80@gmail.com)
+   (C) 2005-2014 Peter Deak  (hyper80@gmail.com)
 
     License: GPLv2  http://www.gnu.org/licenses/gpl-2.0.html
 

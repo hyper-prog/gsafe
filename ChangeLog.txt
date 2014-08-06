@@ -1,3 +1,6 @@
+1.3.9
+	-Improved sql queries of HDebugConsole to show the column names.
+
 1.3.8
 	-HDebugConsole's TAB command search in user defined commands too ("run a...")
 	-You can disable the command execution of HDebugConsole by a function

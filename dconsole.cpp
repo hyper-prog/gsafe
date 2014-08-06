@@ -2,7 +2,7 @@
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2006-2013 Peter Deak  (hyper80@gmail.com)
+   (C) 2006-2014 Peter Deak  (hyper80@gmail.com)
 
     License: GPLv2  http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -430,17 +430,39 @@ int HDebugConsole::execCommand(QString query)
     QSqlQuery q(db);
     q.exec(query);
     QString result;
+    QMap<int,int> flen;
 
     if(q.lastError().type() == QSqlError::NoError)
     {
         p->cf->addText("Succesfull executed. Dumping data:",DCONSOLE_TYPE_MESSAGE);
 
+        int rcount = 0;
         while(q.next())
         {
             if(!q.record().isEmpty())
             {
                 cn = q.record().count();
                 result.append("\n");
+
+                if(rcount == 0) //print the header
+                {
+                    for(i=0;i<cn;++i)
+                    {
+                        if(i != 0)
+                            result.append(" | ");
+                        flen[i] = q.record().field(i).length();
+                        if(flen[i] < q.record().field(i).name().length())
+                            flen[i] = q.record().field(i).name().length();
+                        if(flen[i] > 0)
+                            result.append(q.record().field(i).name().leftJustified(flen[i],' '));
+                        else
+                            result.append(q.record().field(i).name());
+                    }
+                    //Header - data separate line
+                    result.append(QString("\n%1\n").arg(QString(result.length()-2,'-')));
+                }
+
+                //print the data
                 for(i=0;i<cn;++i)
                 {
                     v = q.value(i);
@@ -448,10 +470,15 @@ int HDebugConsole::execCommand(QString query)
                     {
                         if(i != 0)
                             result.append(" | ");
-                        result.append(v.toString());
+
+                        if(flen[i] > 0)
+                            result.append(v.toString().leftJustified(flen[i],' '));
+                        else
+                            result.append(v.toString());
                     }
                 }
             }
+            ++rcount;
         }
         p->cf->addText(result,DCONSOLE_TYPE_RESULT);
         p->cf->addText(QString("(%1 rows affected/%2 size)")

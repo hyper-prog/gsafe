@@ -2,7 +2,7 @@
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2005-2013 Peter Deak  (hyper80@gmail.com)
+   (C) 2005-2014 Peter Deak  (hyper80@gmail.com)
 
     License: GPLv2  http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,7 +36,7 @@
 #include "gstexts.h"
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "1.3.8"
+#define GSAFE_VERSION   "1.3.9"
 
 // ///////////////////////////////////
 // BEGIN - CONFIG/MODIFIERS/MODULES //
@@ -1193,6 +1193,7 @@ class HTableBase : public HSqlHandler
 
         /** Starts the validation of the data fields accoring the regex pattern.
          *  Starts the high level HDataField and the lower level (type dependent) tests.
+         *  Returns empty string if the validation success otherwise the occured errors.
          *  @param all If true it checks the fields of connected tables too,
          *      otherwise only the fields of the base table is validated. */
         QString validate(bool all=true);
