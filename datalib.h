@@ -36,7 +36,7 @@
 #include "gstexts.h"
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "1.3.9"
+#define GSAFE_VERSION   "1.3.10"
 
 // ///////////////////////////////////
 // BEGIN - CONFIG/MODIFIERS/MODULES //
@@ -3936,6 +3936,11 @@ public:
 
     /** Returns the number of all defined elements(with no argument) or a specified labelled elements. (if nonempty argument passed) */
     int countElements(QString limitTo="");
+
+    /** Returns the first element's index matching the name passed in parameter. Returns -1 if the element did not found. */
+    int indexByElementName(QString name);
+    /** Returns the first element's index matching the sqlname passed in parameter. Returns -1 if the element did not found. */
+    int indexByElementSqlName(QString sqlname);
     /** Returns the name of the index'th element */
     QString indexedElementName(int index);
     /** Returns the sql name of the index'th element */

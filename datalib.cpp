@@ -8255,6 +8255,36 @@ int HDynTable::countElements(QString limitTo)
     return count;
 }
 
+int HDynTable::indexByElementName(QString name)
+{
+    int idx=0;
+    QList<HDynTableElement>::iterator i = elements.begin();
+    while(i != elements.end())
+    {
+        if(i->name == name)
+            return idx;
+
+        ++idx;
+        ++i;
+    }
+    return -1;
+}
+
+int HDynTable::indexByElementSqlName(QString sqlname)
+{
+    int idx=0;
+    QList<HDynTableElement>::iterator i = elements.begin();
+    while(i != elements.end())
+    {
+        if(i->sqlname == sqlname)
+            return idx;
+
+        ++idx;
+        ++i;
+    }
+    return -1;
+}
+
 QString HDynTable::indexedElementName(int index)
 {
     int run = 0;
