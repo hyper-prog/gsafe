@@ -8300,6 +8300,36 @@ QString HDynTable::indexedElementName(int index)
     return "";
 }
 
+QString HDynTable::indexedElementRowName(int index)
+{
+    int run = 0;
+    QList<HDynTableElement>::iterator i = elements.begin();
+    while(i != elements.end())
+    {
+        if(run == index)
+            return i->rowName;
+
+        ++run;
+        ++i;
+    }
+    return "";
+}
+
+QString HDynTable::indexedElementColName(int index)
+{
+    int run = 0;
+    QList<HDynTableElement>::iterator i = elements.begin();
+    while(i != elements.end())
+    {
+        if(run == index)
+            return i->colName;
+
+        ++run;
+        ++i;
+    }
+    return "";
+}
+
 QString HDynTable::indexedElementSqlName(int index)
 {
     return getElementSqlName( indexedElementName(index) );

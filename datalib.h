@@ -3945,6 +3945,10 @@ public:
     QString indexedElementName(int index);
     /** Returns the sql name of the index'th element */
     QString indexedElementSqlName(int index);
+    /** Returns the row name of the index'th element */
+    QString indexedElementRowName(int index);
+    /** Returns the column name of the index'th element */
+    QString indexedElementColName(int index);
     /** Returns the value name of the index'th element
      *  @param If you give this bool pointer the pointer will be set to true any cases the element has been found */
     double getIndexedValueDouble(int index,bool *found=NULL);
