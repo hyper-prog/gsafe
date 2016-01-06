@@ -1,3 +1,7 @@
+1.3.11
+        -Added putCDataLimited,putCDataOptLimited to HXmlWriter
+        -Small variable fix in HDialogData
+
 1.3.10
         -Added indexByElementName,indexByElementSqlName
          indexedElementRowName,indexedElementColName to HDynTable class

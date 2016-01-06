@@ -36,7 +36,7 @@
 #include "gstexts.h"
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "1.3.10"
+#define GSAFE_VERSION   "1.3.11"
 
 // ///////////////////////////////////
 // BEGIN - CONFIG/MODIFIERS/MODULES //
@@ -165,6 +165,19 @@ class HXmlWriter
          *  @param data the character data
          *  @param parameters is a string which can optionally contain parameters    */
         void putCData(QString n,QString data,QString parameters="");
+
+        /** Creates a node contains character data with truncation to max length(Opens it, fill and close)
+         *  @param n the name of the node
+         *  @param data the character data
+         *  @param maxlength The data is truncated to this length */
+        void putCDataLimited(QString n,QString data,int maxlength);
+
+        /** Optionally creates a node contains character data wit truncation to max length
+         *  Its only creates the node if data is not empty
+         *  @param n the name of the node
+         *  @param data the character data
+         *  @param maxlength The data is truncated to this length */
+        void putCDataOptLimited(QString n,QString data,int maxlength);
 
         /** Creates an empty node without content (This is not an open and a close node. It's a single node.)
          *  @param n the name of the node

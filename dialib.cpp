@@ -25,6 +25,7 @@ HDialogData::HDialogData(void)
     dmatrix2 = NULL;
     toolbutton1 = NULL;
     toolbutton2 = NULL;
+    topLabel = NULL;
     t1C    = false;
     t1AC   = false;
     t2C    = false;
@@ -36,6 +37,7 @@ HDialogData::HDialogData(void)
 
     tb1clicked = false;
     tb2clicked = false;
+
 }
 
 int HDialogData::makeGui(QWidget *basew,QString caption,HBase *dobj1,HBase *dobj2,
@@ -141,11 +143,12 @@ int HDialogData::makeGui(QWidget *basew,QString caption,HBase *dobj1,HBase *dobj
 
     if(!ttext.isEmpty())
     {
+        topLabel = new QLabel(ttext,basew);
         QBoxLayout *titleLayout = new QHBoxLayout(0);
             titleLayout->setMargin(5);
             titleLayout->setSpacing(5);
             titleLayout->addStretch();
-            titleLayout->addWidget(new QLabel(ttext,basew));
+            titleLayout->addWidget(topLabel);
             titleLayout->addStretch();
         mainLayout->addLayout(titleLayout);
     }

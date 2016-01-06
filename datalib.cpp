@@ -371,6 +371,19 @@ void HXmlWriter::putCData(QString n,QString data,QString parameters)
     eatData( QString().fill('\t',indent_pos) + "<" + n + parameters + ">" + data + "</" + n + ">\r\n");
 }
 
+void HXmlWriter::putCDataLimited(QString n,QString data,int maxlength)
+{
+    QString ldata = data;
+    ldata.truncate(maxlength);
+    putCData(n,ldata,"");
+}
+
+void HXmlWriter::putCDataOptLimited(QString n,QString data,int maxlength)
+{
+    if(!data.isEmpty())
+        putCDataLimited(n,data,maxlength);
+}
+
 void HXmlWriter::putEmptyNode(QString n,QString parameters)
 {
     if(!parameters.isEmpty())

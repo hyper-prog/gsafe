@@ -118,6 +118,7 @@ class HDialogData
         QPushButton *toolbutton1,*toolbutton2,*closebutton;
         QScrollArea *sv1,*sv2;
         QToolButton *pixTool[8];
+        QLabel *topLabel;
 
         /** Inticates (after the dialog exec) wheter the toolbutton 1 is pressed */
         bool tb1clicked;
