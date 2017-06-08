@@ -2,7 +2,7 @@
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2005-2013 Peter Deak  (hyper80@gmail.com)
+   (C) 2005-2017 Peter Deak  (hyper80@gmail.com)
 
     License: GPLv2  http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -1385,27 +1385,36 @@ class HPressButton : public QFrame
         ~HPressButton(void);
 
         /** Sets the color of the button */
-        void setColor(int red,int green,int blue);
+        void setColor(int red,int green,int blue,int mode = 0);
         /** Width of the pressing effect of the button */
         void setEffect(int effectwidth);
         /** Sets the margin of the button text */
         void setMargin(int margin);
         /** Sets the size of the button text */
         void setTextPointSize(int size);
+        /** Sets the amount a smaller size when pushed down */
+        void setDownSmaller(int sdm_pixel);
+        /** Get the amount a smaller size when pushed down */
+        int getDownSmaller(void);
+
+        QColor downColor;
+        QColor borderColor;
 
     private:
         bool enablestat;
         bool hidestat;
         int cmargin;
         int c3deffect;
+        int downsmaller;
 
-        QFont font;
+        QFont font,downFont;
         bool willmid;
         bool mid;
         bool down;
         QString textstr,idstr;
 
-        int r,rd,g,gd,b,bd;
+        int r,g,b;
+        int rAlt,gAlt,bAlt;
 
         void calcSize();
         //static int mx,my;

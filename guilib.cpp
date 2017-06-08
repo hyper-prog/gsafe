@@ -2,7 +2,7 @@
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2005-2013 Peter Deak  (hyper80@gmail.com)
+   (C) 2005-2017 Peter Deak  (hyper80@gmail.com)
 
     License: GPLv2  http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -4494,6 +4494,8 @@ HDecorDialog::HDecorDialog(QWidget *parent,QString title,int no_action_closetime
     setModal(true);
     setMouseTracking(true);
 
+    setAttribute(Qt::WA_TranslucentBackground);
+
     this->no_action_closetime = no_action_closetime;
     this->title = title;
 
@@ -4554,6 +4556,7 @@ void HDecorDialog::paintEvent(QPaintEvent *pe)
     QPainter p(this);
 
     p.setRenderHint(QPainter::Antialiasing);
+    /*
     p.fillRect(0,0,width(),height(),QBrush(bgcolor,Qt::SolidPattern));
     p.setPen(frcolor);
     p.drawRect(framewidth,framewidth,width()-2*framewidth-1,height()-2*framewidth-1);
@@ -4561,14 +4564,63 @@ void HDecorDialog::paintEvent(QPaintEvent *pe)
     p.setPen(titlecolor);
     p.drawText(framewidth,framewidth,width()-2*framewidth-closerwidth-1,titleheight,Qt::AlignHCenter | Qt::AlignVCenter | Qt::TextSingleLine ,title);
     p.fillRect(width()-framewidth-closerwidth,framewidth+2,closerwidth-2,titleheight-4,QBrush(titlecolor,Qt::SolidPattern));
+    */
+
+    /*
+    QPainterPath path;
+    QPen pen(Qt::black, 1);
+    p.setPen(pen);
+    path.addRoundedRect(QRectF(0,0,width(),height()), 20, 20);
+    p.fillPath(path,QColor(r,g,b));
+    p.drawPath(path);*/
+
+    QPainterPath outer;
+    QPen pen1(Qt::gray,1);
+    outer.addRoundedRect(0,0,width(),height(),15,15);
+    p.setPen(pen1);
+    p.fillPath(outer,bgcolor);
+    //p.fillRect(0,0,width(),height(),QBrush(bgcolor,Qt::SolidPattern));
+    //p.drawPath(outer);
+
+
+
+    //p.drawRect(framewidth,framewidth,width()-2*framewidth-1,height()-2*framewidth-1);
+    //p.fillRect(framewidth,framewidth,width()-2*framewidth-1,titleheight,QBrush(frcolor,Qt::SolidPattern));
+
+    QPainterPath decorFrame;
+    QPen pen2(frcolor,3);
+    p.setPen(pen2);
+    decorFrame.addRoundedRect(framewidth,framewidth,width()-2*framewidth-1,height()-2*framewidth-1,15,15);
+    //p.fillPath(decor,frcolor);
+    p.drawPath(decorFrame);
+
+    QPainterPath decorTitle;
+    decorTitle.setFillRule(Qt::WindingFill);
+    decorTitle.addRoundedRect(framewidth,framewidth,width()-2*framewidth-1,titleheight,15,15);
+    decorTitle.addRect(framewidth,framewidth+15,width()-2*framewidth-1,titleheight-15);
+    p.fillPath(decorTitle.simplified(),frcolor);
+
+    p.setPen(titlecolor);
+    p.drawText(framewidth,framewidth,width()-2*framewidth-closerwidth-1,titleheight,Qt::AlignHCenter | Qt::AlignVCenter | Qt::TextSingleLine ,title);
+
+
+    QPainterPath closerBox;
+    closerBox.setFillRule(Qt::WindingFill);
+    closerBox.addRoundedRect(width()-framewidth-closerwidth,framewidth+2,closerwidth-2,titleheight-4,15,15);
+    closerBox.addRect(width()-framewidth-closerwidth+15,framewidth+2+15,closerwidth-2-15,titleheight-4-15);
+    p.fillPath(closerBox.simplified(),QColor(20,20,20));
+
+    //p.fillRect(width()-framewidth-closerwidth,framewidth+2,closerwidth-2,titleheight-4,QBrush(titlecolor,Qt::SolidPattern));
+
+
     if(t_t >= (int)((1000 / t_time)))
     {
         float max,curr;
         max  = end_t-(1000 / t_time);
         curr = t_t  -(1000 / t_time);
         p.setPen(indcolor);
-        p.setBrush(QBrush(indcolor,Qt::SolidPattern));
-        p.drawPie(width()-framewidth-closerwidth+(3),framewidth+2+(3),closerwidth-2-(6),titleheight-4-(6),0,/*2*3.1416f*/5760*(curr/max));
+        p.setBrush(QBrush(indcolor,Qt::SolidPattern));                                                       //5760 => 2*3.1416f
+        p.drawPie(width()-framewidth-closerwidth+(3),framewidth+2+(3),closerwidth-2-(6),titleheight-4-(6),0,5760*(curr/max));
     }
 
     p.setPen(QPen(QBrush(frcolor,Qt::SolidPattern),crossthick,Qt::SolidLine,Qt::RoundCap));
@@ -4582,7 +4634,6 @@ void HDecorDialog::paintEvent(QPaintEvent *pe)
                framewidth+2+crossmargin);
 
     QDialog::paintEvent(pe);
-
 }
 
 void HDecorDialog::mousePressEvent(QMouseEvent *e)
@@ -4629,13 +4680,18 @@ HPressButton::HPressButton(QWidget *parent,QString text,QString code)
     font = QApplication::font();
     font.setBold(true);
     font.setPointSize(8);
+    downFont = font;
+    downFont.setPointSize(7);
     cmargin = 5;
-    c3deffect = 15;
+    c3deffect = 12;
+    downsmaller = 5;
 
-    r=200; rd=3;
-    g=200; gd=3;
-    b=200; bd=3;
+    r=200; rAlt=220;
+    g=200; gAlt=220;
+    b=200; bAlt=254;
 
+    downColor = QColor(220,220,254);
+    borderColor = QColor(40,40,40);
     setFocusPolicy(Qt::StrongFocus);
 
     mid = false;
@@ -4678,6 +4734,16 @@ void HPressButton::setEffect(int effectwidth)
     calcSize();
 }
 
+void HPressButton::setDownSmaller(int sdm_pixel)
+{
+    downsmaller = sdm_pixel;
+}
+
+int HPressButton::getDownSmaller(void)
+{
+    return downsmaller;
+}
+
 void HPressButton::setMargin(int margin)
 {
     cmargin = margin;
@@ -4687,9 +4753,9 @@ void HPressButton::setMargin(int margin)
 void HPressButton::setTextPointSize(int size)
 {
     font.setPointSize(size);
+    downFont.setPointSize(size-1);
     calcSize();
 }
-
 
 int HPressButton::recalcSize()
 {
@@ -4718,26 +4784,26 @@ void HPressButton::calcSize()
     resize(x,y);
 }
 
-void HPressButton::setColor(int red,int green,int blue)
+void HPressButton::setColor(int red,int green,int blue,int mode)
 {
-    r = red;
-    g = green;
-    b = blue;
-
-    if(r < c3deffect*rd) r=c3deffect*rd;
-    if(g < c3deffect*gd) g=c3deffect*gd;
-    if(b < c3deffect*bd) b=c3deffect*bd;
-
-    if(r + c3deffect*rd > 255) r=255-c3deffect*rd;
-    if(g + c3deffect*gd > 255) g=255-c3deffect*gd;
-    if(b + c3deffect*bd > 255) b=255-c3deffect*bd;
+    if(mode == 1)
+    {
+        rAlt = red;
+        gAlt = green;
+        bAlt = blue;
+    }
+    else
+    {
+        r = red;
+        g = green;
+        b = blue;
+    }
 }
 
 void HPressButton::paintEvent(QPaintEvent *e)
 {
-    int i,sx,sy,ex,ey;
+    int sx,sy,ex,ey;
     QPainter p(this);
-
 
     if(hidestat)
     {
@@ -4745,15 +4811,34 @@ void HPressButton::paintEvent(QPaintEvent *e)
         return;
     }
 
-    p.setRenderHint(QPainter::Antialiasing);
-
     sx = c3deffect;
     sy = c3deffect;
     ex = width()-c3deffect;
     ey = height()-c3deffect;
 
-    p.fillRect(0,0,width(),height(),QBrush(QColor(r,g,b)));
+    p.setRenderHint(QPainter::Antialiasing);
+    QPainterPath path;
+    QPen pen(borderColor, 1);
+    p.setPen(pen);
 
+    if(down)
+    {
+        path.addRoundedRect(QRectF(downsmaller,downsmaller,
+                                   width()-(downsmaller*2),height()-(downsmaller*2)), 15, 15);
+
+        p.fillPath(path,downColor);
+        p.setFont(downFont);
+    }
+    else
+    {
+        path.addRoundedRect(QRectF(0,0,width(),height()), 15, 15);
+        p.fillPath(path,QColor(r,g,b));
+        p.setFont(font);
+    }
+
+    p.drawPath(path);
+
+/*  old style (now unused)
     if(!down)
         for(i=0;i<c3deffect;++i)
         {
@@ -4770,27 +4855,27 @@ void HPressButton::paintEvent(QPaintEvent *e)
             p.setPen(QColor(r+rd*i,g+gd*i,b+bd*i)); p.drawLine(ex+i,ey+i,sx-i,ey+i);
             p.setPen(QColor(r-rd*i,g-gd*i,b-bd*i)); p.drawLine(sx-i,sy-i,sx-i,ey+i);
         }
+*/
 
-    p.setFont(font);
     if(enablestat)
         p.setPen(QColor(0,0,0));
     else
         p.setPen(QColor(100,100,100));
 
-    p.drawText(sx,sy+(down ? 1 : -1),ex-sx,ey-sy+(down ? 1 : -1),
+    p.drawText(sx,sy,ex-sx,ey-sy,
                     Qt::AlignHCenter | Qt::AlignVCenter , textstr);
 
     if(!enablestat)
     {
         p.setPen(QPen(QBrush(QColor(255,0,0),Qt::SolidPattern),6,Qt::SolidLine,Qt::RoundCap));
         p.drawLine(c3deffect+cmargin+15,
-                   c3deffect+cmargin,
+                   c3deffect/2+cmargin,
                    width()-(c3deffect+cmargin+15),
-                   height()-(c3deffect+cmargin));
+                   height()-(c3deffect/2+cmargin));
         p.drawLine(c3deffect+cmargin+15,
-                   height()-(c3deffect+cmargin),
+                   height()-(c3deffect/2+cmargin),
                    width()-(c3deffect+cmargin+15),
-                   c3deffect+cmargin);
+                   c3deffect/2+cmargin);
     }
 
     QWidget::paintEvent(e);

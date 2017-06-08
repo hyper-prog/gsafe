@@ -2,7 +2,7 @@
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2006-2014 Peter Deak  (hyper80@gmail.com)
+   (C) 2006-2017 Peter Deak  (hyper80@gmail.com)
 
     License: GPLv2  http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,7 +17,10 @@
 #define GSAFE_DCONSOLE__HEADER_
 
 #include <QtCore>
+
+#ifndef GSAFE_DISABLE_DEBUG
 #include <QtGui>
+#endif
 
 #ifndef COMPILED_WITH_QT4X
 #include <QtWidgets>

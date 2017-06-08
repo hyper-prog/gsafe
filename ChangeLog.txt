@@ -1,3 +1,7 @@
+1.3.20
+      -Dconsole fix unnecessary include QtGui if debugging disabled
+      - HPressButton and HDecorDialog full redesign (visual upgrade)
+      
 1.3.11
         -Added putCDataLimited,putCDataOptLimited to HXmlWriter
         -Small variable fix in HDialogData
