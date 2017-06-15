@@ -20,11 +20,12 @@
 
 #ifndef GSAFE_DISABLE_DEBUG
 #include <QtGui>
-#endif
 
 #ifndef COMPILED_WITH_QT4X
 #include <QtWidgets>
 #endif //COMPILED_WITH_QT4X
+
+#endif
 
 /** \defgroup dconsole dconsole */
 /*  @{  */

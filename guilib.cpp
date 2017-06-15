@@ -4443,7 +4443,7 @@ void HPleaseWaitWindow::paintEvent(QPaintEvent *e)
      QPainter p(this);
 
      p.setRenderHint(QPainter::Antialiasing);
-     p.setClipping(FALSE);
+     p.setClipping(false);
      p.drawRect(1,1,78,78);
 
      p.setBrush(Qt::SolidPattern);
