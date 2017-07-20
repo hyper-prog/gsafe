@@ -5047,7 +5047,7 @@ HDynTableDispConnector::HDynTableDispConnector(HDynTable *dynt,QTableWidget *qtw
             else
             {
                 //item->setFlags(!Qt::ItemIsEnabled);
-                item->setFlags(!Qt::ItemIsEditable);
+                item->setFlags(item->flags() & ~(Qt::ItemIsEditable));
                 item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
                 item->setBackground(Qt::darkGray);
