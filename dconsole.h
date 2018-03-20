@@ -350,6 +350,8 @@ public:
     void setFontSize(int point);
     /** Returns the font point size used by HConsolePanel */
     int  fontSize(void);
+    /** Sets the font used by HConsolePanel */
+    void setCustomFont(QFont f);
 
 public slots:
     /** Adds a text to the readonly/view part. Means: addText(text,0); */

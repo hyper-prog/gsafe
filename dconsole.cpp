@@ -1192,6 +1192,16 @@ HConsolePanel::~HConsolePanel(void)
     delete p; //delete pimpl object
 }
 
+void HConsolePanel::setCustomFont(QFont f)
+{
+    f.setPixelSize(p->fontsize);
+    setFont(f);
+    delete p->fm;
+    p->fm = new QFontMetrics(font(),this);
+    p->fitConsole();
+    update();
+}
+
 int HConsolePanelPrivate::calcStringWidth(QString s)
 {
     if(fastfix)
