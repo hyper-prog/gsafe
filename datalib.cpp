@@ -1,8 +1,8 @@
-/*  gSAFE - LIB
+﻿/*  gSAFE - LIB
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2005-2014 Peter Deak  (hyper80@gmail.com)
+   (C) 2005-2018 Peter Deak  (hyper80@gmail.com)
 
     License: GPLv2  http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -7848,17 +7848,18 @@ void HDynTable::add(HDynTableElement e)
     elements.push_back(e);
 }
 
-QString HDynTable::dumpElements(void)
+QString HDynTable::dumpElements(bool newline)
 {
     QString s="";
     bool first=true;
     firstElement();
     while(!isEnded())
     {
-        s.append(QString("%1%2=%3")
-                 .arg(first ? "" : ",")
+        s.append(QString("%1%2=%3%4")
+                 .arg(first || newline ? "" : ",")
                  .arg(currentElementName())
-                 .arg(currentElementValueString()));
+                 .arg(currentElementValueString())
+                 .arg(newline ? "\n" : ""));
         nextElement();
         first = false;
     }

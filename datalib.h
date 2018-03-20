@@ -1,8 +1,8 @@
-/*  gSAFE - LIB
+﻿/*  gSAFE - LIB
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2005-2017 Peter Deak  (hyper80@gmail.com)
+   (C) 2005-2018 Peter Deak  (hyper80@gmail.com)
 
     License: GPLv2  http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,7 +36,7 @@
 #include "gstexts.h"
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "1.3.21"
+#define GSAFE_VERSION   "1.3.22"
 
 // ///////////////////////////////////
 // BEGIN - CONFIG/MODIFIERS/MODULES //
@@ -3840,7 +3840,7 @@ public:
     void clear(void) { elements.clear(); }
 
     /** Dump out all elements name and value in one concatenated string */
-    QString dumpElements(void);
+    QString dumpElements(bool newline = false);
 
     /** Sets the given named element's value */
     void setElementValue(QString name,double value);
