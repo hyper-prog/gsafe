@@ -531,13 +531,32 @@ int HDebugConsole::tabPressed(QString query)
 
             if(mnum > 1)
             {
+                int n;
+                QString longest="",lastm=query;
                 p->cf->addText("",DCONSOLE_TYPE_MESSAGE);
                 for(i = user_commands.constBegin();i != user_commands.constEnd();++i)
                     if(QString("run %1").arg(i.key()).startsWith(query))
+                    {
+                        if(longest.length() < i.key().length())
+                            longest = i.key();
                         p->cf->addText((QString("run %1 - %2")
                                         .arg(i.key())
                                         .arg(user_commands_descr.value(i.key())))
                                             ,DCONSOLE_TYPE_MESSAGE);
+                    }
+
+                bool allMatch=true;
+                for(n = 1;allMatch && n < longest.length();++n)
+                {
+                    for(i = user_commands.constBegin();i != user_commands.constEnd();++i)
+                        if(QString("run %1").arg(i.key()).startsWith(query))
+                            if(longest.left(n) != i.key().left(n))
+                                allMatch=false;
+                    if(allMatch)
+                        lastm = longest.left(n);
+                }
+
+                p->cf->setCommandLineText(QString("run %1").arg(lastm));
             }
         }
         return 0;
@@ -562,10 +581,29 @@ int HDebugConsole::tabPressed(QString query)
 
     if(mnum > 1)
     {
+        int n;
+        QString longest="",lastm=query;
         p->cf->addText("",DCONSOLE_TYPE_MESSAGE);
         for(i = cmds.begin();i != cmds.end();++i)
             if(i->startsWith(query))
+            {
+                if(longest.length() < i->length())
+                    longest = *i;
                 p->cf->addText((QString("%1").arg(p->commands_dscr[*i])),DCONSOLE_TYPE_MESSAGE);
+            }
+
+        bool allMatch=true;
+        for(n = 1;allMatch && n < longest.length();++n)
+        {
+            for(i = cmds.begin();i != cmds.end();++i)
+                if(i->startsWith(query))
+                    if(longest.left(n) != i->left(n))
+                        allMatch=false;
+            if(allMatch)
+                lastm = longest.left(n);
+        }
+
+        p->cf->setCommandLineText(lastm);
     }
     return 0;
 }
