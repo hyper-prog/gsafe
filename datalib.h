@@ -36,7 +36,7 @@
 #include "gstexts.h"
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "1.3.23"
+#define GSAFE_VERSION   "1.3.24"
 
 // ///////////////////////////////////
 // BEGIN - CONFIG/MODIFIERS/MODULES //

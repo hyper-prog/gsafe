@@ -621,21 +621,14 @@ void dconsoleMessageHandler(QtMsgType type, const QMessageLogContext &context, c
             .arg(context.line)
             .arg(context.version);
 
-    switch (type)
-    {
-        case QtDebugMsg:
-            mm = QString("Qt-Debug: %1\n%2").arg(msg).arg(contmsg);
-        break;
-        case QtWarningMsg:
-            mm = QString("Qt-Warning: %1\n%2").arg(msg).arg(contmsg);
-        break;
-        case QtCriticalMsg:
-            mm = QString("Qt-Critical: %1\n%2").arg(msg).arg(contmsg);
-        break;
-        case QtFatalMsg:
-            mm = QString("Qt-Fatal: %1\n%2").arg(msg).arg(contmsg);
-        break;
-    }
+    if(type == QtDebugMsg)
+        mm = QString("Qt-Debug: %1\n%2").arg(msg).arg(contmsg);
+    if(type == QtWarningMsg)
+        mm = QString("Qt-Warning: %1\n%2").arg(msg).arg(contmsg);
+    if(type == QtCriticalMsg)
+        mm = QString("Qt-Critical: %1\n%2").arg(msg).arg(contmsg);
+    if(type == QtFatalMsg)
+        mm = QString("Qt-Fatal: %1\n%2").arg(msg).arg(contmsg);
 
     if(HDebugConsole::myself == NULL)
     {
@@ -2039,6 +2032,8 @@ void HConsolePanel::mouseReleaseEvent(QMouseEvent *e)
 
 void HConsolePanelPrivate::hoverHandler(int x,int y)
 {
+    Q_UNUSED(y)
+
     if(x < 0 && x > pp->width())
     {
         mouseOldCursor = 0;

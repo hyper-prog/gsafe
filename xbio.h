@@ -51,10 +51,11 @@ class HCodepageConvert
 {
 
 public:
-    HCodepageConvert(void) {}
+    HCodepageConvert(void);
 
     virtual QString conv_from(char * from) = 0;
     virtual void    conv_to(QString from,char * buffer,int bufflen) = 0;
+    virtual ~HCodepageConvert();
 };
 
 /** The codpage converter class for IBM 852 codepage. */

@@ -39,6 +39,9 @@ int cp850from128idx_utf16value[] =
  245 ,213 ,181 ,254 ,222 ,218 ,219 ,217 ,253 ,221 ,175 ,180 ,173 ,177 ,8215,190 ,182 ,167 ,247 ,184 ,
  176 ,168 ,183 ,185 ,179 ,178 ,9632,160 };
 
+HCodepageConvert::HCodepageConvert(void) {}
+HCodepageConvert::~HCodepageConvert() {}
+
 QString HCodepage852::conv_from(char * from)
 {
     int i,l=strlen(from);
