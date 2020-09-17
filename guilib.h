@@ -374,7 +374,7 @@ class HTableBrowser : public QFrame
     //================================================================
     private:
         int limitCache(void);
-        QLinkedList<HTableBrowserElement *> cachedElements;
+        std::list<HTableBrowserElement *> cachedElements;
         int cacheLimit;
 
     private:

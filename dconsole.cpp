@@ -397,7 +397,7 @@ int HDebugConsole::execCommand(QString query)
         return 0;
     }
 
-    QStringList qparts = query.split(" ",QString::SkipEmptyParts);
+    QStringList qparts = query.split(" ",CONQT_SKIP_EMPTY_PARTS);
     if(qparts.count() > 0)
     {
         if(p->commands_exec.find(qparts[0]) != p->commands_exec.end())
@@ -1237,7 +1237,7 @@ int HConsolePanelPrivate::calcStringWidth(QString s)
 {
     if(fastfix)
         return s.length() * letterWidth;
-    return fm->width(s);
+    return fm->CONQFONTMETRICS_STRING_HORIZONTAL_WIDTH(s);
 }
 
 int HConsolePanelPrivate::calcStringBreakPos(QString s)
@@ -1245,7 +1245,7 @@ int HConsolePanelPrivate::calcStringBreakPos(QString s)
     if(fastfix)
         return lineBreakPosition;
     int ll = s.length();
-    while(fm->width(s.left(ll)) > maxLineLength)
+    while(fm->CONQFONTMETRICS_STRING_HORIZONTAL_WIDTH(s.left(ll)) > maxLineLength)
         --ll;
     return ll;
 }
@@ -2657,15 +2657,26 @@ void HConsolePanel::wheelEvent(QWheelEvent *e)
 {
     int l,c,scroll;
     char t = 0;
+    int delta,x,y;
+#ifdef COMPILED_WITH_QT4X
+    delta = e->delta();
+    x = e->x();
+    y = e->y();
+#else
+    delta = e->angleDelta().y();
+    x = e->position().x();
+    y = e->position().y();
+#endif
+
     if(p->first == NULL)
         return;
-    p->getLCfromXY(e->x(),e->y(),l,c,scroll,t);
+    p->getLCfromXY(x,y,l,c,scroll,t);
     if(t == 2 && p->cfirst != p->clast)
     {
         p->viewtop = NULL;
-        if(e->delta()>0 && p->cursorPos[0] > p->cfirst->serial)
+        if(delta>0 && p->cursorPos[0] > p->cfirst->serial)
             p->cursorPos[0] -= 1;
-        if(e->delta()<0 && p->cursorPos[0] < p->clast->serial)
+        if(delta<0 && p->cursorPos[0] < p->clast->serial)
             p->cursorPos[0] += 1;
 
         p->cursorPos[1] = p->origCursorPos2;
@@ -2676,9 +2687,9 @@ void HConsolePanel::wheelEvent(QWheelEvent *e)
     }
     else
     {
-        if(e->delta()<0)
+        if(delta<0)
             scrollDown(e->modifiers() == Qt::ShiftModifier ? 10 : 1);
-        if(e->delta()>0)
+        if(delta>0)
             scrollUp(e->modifiers() == Qt::ShiftModifier ? 10 : 1);
     }
 }

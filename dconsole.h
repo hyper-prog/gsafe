@@ -27,6 +27,17 @@
 
 #endif
 
+//Compatibility defines
+#ifdef COMPILED_WITH_QT4X
+#define CONQT_SKIP_EMPTY_PARTS QString::SkipEmptyParts
+#define CONQT_KEEP_EMPTY_PARTS QString::KeepEmptyParts
+#define CONQFONTMETRICS_STRING_HORIZONTAL_WIDTH width
+#else
+#define CONQT_SKIP_EMPTY_PARTS Qt::SkipEmptyParts
+#define CONQT_KEEP_EMPTY_PARTS Qt::KeepEmptyParts
+#define CONQFONTMETRICS_STRING_HORIZONTAL_WIDTH horizontalAdvance
+#endif
+
 /** \defgroup dconsole dconsole */
 /*  @{  */
 

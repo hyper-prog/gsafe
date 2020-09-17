@@ -14,7 +14,6 @@
 #include "printlib.h"
 #include "xmlolib.h"
 
-
 static const char* const image_Y[] = {
 "22 22 5 1",
 ". c None",
@@ -650,7 +649,15 @@ void HSpinBox::check(void)
 
 void HSpinBox::wheelEvent(QWheelEvent *e)
 {
-    if(e->delta() > 0)
+    int d;
+
+#ifdef COMPILED_WITH_QT4X
+    d = e->delta();
+#else
+    d = e->angleDelta().y();
+#endif
+
+    if(d > 0)
         val++;
     else
         val--;
@@ -847,7 +854,7 @@ int HTableBrowser::addElement(HTableBrowserElement *e)
 
         for(i=0;i<e->size();++i)
         {
-            colw.push_back( fm->width((*e)[i]) );
+            colw.push_back( fm->QFONTMETRICS_STRING_HORIZONTAL_WIDTH((*e)[i]) );
             colc.push_back( precolor.contains(i) ? precolor[i] : QColor( (100+i*25)>255 ? 255 : (100+i*25) ,200-i*5,180 ));
             spec_sort.push_back("");
         }
@@ -858,7 +865,7 @@ int HTableBrowser::addElement(HTableBrowserElement *e)
 
         for(i=0;i<(int)head.size();++i)
         {
-            l = fm->width(head[i]) + BARW; //because the sort indicator
+            l = fm->QFONTMETRICS_STRING_HORIZONTAL_WIDTH(head[i]) + BARW; //because the sort indicator
             if(l > colw[i])
                 colw[i] = l;
         }
@@ -872,7 +879,7 @@ int HTableBrowser::addElement(HTableBrowserElement *e)
 
         for(i=0;i<e->size();++i)
         {
-            l = fm->width((*e)[i]) + BARW; //because the sort indicator
+            l = fm->QFONTMETRICS_STRING_HORIZONTAL_WIDTH((*e)[i]) + BARW; //because the sort indicator
             if(l > colw[i])
                 colw[i] = l;
         }
@@ -1079,7 +1086,15 @@ bool HTableBrowser::stepDown(void)
 
 void HTableBrowser::wheelEvent(QWheelEvent *e)
 {
-    if(e->delta() < 0)
+    int d;
+
+#ifdef COMPILED_WITH_QT4X
+    d = e->delta();
+#else
+    d = e->angleDelta().y();
+#endif
+
+    if(d < 0)
     {
         if(stepDown())
             update();
@@ -1597,7 +1612,7 @@ int HTableBrowser::fulshDrawingCache(void)
 {
     //sdebug("Flush drawing cache...");
     cacheMutex.lock();
-    QLinkedList<HTableBrowserElement *>::Iterator i = cachedElements.begin();
+    std::list<HTableBrowserElement *>::iterator i = cachedElements.begin();
     while(i != cachedElements.end())
     {
         if((*i)->cachePixmap != NULL)
@@ -1615,10 +1630,10 @@ int HTableBrowser::limitCache(void)
 {
     HTableBrowserElement *toremove=NULL;
     cacheMutex.lock();
-    while(cacheLimit <= cachedElements.size())
+    while(cacheLimit <= (int)cachedElements.size())
     {
-        toremove = cachedElements.last();
-        cachedElements.removeLast();
+        toremove = cachedElements.back();
+        cachedElements.pop_back();
 
         if(toremove->cachePixmap != NULL)
             delete toremove->cachePixmap;
@@ -1862,7 +1877,7 @@ void HTableBrowser::paintEvent(QPaintEvent *e)
                     if( (*dcI)[c].startsWith(seek) )
                     {
                         p->fillRect(posX+CELLHMARGIN,dcY+CELLVMARGIN,
-                                    QApplication::fontMetrics().width(seek),rowh+CELLVMARGIN,
+                                    QApplication::fontMetrics().QFONTMETRICS_STRING_HORIZONTAL_WIDTH(seek),rowh+CELLVMARGIN,
                                     QColor(254,230,100));
                     }
                 }
@@ -4067,15 +4082,15 @@ int SqlChooseDialog::updateList(void)
     QStringList h;
 
     if(headertext.isEmpty())
-    {   h = QString("A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|R|S|T").split("|",QString::SkipEmptyParts);    }
+    {   h = QString("A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|R|S|T").split("|",QT_SKIP_EMPTY_PARTS);    }
     else
-    {   h = headertext.split("|",QString::SkipEmptyParts);                                          }
+    {   h = headertext.split("|",QT_SKIP_EMPTY_PARTS);                                          }
     table->setHeadTexts(h);
     QStringList::Iterator itv = v.begin();
     QStringList::Iterator itk = k.begin();
     while ( itv != v.end() && itk != k.end() )
     {
-        QStringList vals = itv->split("|",QString::KeepEmptyParts);
+        QStringList vals = itv->split("|",QT_KEEP_EMPTY_PARTS);
         table->addElement( record = new HTableBrowserElement(*itk,&vals) );
         ++itv;
         ++itk;
@@ -4374,36 +4389,41 @@ HPleaseWaitWindow *HPleaseWaitWindow::pww = NULL;
 
 HPleaseWaitWindow::HPleaseWaitWindow(int sizex_,int sizey_,int refreshTime_) :
 QWidget(0,Qt::SplashScreen | Qt::CustomizeWindowHint | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint | Qt::BypassGraphicsProxyWidget)
-     {
-      sizex = sizex_;
-      sizey = sizey_;
+{
+    sizex = sizex_;
+    sizey = sizey_;
 
-      refreshTime = refreshTime_;
-      setMinimumSize(sizex,sizey);
-      setMaximumSize(sizex,sizey);
+    refreshTime = refreshTime_;
+    setMinimumSize(sizex,sizey);
+    setMaximumSize(sizex,sizey);
 
-      //determine the window position
-      if(QApplication::activeWindow() == NULL)
-      {
-          QRect r;
-          QDesktopWidget *d = QApplication::desktop();
-          r = d->screenGeometry();
-          setGeometry((r.width()-sizex)/2,(r.height()-sizey)/2,sizex,sizey);
-      }
-      else
-      {
-          QWidget *w;
 
-          w = QApplication::activeWindow();
-          QPoint gpos=w->mapToGlobal(QPoint(0,0));
-          setGeometry(gpos.x()+((w->width()-sizex)/2),gpos.y()+((w->height()-sizey)/2),sizex,sizey);
-      }
+    //determine the window position
+    if(QApplication::activeWindow() == NULL)
+    {
+        QRect r;
+#ifdef COMPILED_WITH_QT4X
+        QDesktopWidget *d = QApplication::desktop();
+        r = d->screenGeometry();
+#else
+        r = QGuiApplication::primaryScreen()->availableGeometry();
+#endif
+        setGeometry((r.width()-sizex)/2,(r.height()-sizey)/2,sizex,sizey);
+    }
+    else
+    {
+        QWidget *w;
 
-      /*Get the firt value of the timer*/
-       t=QTime::currentTime();
-       seq=0;
-       show();
-     }
+        w = QApplication::activeWindow();
+        QPoint gpos=w->mapToGlobal(QPoint(0,0));
+        setGeometry(gpos.x()+((w->width()-sizex)/2),gpos.y()+((w->height()-sizey)/2),sizex,sizey);
+    }
+
+    /*Get the firt value of the timer*/
+    t=QTime::currentTime();
+    seq=0;
+    show();
+}
 
 HPleaseWaitWindow::~HPleaseWaitWindow(void)
 {
@@ -4529,7 +4549,7 @@ void HDecorDialog::setTitleFont(QFont f)
 
     titlefont = f;
     QFontMetrics fm(titlefont);
-    mw = fm.width(title);
+    mw = fm.QFONTMETRICS_STRING_HORIZONTAL_WIDTH(title);
     mw += 4*framewidth+closerwidth+20;
     setMinimumWidth(mw);
     update();

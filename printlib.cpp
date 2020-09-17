@@ -101,9 +101,16 @@ void HPreviewFrame::resizeEvent(QResizeEvent *e)
 
 void HPreviewFrame::wheelEvent(QWheelEvent *e)
 {
+    int delta;
+#ifdef COMPILED_WITH_QT4X
+    delta = e->delta();
+#else
+    delta = e->angleDelta().y();
+#endif
+
     if(e->modifiers() != Qt::NoModifier)
     {
-        if(e->delta() > 0) 
+        if(delta > 0)
         {
                 pany += 50; 
         }
@@ -114,7 +121,7 @@ void HPreviewFrame::wheelEvent(QWheelEvent *e)
     }
     else
     {
-        if(e->delta() > 0) 
+        if(delta > 0)
         {
             //Max scale
             if(scale >= 3) return;
@@ -366,7 +373,7 @@ void HPrintTable::scanPlainDataMatrix(void)
         for(i=0;i < column;++i)
         {
             //CELLA : slist[i]
-            j =  QFontMetrics(printfont).width( (*slist)[i] );
+            j =  QFontMetrics(printfont).QFONTMETRICS_STRING_HORIZONTAL_WIDTH( (*slist)[i] );
 
             //We can wrap
             if(data->getColumnPrintWrap(i)) 
@@ -426,7 +433,7 @@ void HPrintTable::scanPlainDataMatrix(void)
     //HEADLINE
     for(i=0;i < column;++i)
     {
-        j = QFontMetrics(printfont).width( data->getHeaderItem(i) );
+        j = QFontMetrics(printfont).QFONTMETRICS_STRING_HORIZONTAL_WIDTH( data->getHeaderItem(i) );
             if(j > cellw[i])
                 cellw[i] = j;
     }
@@ -513,7 +520,7 @@ void HPrintTable::scanList(void)
         for(i=0;i < column;++i)
         {
             //CELLA : slist[i]
-            j =  QFontMetrics(printfont).width( (*slist)[i] );
+            j =  QFontMetrics(printfont).QFONTMETRICS_STRING_HORIZONTAL_WIDTH( (*slist)[i] );
 
             //Line wrapping is enabled
             if(data->fieldByIndex(i)->isPrintCellWrap()) 
@@ -572,7 +579,7 @@ void HPrintTable::scanList(void)
     //HEADLINE
     for(i=0;i < column;++i)
     {
-            j = QFontMetrics(printfont).width( (*data)[i] );
+            j = QFontMetrics(printfont).QFONTMETRICS_STRING_HORIZONTAL_WIDTH( (*data)[i] );
             if(j > cellw[i])
                 cellw[i] = j;
     }

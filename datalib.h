@@ -36,7 +36,7 @@
 #include "gstexts.h"
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "1.3.25"
+#define GSAFE_VERSION   "1.3.26"
 
 // ///////////////////////////////////
 // BEGIN - CONFIG/MODIFIERS/MODULES //
@@ -73,6 +73,19 @@
 #endif
 #ifdef MODULE_REFRESHAGENT_NETCLIENT
 #include <QtNetwork>
+#endif
+
+//Compatibility defines
+#ifdef COMPILED_WITH_QT4X
+#define QT_SKIP_EMPTY_PARTS QString::SkipEmptyParts
+#define QT_KEEP_EMPTY_PARTS QString::KeepEmptyParts
+#define QFONTMETRICS_STRING_HORIZONTAL_WIDTH width
+#define Q_ENDL endl
+#else
+#define QT_SKIP_EMPTY_PARTS Qt::SkipEmptyParts
+#define QT_KEEP_EMPTY_PARTS Qt::KeepEmptyParts
+#define QFONTMETRICS_STRING_HORIZONTAL_WIDTH horizontalAdvance
+#define Q_ENDL Qt::endl
 #endif
 
 // Global functions //

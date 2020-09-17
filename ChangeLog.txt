@@ -1,4 +1,7 @@
-﻿1.3.25
+﻿1.3.26
+	-Eliminate some deprecated warning on Qt 5.15.X while maintain working on Qt 4.X
+
+1.3.25
         -Add gsafe.pri file
       
 1.3.24
