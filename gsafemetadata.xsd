@@ -4,8 +4,8 @@
  gSAFE - LIB http://hyperprog.com/gsafe/
  general Sql dAtabase FrontEnd
 
- (C) 2010 Peter Deak
- License: GPLv2  http://www.gnu.org/licenses/gpl-2.0.html -->
+ (C) 2010-2020 Peter Deak
+ License: LGPLv2.1 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <xs:complexType name="emptyindicatornode">

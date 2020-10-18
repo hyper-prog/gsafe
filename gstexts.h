@@ -2,9 +2,9 @@
     gSAFE - LIB
     general Sql dAtabase FrontEnd
 
-   (C) 2010 Peter Deak  (hyper80@gmail.com)
+   (C) 2010-2020 Peter Deak  (hyper80@gmail.com)
 
-    License: GPLv2  http://www.gnu.org/licenses/gpl-2.0.html
+    License: LGPLv2.1
 
     guilib
 */

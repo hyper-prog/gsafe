@@ -1,7 +1,7 @@
 /*
     HSpeedyPair - Template Lib
     A dual AVL tree based pair storing template code
-    
+
    (C) 2006 Peter Deak  (hyper80@gmail.com)
 
     speedypair.h
