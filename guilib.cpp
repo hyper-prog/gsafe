@@ -14,428 +14,6 @@
 #include "printlib.h"
 #include "xmlolib.h"
 
-static const char* const image_Y[] = {
-"22 22 5 1",
-". c None",
-"# c #000000",
-"a c #848200",
-"b c #c1c1c1",
-"c c #cab5d1",
-"......................",
-".####################.",
-".#aa#bbbbbbbbbbbb#bb#.",
-".#aa#bbbbbbbbbbbb#bb#.",
-".#aa#bbbbbbbbbcbb####.",
-".#aa#bbbccbbbbbbb#aa#.",
-".#aa#bbbccbbbbbbb#aa#.",
-".#aa#bbbbbbbbbbbb#aa#.",
-".#aa#bbbbbbbbbbbb#aa#.",
-".#aa#bbbbbbbbbbbb#aa#.",
-".#aa#bbbbbbbbbbbb#aa#.",
-".#aaa############aaa#.",
-".#aaaaaaaaaaaaaaaaaa#.",
-".#aaaaaaaaaaaaaaaaaa#.",
-".#aaa#############aa#.",
-".#aaa#########bbb#aa#.",
-".#aaa#########bbb#aa#.",
-".#aaa#########bbb#aa#.",
-".#aaa#########bbb#aa#.",
-".#aaa#########bbb#aa#.",
-"..##################..",
-"......................"};
-
-static const char* const image_F[] = {
-"20 20 9 1",
-"b c None",
-"e c #ffffff",
-"d c #ffffff",
-"c c #ffffff",
-"a c #ffffff",
-"f c #0000f3",
-". c #030303",
-"g c #4e1c0f",
-"# c #eef11a",
-".##################.",
-".#################..",
-"a..##############.bb",
-"bc..###########...bb",
-"dbe..##########...bb",
-"bbbb..bbbbbbbb.bbbbb",
-"bbbbbbffggfffbbbbbbb",
-"bbbbbfffgfggggbbbbbb",
-"bbbbffgffgfggggbbbbb",
-"bbbffffgggggggggbbbb",
-"bbbfffgfggggggggbbbb",
-"bbbfffffffgfggggbbbb",
-"bbbffffgggggffffbbbb",
-"bbbffffggggfffffbbbb",
-"bbbffgfffggfffffbbbb",
-"bbbffffffggfffggbbbb",
-"bbbbfffffggfffgbbbbb",
-"bbbbbfffffffffbbbbbb",
-"bbbbbbfffffffbbbbbbb",
-"bbbbbbbbbbbbbbbbbbbb"};
-
-
-static const char* const image_P[] = {
-"16 16 6 1",
-"# c #4d4d4d",
-"c c #a6a6a6",
-"b c #d3d3d3",
-". c #dbd8d1",
-"d c #ffff4d",
-"a c #ffffff",
-"................",
-".....#########..",
-"....#aaaaaaaa#..",
-"....#a#####a#...",
-"...#aaaaaaaa#...",
-"...#a#####a####.",
-"..#aaaaaaaa#b##.",
-".##########b#b#.",
-"#bbbbbbbbbb#b##.",
-"#############b#.",
-"#bbbbbbcccbb#b#.",
-"#bbbbbbdddbb###.",
-"#############b#.",
-".#bbbbbbbbb#b#..",
-"..###########...",
-"................"};
-
-static const char* const image_X[] = {
-"14 14 3 1",
-"# c #006600",
-". c #dbd8d1",
-"a c #ffffff",
-"..............",
-"..............",
-"..####...###..",
-"..#####.####..",
-"..#a########..",
-"...#a######...",
-"....#a####....",
-"...###a#####..",
-"..#####a####..",
-"..######a###..",
-"..#######a###.",
-"........#####.",
-"..............",
-".............."};
-
-static const char* const image_E[] = {
-"20 20 9 1",
-"d c None",
-"f c None",
-". c None",
-"g c None",
-"# c None",
-"b c None",
-"e c #000000",
-"a c #f64421",
-"c c #ffffff",
-".##########aaaaaaaaa",
-".##########aaaaaaaaa",
-"b..########aacccccaa",
-"bb..#######aacccccaa",
-"bbb..######aacccccaa",
-"dddd..dddddaacccccaa",
-"dddddeeeeeeaaaaaaaaa",
-"dddddeeeeeeaaaaaaaaa",
-"ddddfeeeeeeeeegddddd",
-"dddffffgeeeeeeggdddd",
-"dddfffgeeeeeeeggdddd",
-"dddffffeeegeeeggdddd",
-"dddfffeeeggeeeffdddd",
-"dddffeeegggeeeffdddd",
-"dddfeeeffggfffffdddd",
-"dddeeefffggfffggdddd",
-"ddeeeffffggfffgddddd",
-"deeedfffffffffdddddd",
-"eeedddfffffffddddddd",
-"dddddddddddddddddddd"};
-
-static const char* const refreshbutton_data[] = {
-"16 16 105 2",
-"#a c #008f00",
-".z c #009000",
-".A c #009200",
-"#b c #009300",
-".B c #009400",
-".D c #009500",
-".L c #009600",
-".C c #009700",
-".y c #009800",
-"#c c #009900",
-".R c #009b00",
-"#y c #009c07",
-"#i c #019901",
-"#s c #029d0d",
-"#x c #039c03",
-"#p c #059a07",
-"#r c #059d0b",
-".t c #0a9b0b",
-".G c #0aa40a",
-".q c #0ea110",
-".r c #0fa211",
-"#g c #14a421",
-"#C c #1d9e1d",
-"#d c #229e20",
-"#q c #24a831",
-".p c #2ca62d",
-"#m c #2ea431",
-".K c #35b13e",
-"#n c #3bb562",
-".H c #3dad41",
-".s c #48b04e",
-".N c #4eb855",
-"#j c #4eb865",
-"#w c #58be6f",
-".U c #6fc778",
-".1 c #70af70",
-".Z c #73b073",
-".Y c #75b075",
-".0 c #78b178",
-"#F c #79c39c",
-".Q c #81b280",
-"#z c #89bb9a",
-".o c #8dc490",
-".l c #91b691",
-".i c #94bd95",
-"#G c #94ccc3",
-".j c #95bd98",
-"#l c #98bba0",
-"#t c #9dc3b7",
-".u c #a0b9a0",
-".S c #a5baa5",
-".E c #a8baa8",
-".M c #b0c4b2",
-".m c #b3bdb3",
-".3 c #b5c0b7",
-".2 c #b7beb7",
-".x c #b8beb7",
-".h c #b9c4ba",
-"#E c #becfd8",
-".W c #c0bec0",
-".f c #c0bfc0",
-"Qt c #c0c0c0",
-"#k c #c0c7cc",
-"#M c #c1bebe",
-".c c #c1bfc1",
-".e c #c1c0c1",
-"#J c #c2bfc0",
-".# c #c2bfc2",
-".I c #c2cac7",
-".w c #c3c0c3",
-".v c #c4c1c4",
-".k c #c4c8c8",
-"#H c #c4d1ec",
-"#u c #c5c0c3",
-".b c #c5c0c5",
-".d c #c5c1c5",
-"#f c #c5c1c6",
-".n c #c5c5c4",
-"#L c #c6bfc1",
-".a c #c6c0c5",
-".T c #c7bfc6",
-"#A c #c7c0c4",
-".X c #c7c1c7",
-"#K c #c8c0c5",
-"#I c #c9bfc4",
-".g c #c9c0c9",
-".8 c #c9c1c9",
-".P c #cac1ca",
-".9 c #cbc2cb",
-".V c #cbced0",
-"#o c #cec1ca",
-"#h c #cfc2ce",
-"#B c #cfc3cf",
-"#. c #d1c2d0",
-".F c #d4c2d4",
-"#v c #d5c3d5",
-".5 c #d7c4d7",
-"#e c #d8c4d7",
-".7 c #d8c5d8",
-".O c #d9c2d8",
-".4 c #d9c3d9",
-"## c #d9c4d9",
-".6 c #ddc5dc",
-"#D c #e0c3db",
-".J c #f3c8f2",
-"QtQtQtQtQtQt.#.a.b.c.d.eQtQtQtQt",
-"QtQtQtQt.f.g.h.i.j.k.l.m.eQtQtQt",
-"QtQtQt.f.n.o.p.q.r.s.t.u.vQtQtQt",
-"QtQtQt.w.x.y.z.A.B.C.D.E.vQtQtQt",
-"QtQtQt.F.G.H.I.J.K.L.D.E.vQtQtQt",
-"QtQt.#.M.N.O.P.Q.R.D.A.S.vQtQtQt",
-"QtQt.T.U.V.W.X.Y.Z.0.1.2.eQtQtQt",
-"QtQt.c.3.4.5.5.6.7.8.9#.QtQtQtQt",
-"QtQtQt###a.B#b#c#d#e#f#g#hQtQtQt",
-"QtQtQt.5.B#i.D#j#k#l#m#n#oQtQtQt",
-"QtQtQt.5#b.D.C#p#q#r#s#t#uQtQtQt",
-"QtQtQt#v#c#w#x.A.z#y#z#AQtQtQtQt",
-"QtQtQt#B#C#D#E#F#G#H#IQtQtQtQtQt",
-"QtQtQtQt#BQt#J#K#L#MQtQtQtQtQtQt",
-"QtQtQtQtQtQtQtQtQtQtQtQtQtQtQtQt",
-"QtQtQtQtQtQtQtQtQtQtQtQtQtQtQtQt"};
-
-static const char* const image_descend[] = {
-"12 17 2 1",
-". c #f4b4c8",
-"# c #ff0000",
-"............",
-"............",
-".....##.....",
-"....####....",
-"...######...",
-"..########..",
-".##########.",
-"############",
-"############",
-"...######...",
-"...######...",
-"...######...",
-"...######...",
-"...######...",
-"............",
-"............",
-"............"};
-
-
-static const char* const image_ascend[] = {
-"12 17 2 1",
-". c #f4b4c8",
-"# c #ff0000",
-"............",
-"............",
-"............",
-"...######...",
-"...######...",
-"...######...",
-"...######...",
-"...######...",
-"############",
-"############",
-".##########.",
-"..########..",
-"...######...",
-"....####....",
-".....##.....",
-"............",
-"............"};
-
-static const char* const image_descend2[] = {
-"12 17 2 1",
-". c #f4b4c8",
-"# c #ff0000",
-"............",
-"............",
-"............",
-".....##.....",
-"....####....",
-"...######...",
-"..########..",
-".##########.",
-"....####....",
-"....####....",
-"....####....",
-"....####....",
-"....####....",
-"............",
-"............",
-"............",
-"............"};
-
-static const char* const image_ascend2[] = {
-"12 17 2 1",
-". c #f4b4c8",
-"# c #ff0000",
-"............",
-"............",
-"............",
-"............",
-"....####....",
-"....####....",
-"....####....",
-"....####....",
-"....####....",
-".##########.",
-"..########..",
-"...######...",
-"....####....",
-".....##.....",
-"............",
-"............",
-"............"};
-
-static const char* const image_up[] = {
-"12 18 2 1",
-"# c #0000ff",
-". c #ffffff",
-"............",
-".....##.....",
-".....##.....",
-"....####....",
-"....####....",
-"....####....",
-"....####....",
-"...######...",
-"...######...",
-"...######...",
-"..########..",
-"..########..",
-"..########..",
-"..########..",
-".##########.",
-".##########.",
-"............",
-"............"};
-
-static const char* const image_down[] = {
-"12 18 2 1",
-"# c #0000ff",
-". c #ffffff",
-"............",
-"............",
-".##########.",
-".##########.",
-"..########..",
-"..########..",
-"..########..",
-"..########..",
-"...######...",
-"...######...",
-"...######...",
-"....####....",
-"....####....",
-"....####....",
-"....####....",
-".....##.....",
-".....##.....",
-"............"};
-
-static const char* const image_hsdown[] = {
-"9 6 2 1",
-"# c #000000",
-". c #d0d0d0",
-"#########",
-".#######.",
-"..#####..",
-"...###...",
-"....#....",
-"........."};
-
-static const char* const image_hsup[] = {
-"9 6 2 1",
-"# c #000000",
-". c #d0d0d0",
-".........",
-"....#....",
-"...###...",
-"..#####..",
-".#######.",
-"#########"};
-
-
 int HArrayButton::defaultSizeX = 0;
 int HArrayButton::defaultSizeY = 0;
 
@@ -554,16 +132,15 @@ HSpinBox::HSpinBox(QWidget *parent)
 
     h = height()/2-4;
 
-
     QToolButton *bu = new QToolButton(this);
-    bu->setIcon(QPixmap(image_hsup));
+    bu->setIcon(QPixmap(":/GSAFEPIXMAPS/image_hsup.png"));
     bu->setMaximumHeight(h);
     bu->setMinimumHeight(h);
     bu->setMinimumWidth(14);
     bu->setMaximumWidth(14);
 
     QToolButton *bd = new QToolButton(this);
-    bd->setIcon(QPixmap(image_hsdown));
+    bd->setIcon(QPixmap(":/GSAFEPIXMAPS/image_hsdown.png"));
     bd->setMaximumHeight(h);
     bu->setMinimumHeight(h);
     bd->setMinimumWidth(14);
@@ -725,12 +302,12 @@ HTableBrowser::HTableBrowser(QWidget *parent)
     if(!staticinit)
     {
         staticinit = true;
-        pix_up   = new QPixmap(image_up);
-        pix_down = new QPixmap(image_down);
-        pix_asc  = new QPixmap(image_ascend);
-        pix_desc = new QPixmap(image_descend);
-        pix_asc2 = new QPixmap(image_ascend2);
-        pix_desc2= new QPixmap(image_descend2);
+        pix_up   = new QPixmap(":/GSAFEPIXMAPS/image_up.png");
+        pix_down = new QPixmap(":/GSAFEPIXMAPS/image_down.png");
+        pix_asc  = new QPixmap(":/GSAFEPIXMAPS/image_ascend.png");
+        pix_desc = new QPixmap(":/GSAFEPIXMAPS/image_descend.png");
+        pix_asc2 = new QPixmap(":/GSAFEPIXMAPS/image_ascend2.png");
+        pix_desc2= new QPixmap(":/GSAFEPIXMAPS/image_descend2.png");
     }
 
     setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
@@ -2226,8 +1803,8 @@ HDispPlainDataMatrix::HDispPlainDataMatrix(QWidget *parent,HBase *d,bool htmlmod
     QHBoxLayout *toplay = new QHBoxLayout(0);
     tx = new QToolButton(this);
     tp = new QToolButton(this);
-    tx->setIcon(QPixmap( (const char **) image_X ) );
-    tp->setIcon(QPixmap( (const char **) image_P ) );
+    tx->setIcon(QPixmap(":/GSAFEPIXMAPS/image_x.png"));
+    tp->setIcon(QPixmap(":/GSAFEPIXMAPS/image_p.png"));
 
     toplay->addSpacing(5);
     toplay->addWidget(tp);
@@ -2236,7 +1813,7 @@ HDispPlainDataMatrix::HDispPlainDataMatrix(QWidget *parent,HBase *d,bool htmlmod
     if(htmlmode)
     {
         th = new QToolButton(this);
-        th->setIcon(QPixmap( (const char **) image_F ) );
+        th->setIcon(QPixmap(":/GSAFEPIXMAPS/image_f.png"));
         toplay->addSpacing(3);
         toplay->addWidget(th);
 
@@ -2388,8 +1965,8 @@ HDispList::HDispList(QWidget *parent,HList *d,int datamodep,int ddata)
         QHBoxLayout *toplay = new QHBoxLayout(0);
         tx = new QToolButton(this);
         tp = new QToolButton(this);
-        tx->setIcon(QPixmap( (const char **) image_X ) );
-        tp->setIcon(QPixmap( (const char **) image_P ) );
+        tx->setIcon(QPixmap(":/GSAFEPIXMAPS/image_x.png"));
+        tp->setIcon(QPixmap(":/GSAFEPIXMAPS/image_p.png"));
         toplay->addSpacing(5);
         toplay->addWidget(tp);
         toplay->addSpacing(3);
@@ -2565,8 +2142,8 @@ HDispTable::HDispTable(QWidget *parent,HTable *d,int datamodep,int ddata)
         QHBoxLayout *toplay = new QHBoxLayout(0);
         tx = new QToolButton(this);
         tp = new QToolButton(this);
-        tx->setIcon(QPixmap( (const char **) image_X ) );
-        tp->setIcon(QPixmap( (const char **) image_P ) );
+        tx->setIcon(QPixmap(":/GSAFEPIXMAPS/image_x.png"));
+        tp->setIcon(QPixmap(":/GSAFEPIXMAPS/image_p.png"));
         toplay->addSpacing(5);
         toplay->addWidget(tp);
         toplay->addSpacing(3);
@@ -3767,7 +3344,7 @@ HDispSqlChoose::HDispSqlChoose(QWidget *parent,HDataField *d,bool _ro_mask)
             }
 
             rfbutt = new QToolButton(this);
-            rfbutt->setIcon( QPixmap( (const char **) refreshbutton_data ) );
+            rfbutt->setIcon(QPixmap(":/GSAFEPIXMAPS/refreshbutton.png"));
             sublayout->addWidget(edval);
             sublayout->addWidget(rfbutt);
             if(!connect(edval,SIGNAL(activated(int)),this,SLOT(itemSelected(int))))
@@ -4228,9 +3805,9 @@ HShowPrintHtml::HShowPrintHtml(QWidget *parent)
     QToolButton *tst = new QToolButton(this);
     QToolButton *ts = new QToolButton(this);
 
-    tp->setIcon(QPixmap(image_P));
-    ts->setIcon(QPixmap(image_Y));
-    tst->setIcon(QPixmap(image_E));
+    tp->setIcon(QPixmap(":/GSAFEPIXMAPS/image_p.png"));
+    ts->setIcon(QPixmap(":/GSAFEPIXMAPS/image_y.png"));
+    tst->setIcon(QPixmap(":/GSAFEPIXMAPS/image_e.png"));
     toolbuttons->addWidget(tp);
     toolbuttons->addSpacing(3);
     toolbuttons->addWidget(tst);

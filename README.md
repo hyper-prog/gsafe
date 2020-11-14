@@ -1,4 +1,4 @@
-![gSAFE Logo](https://raw.githubusercontent.com/hyper-prog/gsafe/master/PIXMAPS/gsafe.png)
+![gSAFE Logo](https://raw.githubusercontent.com/hyper-prog/gsafe/master/GSAFEPIXMAPS/gsafe.png)
 
 gSAFE - General Sql dAtabase Front End (C++, Multiplatform, Qt)
 ==============================================================

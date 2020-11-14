@@ -41,4 +41,6 @@ HEADERS  += \
     $${GSAFE_PATH}datalib.h \
     $${GSAFE_PATH}xmlolib.h
 
+RESOURCES += $${GSAFE_PATH}gsafe.qrc
+
 # end of gsafe.pri

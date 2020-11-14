@@ -1,0 +1,18 @@
+<RCC>
+    <qresource prefix="/">
+        <file>GSAFEPIXMAPS/image_up.png</file>
+        <file>GSAFEPIXMAPS/image_down.png</file>
+        <file>GSAFEPIXMAPS/image_ascend.png</file>
+        <file>GSAFEPIXMAPS/image_descend.png</file>
+        <file>GSAFEPIXMAPS/image_ascend2.png</file>
+        <file>GSAFEPIXMAPS/image_descend2.png</file>
+        <file>GSAFEPIXMAPS/image_hsup.png</file>
+        <file>GSAFEPIXMAPS/image_hsdown.png</file>
+        <file>GSAFEPIXMAPS/refreshbutton.png</file>
+        <file>GSAFEPIXMAPS/image_x.png</file>
+        <file>GSAFEPIXMAPS/image_p.png</file>
+        <file>GSAFEPIXMAPS/image_f.png</file>
+        <file>GSAFEPIXMAPS/image_y.png</file>
+        <file>GSAFEPIXMAPS/image_e.png</file>
+    </qresource>
+</RCC>

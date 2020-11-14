@@ -35,6 +35,7 @@ SOURCES 	+= \
                 xbio.cpp     \
                 xbioconn.cpp
 
-INCLUDEPATH	+= .
+RESOURCES += gsafe.qrc
+INCLUDEPATH += .
 
 #end
