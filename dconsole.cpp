@@ -2,7 +2,7 @@
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2006-2020 Peter Deak  (hyper80@gmail.com)
+   (C) 2006-2021 Peter Deak  (hyper80@gmail.com)
 
     License: LGPLv2.1
 
@@ -53,6 +53,18 @@ void sdebug(QString s)
     HDebugConsole::debug_txt(s);
 #else
     Q_UNUSED(s);
+#endif //GSAFE_DISABLE_DEBUG
+}
+
+void ssdebug(QString s,char type)
+{
+#ifndef GSAFE_DISABLE_DEBUG
+    if(HDebugConsole::myself == NULL)
+        return;
+    HDebugConsole::debug_typedtxt(s,type);
+#else
+    Q_UNUSED(s);
+    Q_UNUSED(type);
 #endif //GSAFE_DISABLE_DEBUG
 }
 
@@ -210,8 +222,6 @@ HDebugConsole::HDebugConsole(QWidget *parent)
     connect(p->pushClear,SIGNAL(clicked()),p->cf,SLOT(clearText()));
     connect(p->cf,SIGNAL(commandEntered(QString)),this,SLOT(execCommand(QString)));
     connect(p->cf,SIGNAL(tabPressed(QString)),this,SLOT(tabPressed(QString)));
-    p->cf->setTextTypeColor(1,QColor(255,150,150));
-    p->cf->setTextTypeColor(2,QColor(200,200,200));
 
     p->cf->setColor("cursor",Qt::white);
     p->cf->setColor("cmdtext",QColor(0,255,0));
@@ -221,6 +231,11 @@ HDebugConsole::HDebugConsole(QWidget *parent)
     p->cf->setTextTypeColor(DCONSOLE_TYPE_RESULT  ,QColor(100,100,255));
     p->cf->setTextTypeColor(DCONSOLE_TYPE_CMD     ,QColor(0,230,0));
     p->cf->setTextTypeColor(DCONSOLE_TYPE_QTDEBUG ,QColor(255,127,30));
+    p->cf->setTextTypeColor(DCONSOLE_TYPE_TXTALT_A,QColor(0,250,250));
+    p->cf->setTextTypeColor(DCONSOLE_TYPE_TXTALT_B,QColor(240,120,1));
+    p->cf->setTextTypeColor(DCONSOLE_TYPE_TXTALT_C,QColor(60,120,120));
+    p->cf->setTextTypeColor(DCONSOLE_TYPE_TXTALT_D,QColor(188,18,107));
+    p->cf->setTextTypeColor(DCONSOLE_TYPE_TXTALT_E,QColor(255,45,45));
 
     p->cf->addText("START",DCONSOLE_TYPE_MESSAGE);
 
@@ -356,8 +371,14 @@ void HDebugConsole::add_text(QString s,int type)
 
 #endif // DCONSOLE_NO_SQL
 
-    if(p->pushText->isChecked() && type == DCONSOLE_TYPE_TEXT)
-        p->cf->addText(s,DCONSOLE_TYPE_TEXT);
+    if(p->pushText->isChecked() && (
+                    type == DCONSOLE_TYPE_TEXT ||
+                    type == DCONSOLE_TYPE_TXTALT_A ||
+                    type == DCONSOLE_TYPE_TXTALT_B ||
+                    type == DCONSOLE_TYPE_TXTALT_C ||
+                    type == DCONSOLE_TYPE_TXTALT_D ||
+                    type == DCONSOLE_TYPE_TXTALT_E))
+        p->cf->addText(s,type);
 
     if(type == DCONSOLE_TYPE_QTDEBUG)
         p->cf->addText(s,DCONSOLE_TYPE_QTDEBUG);
@@ -383,6 +404,12 @@ void HDebugConsole::debug_txt(QString s)
 {
     if(myself != NULL)
         myself->add_text(s,DCONSOLE_TYPE_TEXT);
+}
+
+void HDebugConsole::debug_typedtxt(QString s,char type)
+{
+    if(myself != NULL)
+        myself->add_text(s,type);
 }
 
 int HDebugConsole::execCommand(QString query)

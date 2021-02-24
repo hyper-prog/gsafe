@@ -2,7 +2,7 @@
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2005-2020 Peter Deak  (hyper80@gmail.com)
+   (C) 2005-2021 Peter Deak  (hyper80@gmail.com)
 
     License: LGPLv2.1
 
@@ -36,7 +36,7 @@
 #include "gstexts.h"
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "1.3.28"
+#define GSAFE_VERSION   "1.3.29"
 
 // ///////////////////////////////////
 // BEGIN - CONFIG/MODIFIERS/MODULES //

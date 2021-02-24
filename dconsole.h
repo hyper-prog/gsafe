@@ -2,7 +2,7 @@
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2006-2020 Peter Deak  (hyper80@gmail.com)
+   (C) 2006-2021 Peter Deak  (hyper80@gmail.com)
 
     License: LGPLv2.1
 
@@ -53,6 +53,11 @@ void sqldebug(QString s);
  *  @see HDebugConsole*/
 void sdebug(QString s);
 
+/** Puts a debug/info text as special text.
+ *  If there is no started HDebugConsole this function does nothing.
+ *  @see HDebugConsole*/
+void ssdebug(QString s,char type);
+
 /** Starts/Popup the HDebugConsole.
  *  If the console already run this function does nothing.
  *  @see HDebugConsole  */
@@ -93,6 +98,17 @@ void clear_dconsole_commands();
 #define DCONSOLE_TYPE_RESULT    3
 #define DCONSOLE_TYPE_CMD       4
 #define DCONSOLE_TYPE_QTDEBUG   5
+#define DCONSOLE_TYPE_TXTALT_A  6
+#define DCONSOLE_TYPE_TXTALT_B  7
+#define DCONSOLE_TYPE_TXTALT_C  8
+#define DCONSOLE_TYPE_TXTALT_D  9
+#define DCONSOLE_TYPE_TXTALT_E  10
+
+#define DCONSOLE_TYPE_TXTALT_CYAN    DCONSOLE_TYPE_TXTALT_A
+#define DCONSOLE_TYPE_TXTALT_CORAL   DCONSOLE_TYPE_TXTALT_B
+#define DCONSOLE_TYPE_TXTALT_TEAL    DCONSOLE_TYPE_TXTALT_C
+#define DCONSOLE_TYPE_TXTALT_PURPLE  DCONSOLE_TYPE_TXTALT_D
+#define DCONSOLE_TYPE_TXTALT_RED     DCONSOLE_TYPE_TXTALT_E
 
 #ifndef COMPILED_WITH_QT4X
 void dconsoleMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
@@ -209,6 +225,8 @@ public:
 #endif // DCONSOLE_NO_SQL
     /** Write a normal text to the console */
     static void debug_txt(QString s);
+    /** Write a special typed text to the console */
+    static void debug_typedtxt(QString s,char type);
     /** Popups a warning text */
     static void popup(QString title,QString str);
     /** You can disable the command excution if this function called with FALSE.
