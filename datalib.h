@@ -36,7 +36,7 @@
 #include "gstexts.h"
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "1.3.29"
+#define GSAFE_VERSION   "1.3.30"
 
 // ///////////////////////////////////
 // BEGIN - CONFIG/MODIFIERS/MODULES //
@@ -421,6 +421,8 @@ class HPlainDataMatrix : public HBase
 
         /** Sets the whole table header text with a QString list */
         void setHeader(QList<QString> strlistdata);
+        /** Clears the whole table header texts */
+        void clearHeader(void);
         /** Sets the whole table header text with a list of QStrings */
         void setHeader(QString d1="",QString d2="",QString d3=""
                        ,QString d4="",QString d5="",QString d6=""
@@ -431,6 +433,9 @@ class HPlainDataMatrix : public HBase
         QString getHeaderItem(int col);
         /** Returns the whole table header */
         QList<QString> getHeader(void);
+        /** Returns the column index of the passed header text.
+         *  If the header text not found it returns -1. */
+        int getHeaderColIndex(QString headertext);
 
         /** Sets wrap settings for the specified column which is needed for printing */
         void setColumnPrintWrap(int col,bool wrap) { if(col <= col_count) printCellWrap[col] = wrap; }
@@ -506,6 +511,19 @@ class HPlainDataMatrix : public HBase
         void setCell(int row,int col,QVariant vdata);
         /** Sets the content of the specified cell */
         void setCellStr(int row,int col,QString strdata);
+
+        /** Returns the content of the cell, the column is specified by the header text.
+            If the headers are not set or not found this function returns empty value. */
+        QVariant getCellH(int row,QString colheader);
+        /** Returns the content of the cell, the column is specified by the header text.
+            If the headers are not set or not found this function returns empty value. */
+        QString getCellHStr(int row,QString colheader);
+        /** Sets the content of the cell, the column is specified by the header text.
+            If the headers are not set or not found this function does nothing. */
+        void setCellH(int row,QString colheader,QVariant vdata);
+        /** Sets the content of the cell the column is specified by the header text.
+            If the headers are not set or not found this function does nothing.  */
+        void setCellHStr(int row,QString colheader,QString strdata);
 
         /** Sets the control string of the specified row */
         void setRowControl(int row,QString ctrl);

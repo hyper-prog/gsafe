@@ -1314,7 +1314,7 @@ QVariant HSqlHandler::submit1ResultQuery(QString q,QString err,bool tdisabled)
 
 HPlainDataMatrix* HSqlHandler::submitNResultQuery(int N,QString q,QString err,bool tdisabled)
 {
-    int i;
+    int i,r;
     QList<QVariant> list;
     HPlainDataMatrix* dm=NULL;
 
@@ -1332,7 +1332,6 @@ HPlainDataMatrix* HSqlHandler::submitNResultQuery(int N,QString q,QString err,bo
     if((myInterface()->hsqli_usequerysize && qi->numRowsAffected() < 0) ||
         qi->lastError().type() != QSqlError::NoError   )
         {
-
             if(!tdisabled)
                 rollback();
 
@@ -1348,12 +1347,23 @@ HPlainDataMatrix* HSqlHandler::submitNResultQuery(int N,QString q,QString err,bo
             return NULL;
         }
 
+    r = 0;
     while(qi->next())
     {
+        if(r == 0)
+        {
+            QList<QString> headers;
+            int cc = qi->record().count();
+            for(i=0;i<cc;++i)
+                headers.push_back(qi->record().field(i).name());
+            dm->setHeader(headers);
+        }
+
         list.clear();
         for(i=0 ; i < qi->record().count() ; ++i)
             list.push_back( qi->value(i) );
         dm->addRow(list);
+        ++r;
     }
 
     if(!tdisabled)
@@ -1468,6 +1478,22 @@ void HPlainDataMatrix::setHeader(QList<QString> strlistdata)
         else
             hheader[i] = "";
     }
+}
+
+void HPlainDataMatrix::clearHeader(void)
+{
+    int i;
+    for(i = 0; i < col_count;++i)
+        hheader[i] = "";
+}
+
+int HPlainDataMatrix::getHeaderColIndex(QString headertext)
+{
+    int i;
+    for(i = 0; i < col_count;++i)
+        if(hheader[i] == headertext)
+            return i;
+    return -1;
 }
 
 void HPlainDataMatrix::setHeader(QString d1,QString d2,QString d3
@@ -1660,6 +1686,36 @@ void HPlainDataMatrix::setCell(int row,int col,QVariant vdata)
         return;
 
     (data.at(row))[col] = vdata;
+}
+
+QVariant HPlainDataMatrix::getCellH(int row,QString colheader)
+{
+    int colIdx = getHeaderColIndex(colheader);
+    if(colIdx < 0)
+        return QVariant();
+    return getCell(row,colIdx);
+}
+
+QString HPlainDataMatrix::getCellHStr(int row,QString colheader)
+{
+    int colIdx = getHeaderColIndex(colheader);
+    if(colIdx < 0)
+        return QString();
+    return getCellStr(row,colIdx);
+}
+
+void HPlainDataMatrix::setCellH(int row,QString colheader,QVariant vdata)
+{
+    int colIdx = getHeaderColIndex(colheader);
+    if(colIdx >= 0)
+        setCell(row,colIdx,vdata);
+}
+
+void HPlainDataMatrix::setCellHStr(int row,QString colheader,QString strdata)
+{
+    int colIdx = getHeaderColIndex(colheader);
+    if(colIdx >= 0)
+        setCellStr(row,colIdx,strdata);
 }
 
 void HPlainDataMatrix::setRowControl(int row,QString ctrl)
