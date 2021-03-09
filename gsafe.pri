@@ -25,6 +25,7 @@ SOURCES += \
     $${GSAFE_PATH}docgen.cpp \
     $${GSAFE_PATH}dialib.cpp \
     $${GSAFE_PATH}dconsole.cpp \
+    $${GSAFE_PATH}builder.cpp \
     $${GSAFE_PATH}datalib.cpp 
 
 HEADERS  += \
@@ -39,6 +40,7 @@ HEADERS  += \
     $${GSAFE_PATH}dialib.h \
     $${GSAFE_PATH}dconsole.h \
     $${GSAFE_PATH}datalib.h \
+    $${GSAFE_PATH}builder.h \
     $${GSAFE_PATH}xmlolib.h
 
 RESOURCES += $${GSAFE_PATH}gsafe.qrc

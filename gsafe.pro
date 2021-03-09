@@ -21,6 +21,7 @@ HEADERS 	+= \
                 xmlolib.h    \
                 xbio.h	     \
                 gstexts.h    \
+                builder.h    \
                 xbioconn.h
                         
 SOURCES 	+= \
@@ -31,6 +32,7 @@ SOURCES 	+= \
                 guilib.cpp   \
                 hfactory.cpp \
                 printlib.cpp \
+                builder.cpp  \
                 xmlolib.cpp  \
                 xbio.cpp     \
                 xbioconn.cpp
