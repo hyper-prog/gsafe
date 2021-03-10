@@ -8,7 +8,6 @@
 */
 
 #include <string.h>
-#include <dconsole.h>
 #include "builder.h"
 
 #define FIELD_GET 1
