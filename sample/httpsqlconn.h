@@ -22,7 +22,7 @@ public:
     virtual ~HttpSqlConnection();
 
     void sendReqNone(HSqlBuilder b,bool *ok = NULL);
-    QString sendReqSingle(HSqlBuilder b,bool *ok = NULL);
+    QVariant sendReqSingle(HSqlBuilder b,bool *ok = NULL);
     HPlainDataMatrix * sendReqAll(HSqlBuilder b,bool *ok = NULL);
     bool sendCheckFieldsExistsInTable(QString tablename,QStringList fields);
 
@@ -38,7 +38,7 @@ protected:
     QString last_payload;
 
     HPlainDataMatrix *parseAnswerTable(QString payload,QStringList fields,bool *ok);
-    QString parseAnswerSingle(QString payload,bool *ok);
+    QVariant parseAnswerSingle(QString payload,bool *ok);
     void parseAnswerNone(QString payload,bool *ok);
 
     QString mapToJsonPart(QMap<QString,QString> m);

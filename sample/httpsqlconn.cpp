@@ -83,7 +83,7 @@ HPlainDataMatrix * HttpSqlConnection::sendReqAll(HSqlBuilder b,bool *ok)
     return parseAnswerTable(payload,b.query_field_list(),ok);
 }
 
-QString HttpSqlConnection::sendReqSingle(HSqlBuilder b,bool *ok)
+QVariant HttpSqlConnection::sendReqSingle(HSqlBuilder b,bool *ok)
 {
     QString rd;
     b.setJsonExecutionMode(SingleReturn);
@@ -127,7 +127,7 @@ HPlainDataMatrix *HttpSqlConnection::parseAnswerTable(QString payload,QStringLis
                 QJsonObject recordObj = rowarray.at(i).toObject();
                 int ii,aac=fields.count();
                 for(ii=0;ii<aac;++ii)
-                    row.push_back(recordObj.value(fields.at(ii)).toString());
+                    row.push_back(recordObj.value(fields.at(ii)).toVariant());
             }
             result->addRow(row);
         }
@@ -143,7 +143,7 @@ HPlainDataMatrix *HttpSqlConnection::parseAnswerTable(QString payload,QStringLis
     return NULL;
 }
 
-QString HttpSqlConnection::parseAnswerSingle(QString payload,bool *ok)
+QVariant HttpSqlConnection::parseAnswerSingle(QString payload,bool *ok)
 {
     QJsonParseError jpe;
     QJsonDocument answer = QJsonDocument::fromJson(payload.toUtf8(),&jpe);
@@ -156,13 +156,13 @@ QString HttpSqlConnection::parseAnswerSingle(QString payload,bool *ok)
             return QString();
         if(ok != NULL)
             *ok = true;
-        return jo.value("return").toString();
+        return jo.value("return").toVariant();
     }
     lastErrorMessagePrivate = QString("Error in parseAnswerSingle.");
     ssdebug(lastErrorMessagePrivate,DCONSOLE_TYPE_TXTALT_RED);
     if(ok != NULL)
         *ok = false;
-    return QString();
+    return QVariant();
 }
 
 void HttpSqlConnection::parseAnswerNone(QString payload,bool *ok)
