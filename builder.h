@@ -3,7 +3,7 @@
    general Sql dAtabase FrontEnd
    http://hyperprog.com/gsafe/
 
-   (C) 2021 Peter Deak (deak.peter@civishaz.hu)
+   (C) 2021 Peter Deak (hyper80@gmail.com)
 */
 
 #ifndef QUERY_BUILDER_H
