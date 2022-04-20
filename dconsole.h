@@ -2,7 +2,7 @@
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2006-2021 Peter Deak  (hyper80@gmail.com)
+   (C) 2006-2022 Péter Deák (hyper80@gmail.com)
 
     License: LGPLv2.1
 
@@ -20,22 +20,8 @@
 
 #ifndef GSAFE_DISABLE_DEBUG
 #include <QtGui>
-
-#ifndef COMPILED_WITH_QT4X
 #include <QtWidgets>
-#endif //COMPILED_WITH_QT4X
 
-#endif
-
-//Compatibility defines
-#ifdef COMPILED_WITH_QT4X
-#define CONQT_SKIP_EMPTY_PARTS QString::SkipEmptyParts
-#define CONQT_KEEP_EMPTY_PARTS QString::KeepEmptyParts
-#define CONQFONTMETRICS_STRING_HORIZONTAL_WIDTH width
-#else
-#define CONQT_SKIP_EMPTY_PARTS Qt::SkipEmptyParts
-#define CONQT_KEEP_EMPTY_PARTS Qt::KeepEmptyParts
-#define CONQFONTMETRICS_STRING_HORIZONTAL_WIDTH horizontalAdvance
 #endif
 
 /** \defgroup dconsole dconsole */
@@ -110,11 +96,7 @@ void clear_dconsole_commands();
 #define DCONSOLE_TYPE_TXTALT_PURPLE  DCONSOLE_TYPE_TXTALT_D
 #define DCONSOLE_TYPE_TXTALT_RED     DCONSOLE_TYPE_TXTALT_E
 
-#ifndef COMPILED_WITH_QT4X
 void dconsoleMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
-#else
-void dconsoleMessageHandler(QtMsgType type, const char *msg);
-#endif
 
 class QFontMetrics;
 class QCloseEvent;
@@ -168,9 +150,6 @@ class HDebugConsolePrivate;
 
     #define this below to stay Sql independent.
     DEFINES += DCONSOLE_NO_SQL
-
-    #define this below if you use 4.X version of Qt (Not Qt 5.X)
-    DEFINES += COMPILED_WITH_QT4X
  \endcode
  * \n\n
  *

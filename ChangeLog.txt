@@ -1,3 +1,10 @@
+2.X.X   The codebase of gSAFE > 2.0 is completely rewritten.
+        It's now backward compatible with the old versions.
+        This changelog file is no longer updated, the changes are located in git log.
+
+-------------------------------------------------------------------------------------------------
+Old gSAFE version history (Qt 4-5 compatible branch)
+
 1.4.10 
         - HSqlBuilder codes (In separate file)
 

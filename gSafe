@@ -1,0 +1,19 @@
+/* gSAFE - Combined header file */
+#ifndef GSAFE_ALL_HEADER_FILE_H
+#define GSAFE_ALL_HEADER_FILE_H
+
+#include <data.h>
+#include <ra.h>
+#include <dconsole.h>
+#include <builder.h>
+#include <database.h>
+#include <dm.h>
+#include <dmext.h>
+#include <ftypes.h>
+#include <gui.h>
+#include <guiext.h>
+#include <dialog.h>
+#include <quicktable.h>
+#include <xo.h>
+
+#endif // GSAFE_ALL_HEADER_FILE_H

@@ -1,2 +1,0 @@
--docgen: Solve that empty nodes will converted to an open and a close node. 
- <tag/> will be converted to <tag></tag>

@@ -2,7 +2,7 @@
     general Sql dAtabase FrontEnd
     http://hyperprog.com/gsafe/
 
-   (C) 2006-2021 Peter Deak  (hyper80@gmail.com)
+   (C) 2006-2022 Péter Deák (hyper80@gmail.com)
 
     License: LGPLv2.1
 
@@ -18,9 +18,7 @@
 #include <QtSql>
 #endif // DCONSOLE_NO_SQL
 
-#ifndef COMPILED_WITH_QT4X
 #include <QtWidgets>
-#endif //COMPILED_WITH_QT4X
 
 #endif //GSAFE_DISABLE_DEBUG
 
@@ -214,7 +212,7 @@ HDebugConsole::HDebugConsole(QWidget *parent)
     qhbl->addStretch();
     qhbl->addWidget(p->pushClear);
 
-    qvbl->setMargin(0);
+    qvbl->setContentsMargins(0,0,0,0);
     qvbl->setSpacing(0);
     qvbl->addLayout(qhbl);
     qvbl->addWidget(p->cf);
@@ -301,20 +299,12 @@ HDebugConsole::HDebugConsole(QWidget *parent)
     pushSyncwrite->setChecked(true);
     #endif
 
-#ifndef COMPILED_WITH_QT4X
     qInstallMessageHandler(dconsoleMessageHandler);
-#else
-    qInstallMsgHandler(dconsoleMessageHandler);
-#endif
 }
 
 HDebugConsole::~HDebugConsole(void)
 {
-#ifndef COMPILED_WITH_QT4X
     qInstallMessageHandler(0);
-#else
-    qInstallMsgHandler(0);
-#endif
 
     delete p;
     p = NULL;
@@ -424,7 +414,7 @@ int HDebugConsole::execCommand(QString query)
         return 0;
     }
 
-    QStringList qparts = query.split(" ",CONQT_SKIP_EMPTY_PARTS);
+    QStringList qparts = query.split(" ",Qt::SkipEmptyParts);
     if(qparts.count() > 0)
     {
         if(p->commands_exec.find(qparts[0]) != p->commands_exec.end())
@@ -635,7 +625,6 @@ int HDebugConsole::tabPressed(QString query)
     return 0;
 }
 
-#ifndef COMPILED_WITH_QT4X
 void dconsoleMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     QString mm;
@@ -666,36 +655,6 @@ void dconsoleMessageHandler(QtMsgType type, const QMessageLogContext &context, c
     HDebugConsole::myself->add_text(mm,DCONSOLE_TYPE_QTDEBUG);
 
 }
-#else
-void dconsoleMessageHandler(QtMsgType type, const char *msg)
-{
-    QString mm;
-    switch (type)
-    {
-        case QtDebugMsg:
-            mm = QString("Qt-Debug: %1").arg(msg);
-        break;
-        case QtWarningMsg:
-            mm = QString("Qt-Warning: %1").arg(msg);
-        break;
-        case QtCriticalMsg:
-            mm = QString("Qt-Critical: %1").arg(msg);
-        break;
-        case QtFatalMsg:
-            mm = QString("Qt-Fatal: %1").arg(msg);
-        break;
-    }
-
-    if(HDebugConsole::myself == NULL)
-    {
-        fprintf(stderr,"%s",mm.toLocal8Bit().constData());
-        return;
-    }
-
-    HDebugConsole::myself->add_text(mm,DCONSOLE_TYPE_QTDEBUG);
-}
-
-#endif //COMPILED_WITH_QT4X
 
 /* **************************************************************************
  * HDebugConsole command handlers
@@ -1005,7 +964,7 @@ void HDebugConsolePrivate::command_show(QString fcl)
         {
             cf->addText(QString("%1\t\t%2\t\t(default:%3)")
                         .arg(r.field(i).name())
-                        .arg(QVariant::typeToName(r.field(i).type()))
+                        .arg(r.field(i).metaType().name())
                         .arg(r.field(i).defaultValue().toString())
                        ,DCONSOLE_TYPE_RESULT);
         }
@@ -1020,8 +979,9 @@ void HDebugConsolePrivate::command_show(QString fcl)
 int HDebugConsole::checkIfIClose(void)
 {
     bool found=false;
-    QList<QWidget *>::const_iterator i = QApplication::topLevelWidgets().begin();
-    while(i != QApplication::topLevelWidgets().end())
+    QWidgetList wl = QApplication::topLevelWidgets();
+    QList<QWidget *>::const_iterator i = wl.begin();
+    while(i != wl.end())
     {
         if (*i != this && (*i)->isVisible())
             found = true;
@@ -1093,6 +1053,8 @@ private:
     void paintBar(QPainter *p);
 
     void hoverHandler(int x,int y);
+
+    void checkFastFix(void);
 
 private:
     HConsolePanel *pp;
@@ -1211,8 +1173,7 @@ HConsolePanel::HConsolePanel(QWidget *parent) : QFrame(parent)
     p->marginXl = p->marginXlfix = 5;
     p->marginXr = 10;
 
-    if(QFontInfo(font()).fixedPitch())
-        p->fastfix = true;
+    p->checkFastFix();
 
     p->oldWindowWidth = 0;
     p->sbar_minlength = 10;
@@ -1256,6 +1217,7 @@ void HConsolePanel::setCustomFont(QFont f)
     setFont(f);
     delete p->fm;
     p->fm = new QFontMetrics(font(),this);
+    p->checkFastFix();
     p->fitConsole();
     update();
 }
@@ -1264,7 +1226,7 @@ int HConsolePanelPrivate::calcStringWidth(QString s)
 {
     if(fastfix)
         return s.length() * letterWidth;
-    return fm->CONQFONTMETRICS_STRING_HORIZONTAL_WIDTH(s);
+    return fm->horizontalAdvance(s);
 }
 
 int HConsolePanelPrivate::calcStringBreakPos(QString s)
@@ -1272,9 +1234,29 @@ int HConsolePanelPrivate::calcStringBreakPos(QString s)
     if(fastfix)
         return lineBreakPosition;
     int ll = s.length();
-    while(fm->CONQFONTMETRICS_STRING_HORIZONTAL_WIDTH(s.left(ll)) > maxLineLength)
+    while(fm->horizontalAdvance(s.left(ll)) > maxLineLength)
         --ll;
     return ll;
+}
+
+void HConsolePanelPrivate::checkFastFix(void)
+{
+    const char *test[5] = {"it","settings","This is a long text","Quick bronw fox jump","over the lazy dog"};
+
+    if(!QFontInfo(pp->font()).fixedPitch())
+    {
+        fastfix = false;
+        return;
+    }
+
+    fastfix = true;
+    int avgLetterWidth = fm->averageCharWidth();
+    for(int i = 0;i < 5;++i)
+        if(int(avgLetterWidth * strlen(test[i])) != fm->horizontalAdvance(test[i]))
+        {
+            fastfix = false;
+            return;
+        }
 }
 
 void HConsolePanel::setMarginText(QString margin)
@@ -1295,6 +1277,7 @@ void HConsolePanelPrivate::fitConsole(void)
     selection = false;
     cselection = false;
     viewtop = NULL;
+
     maxCharWidth = fm->maxWidth();
     lineHeight = fm->height();
     letterWidth = fm->averageCharWidth();
@@ -1544,7 +1527,7 @@ void HConsolePanelPrivate::paintRows(QPainter *p)
                     if(!marginStr.isEmpty())
                     {
                         QString s = marginStr;
-                        s.replace(QRegExp("%[0]*s"),QString("%1").arg(r->serial+1));
+                        s.replace(QRegularExpression("%[0]*s"),QString("%1").arg(r->serial+1));
                         p->fillRect(0,y-selectionHeight,marginXl-marginXlfix,lineHeight+lhascdiffhalf,marginBgColor);
                         p->drawText(0,y,s);
                     }
@@ -2002,13 +1985,13 @@ void HConsolePanel::mousePressEvent(QMouseEvent *e)
     int l,c,scroll;
     char type;
     type = 0;
-    p->getLCfromXY(e->x(),e->y(),l,c,scroll,type);
+    p->getLCfromXY(e->position().x(),e->position().y(),l,c,scroll,type);
     p->mousePressedArea = type;
     p->holdMouseButton = true;
     if(type == 0)
     {
-        p->mouseOldX = e->x();
-        p->mouseOldY = e->y();
+        p->mouseOldX = e->position().x();
+        p->mouseOldY = e->position().y();
         p->sbar_obegin = p->sbar_begin;
         return;
     }
@@ -2084,7 +2067,7 @@ void HConsolePanel::mouseMoveEvent(QMouseEvent *e)
 {
     if(!p->holdMouseButton)
     {
-        p->hoverHandler(e->x(),e->y());
+        p->hoverHandler(e->position().x(),e->position().y());
         return;
     }
 
@@ -2097,7 +2080,7 @@ void HConsolePanel::mouseMoveEvent(QMouseEvent *e)
            p->mouseOldY > 2 &&
            p->mouseOldY < height() - 2)
         {
-            int nb = p->sbar_obegin + (e->y() - p->mouseOldY);
+            int nb = p->sbar_obegin + (e->position().y() - p->mouseOldY);
             if(nb < 0)
                 nb = 0;
             if(nb > p->sbar_maxlength)
@@ -2108,16 +2091,16 @@ void HConsolePanel::mouseMoveEvent(QMouseEvent *e)
     }
 
     type = p->mousePressedArea;
-    p->getLCfromXY(e->x(),e->y(),l,c,s,type);
+    p->getLCfromXY(e->position().x(),e->position().y(),l,c,s,type);
     if(s == -1)
     {
         scrollUp(1);
-        p->getLCfromXY(e->x(),e->y(),l,c,s,type);
+        p->getLCfromXY(e->position().x(),e->position().y(),l,c,s,type);
     }
     if(s == 1)
     {
         scrollDown(1);
-        p->getLCfromXY(e->x(),e->y(),l,c,s,type);
+        p->getLCfromXY(e->position().x(),e->position().y(),l,c,s,type);
     }
 
     if(type == 0)
@@ -2170,7 +2153,7 @@ void HConsolePanel::mouseDoubleClickEvent(QMouseEvent *e)
     int *mSelRange = NULL;
     char type;
     type = 0;
-    p->getLCfromXY(e->x(),e->y(),l,c,s,type);
+    p->getLCfromXY(e->position().x(),e->position().y(),l,c,s,type);
     if(type == 0 || s != 0)
     {
         p->selection = false;
@@ -2685,15 +2668,10 @@ void HConsolePanel::wheelEvent(QWheelEvent *e)
     int l,c,scroll;
     char t = 0;
     int delta,x,y;
-#ifdef COMPILED_WITH_QT4X
-    delta = e->delta();
-    x = e->x();
-    y = e->y();
-#else
+
     delta = e->angleDelta().y();
     x = e->position().x();
     y = e->position().y();
-#endif
 
     if(p->first == NULL)
         return;
@@ -2991,6 +2969,7 @@ void HConsolePanel::setFontSize(int point)
     setFont(f);
     delete p->fm;
     p->fm = new QFontMetrics(font(),this);
+    p->checkFastFix();
     p->fitConsole();
 }
 

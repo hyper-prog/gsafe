@@ -9,33 +9,36 @@ QT 		+= gui network sql xml widgets printsupport
 CONFIG  	+= qt warn_on
 DEFINES 	+= QT_DLL FORMS_HAS_UI_PREFIX
 
-HEADERS 	+= \
-                datalib.h    \
-                dconsole.h   \
-                dialib.h     \
-                docgen.h     \
-                guilib.h     \
-                hfactory.h   \
-                printlib.h   \
-                res_p.h      \
-                xmlolib.h    \
-                xbio.h	     \
-                gstexts.h    \
-                builder.h    \
-                xbioconn.h
-                        
-SOURCES 	+= \
-                datalib.cpp  \
-                dconsole.cpp \
-                dialib.cpp   \
-                docgen.cpp   \
-                guilib.cpp   \
-                hfactory.cpp \
-                printlib.cpp \
-                builder.cpp  \
-                xmlolib.cpp  \
-                xbio.cpp     \
-                xbioconn.cpp
+SOURCES += \
+    data.cpp \
+    dm.cpp \
+    dmext.cpp \
+    dmjson.cpp \
+    builder.cpp \
+    ra.cpp \
+    gui.cpp \
+    guiext.cpp \
+    quicktable.cpp \
+    ftypes.cpp \
+    database.cpp \
+    dialog.cpp \
+    xo.cpp \
+    dconsole.cpp
+
+HEADERS  += \
+    data.h \
+    dm.h \
+    dmext.h \
+    builder.h \
+    ra.h \
+    gui.h \
+    guiext.h \
+    quicktable.h \
+    ftypes.h \
+    database.h \
+    dialog.h \
+    xo.h \
+    dconsole.h
 
 RESOURCES += gsafe.qrc
 INCLUDEPATH += .

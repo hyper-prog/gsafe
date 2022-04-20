@@ -1,14 +1,15 @@
 /*
-   SAFE - LIB - C++ Sql Builder
+   gSAFE - LIB - C++ Sql Builder
    general Sql dAtabase FrontEnd
    http://hyperprog.com/gsafe/
 
-
-   (C) 2021 Peter Deak  (hyper80@gmail.com)
+   (C) 2021-2022 Péter Deák (hyper80@gmail.com)
 */
 
 #include <string.h>
 #include "builder.h"
+
+#include "dconsole.h"
 
 #define FIELD_GET 1
 #define FIELD_SET_V 2
@@ -51,6 +52,26 @@ HSqlBuilder db_delete(QString tablename,QString alias)
 {
     return HSqlBuilder(Delete,tablename,alias);
 }
+// Sql dialect table ////////////////////////////////////////////////////////////
+const char *dialectTablePuzzles[]  = {//Empty string is the closer element !
+        "<<<current_timestamp>>>",
+        "<<<datetype_null>>>",
+        "<<<numeric_null>>>",
+        "<<<longtext_type>>>",
+        "<<<regex>>>",
+        "",
+};
+
+const char *dialectTableDialects[] = //Empty string is the closer element !
+        {"nochange"               , "sqlite"           , "pgsql"    , "mysql"    , ""};
+
+const char *dialectTableResolve[][4] = {
+        {"<<<current_timestamp>>>", "CURRENT_TIMESTAMP", "now()"    , "CURRENT_TIMESTAMP" },
+        {"<<<datetype_null>>>"    , "NULL"             , "NULL"     , "NULL" },
+        {"<<<numeric_null>>>"     , "NULL"             , "NULL"     , "NULL" },
+        {"<<<longtext_type>>>"    , "longtext"         , "text"     , "longtext" },
+        {"<<<regex>>>"            , "regexp"           , "~"        , "regexp" },
+};
 
 // HSqlBuilderField ////////////////////////////////////////////////////////////
 
@@ -170,20 +191,33 @@ QString HSqlBuilderField::local_cmd_Key(void)
     return name;
 }
 
-QString HSqlBuilderField::local_cmd_Val(HSqlBuilder *builder,bool vmm)
+QString HSqlBuilderField::local_cmd_Val(HSqlBuilder *builder,bool vmm,QString dialect)
 {
     if(type != FIELD_SET_V && type != FIELD_SET_E)
         return QString();
 
     QString v = "";
     QMap<QString,QString> opts = HSqlBuilder::genOptions(options);
-    if(vmm)
+    if(type == FIELD_SET_V)
     {
-        v = builder->addValueForBind(value_expression);
+        if(vmm)
+        {
+            v = builder->addValueForBind(value_expression);
+        }
+        else
+        {
+            v = value_expression.toString();
+            if(vt == Quoted)
+                v = QString("\'%1\'").arg(value_expression.toString());
+        }
     }
-    else
+    if(type == FIELD_SET_E)
     {
         v = value_expression.toString();
+
+        if(opts.value("dialected_element","no") == "yes")
+            v = HSqlBuilder::translateDialect(v,dialect);
+
         if(vt == Quoted)
             v = QString("\'%1\'").arg(value_expression.toString());
     }
@@ -451,12 +485,19 @@ bool HSqlBuilderCondition::isGrpCond(void)
     return false;
 }
 
+bool HSqlBuilderCondition::isEmpty()
+{
+    if((ct == COND_GRP || ct == COND_ZZ) && sub_conds.count() == 0)
+        return true;
+    return false;
+}
+
 HSqlBuilder_ConditionRelation HSqlBuilderCondition::topRelation(void)
 {
     return relation;
 }
 
-QString HSqlBuilderCondition::local_cmd(HSqlBuilder *builder,bool top,bool vmm)
+QString HSqlBuilderCondition::local_cmd(HSqlBuilder *builder,bool top,bool vmm,QString dialect)
 {
     QString local_cmd = "";
     if(ct == COND_ZZ)
@@ -475,7 +516,7 @@ QString HSqlBuilderCondition::local_cmd(HSqlBuilder *builder,bool top,bool vmm)
         {
             if(!sub_cmd.isEmpty())
                 sub_cmd += relation == And ? " AND " : " OR ";
-            sub_cmd += ci->local_cmd(builder,false,vmm);
+            sub_cmd += ci->local_cmd(builder,false,vmm,dialect);
             ++ci;
         }
 
@@ -659,6 +700,7 @@ QString HSqlBuilderCondition::json_string_top(void)
 
 HSqlBuilderJoin::HSqlBuilderJoin()
 {
+    empty = true;
     jtype = Inner;
     totable = "";
     toalias = "";
@@ -671,6 +713,7 @@ HSqlBuilderJoin::~HSqlBuilderJoin()
 
 HSqlBuilderJoin& HSqlBuilderJoin::join(const QString toTable,const QString toAlias,HSqlBuilderCondition joinCond)
 {
+    empty = false;
     jtype = Inner;
     totable = toTable;
     toalias = toAlias;
@@ -680,6 +723,7 @@ HSqlBuilderJoin& HSqlBuilderJoin::join(const QString toTable,const QString toAli
 
 HSqlBuilderJoin& HSqlBuilderJoin::join_opt(const QString toTable,const QString toAlias,HSqlBuilderCondition joinCond)
 {
+    empty = false;
     jtype = LeftOuter;
     totable = toTable;
     toalias = toAlias;
@@ -687,8 +731,16 @@ HSqlBuilderJoin& HSqlBuilderJoin::join_opt(const QString toTable,const QString t
     return *this;
 }
 
-QString HSqlBuilderJoin::local_cmd(HSqlBuilder *builder,bool vmm)
+bool HSqlBuilderJoin::isEmpty()
 {
+    return empty;
+}
+
+QString HSqlBuilderJoin::local_cmd(HSqlBuilder *builder,bool vmm,QString dialect)
+{
+    if(empty)
+        return "";
+
     QString jstr = "";
     QString jcondstr = "";
     if(jtype == Inner)
@@ -698,7 +750,7 @@ QString HSqlBuilderJoin::local_cmd(HSqlBuilder *builder,bool vmm)
     jstr += totable;
     if(!toalias.isEmpty())
         jstr += QString(" AS %1").arg(toalias);
-    jcondstr = jcond.local_cmd(builder,true,vmm);
+    jcondstr = jcond.local_cmd(builder,true,vmm,dialect);
     if(!jcondstr.isEmpty())
         jstr += QString(" ON %1").arg(jcondstr);
     return jstr;
@@ -708,7 +760,7 @@ QString HSqlBuilderJoin::json_string(void)
 {
     QString joinstring = "";
 
-    if(!jcond.isGrpCond())
+    if(!jcond.isGrpCond() || empty)
         return joinstring;
 
     joinstring += "{";
@@ -734,6 +786,7 @@ QString HSqlBuilderJoin::json_string(void)
 
 HSqlBuilderSort::HSqlBuilderSort()
 {
+    empty = true;
     field = "";
     table = "";
     options = "";
@@ -745,12 +798,14 @@ HSqlBuilderSort::~HSqlBuilderSort()
 
 void HSqlBuilderSort::set(const QString fieldName,const QString optionsString)
 {
+    empty = false;
     field = fieldName;
     options = optionsString;
 }
 
 void HSqlBuilderSort::set(const QString fieldSpec[2],const QString optionsString)
 {
+    empty = false;
     table = fieldSpec[0];
     field = fieldSpec[1];
     options = optionsString;
@@ -758,13 +813,19 @@ void HSqlBuilderSort::set(const QString fieldSpec[2],const QString optionsString
 
 void HSqlBuilderSort::set(const QString tableName,const QString fieldName,const QString optionsString)
 {
+    empty = false;
     table = tableName;
     field = fieldName;
     options = optionsString;
 }
 
-QString HSqlBuilderSort::local_cmd(void)
+QString HSqlBuilderSort::local_cmd(QString dialect)
 {
+    Q_UNUSED(dialect)
+
+    if(empty)
+        return "";
+
     QString str = "";
     QMap<QString,QString> opts = HSqlBuilder::genOptions(options);
 
@@ -787,6 +848,9 @@ QString HSqlBuilderSort::json_string(void)
 {
     QString sstr;
 
+    if(empty)
+        return "";
+
     sstr += "{";
     sstr += QString("\"field\": \"%1\",").arg(field);
     sstr += QString("\"table\": \"%1\",").arg(table);
@@ -795,7 +859,35 @@ QString HSqlBuilderSort::json_string(void)
     return sstr;
 }
 
+bool HSqlBuilderSort::isEmpty()
+{
+    return empty;
+}
+
 // HSqlBuilder //////////////////////////////////////////////////////////////////
+
+QString HSqlBuilder::translateDialect(QString subjectString,QString dialect)
+{
+    int d_idx = 0,p_idx = 0;
+    while(true)
+    {
+        if(strlen(dialectTableDialects[d_idx]) == 0)
+            return subjectString;
+        if(dialect == dialectTableDialects[d_idx])
+            break;
+        ++d_idx;
+    }
+
+    while(true)
+    {
+        if(strlen(dialectTablePuzzles[p_idx]) == 0)
+            return subjectString;
+        if(subjectString == dialectTablePuzzles[p_idx])
+            break;
+        ++p_idx;
+    }
+    return dialectTableResolve[p_idx][d_idx];
+}
 
 HSqlBuilder::HSqlBuilder(HSqlBuilder_QueryType qtype,QString tablename,QString alias)
 {
@@ -859,22 +951,27 @@ QStringList HSqlBuilder::query_field_list(void)
 {
     QStringList lst;
     lst.clear();
+
     QList<HSqlBuilderField>::iterator fi = field_list.begin();
     while(fi != field_list.end())
     {
         if(!fi->isGetType())
+        {
+            ++fi;
             continue;
+        }
         lst.push_back(fi->getVisibleName());
         ++fi;
     }
     return lst;
 }
 
-void HSqlBuilder::countingField(QString alias,QString field,QString table)
+HSqlBuilder& HSqlBuilder::countingField(QString alias,QString field,QString table)
 {
     count_alias = alias;
     count_field = field;
     count_table = table;
+    return *this;
 }
 
 HSqlBuilder& HSqlBuilder::get(const QString fieldName,const QString aliasName,const QString optionsString)
@@ -1010,7 +1107,8 @@ HSqlBuilder& HSqlBuilder::join_opt_ffe(const QString toTable,const QString toAli
 
 HSqlBuilder& HSqlBuilder::join(HSqlBuilderJoin j)
 {
-    join_list.push_back(j);
+    if(!j.isEmpty())
+        join_list.push_back(j);
     return *this;
 }
 
@@ -1100,7 +1198,8 @@ HSqlBuilder& HSqlBuilder::cond_spec_fv(const QString condSpec,const QString fiel
 
 HSqlBuilder& HSqlBuilder::cond(HSqlBuilderCondition c)
 {
-    condition.add(c);
+    if(!c.isEmpty())
+        condition.add(c);
     return *this;
 }
 
@@ -1130,7 +1229,8 @@ HSqlBuilder& HSqlBuilder::sort(const QString tableName,const QString fieldName,c
 
 HSqlBuilder& HSqlBuilder::sort(HSqlBuilderSort s)
 {
-    sort_list.push_back(s);
+    if(!s.isEmpty())
+        sort_list.push_back(s);
     return *this;
 }
 
@@ -1146,20 +1246,20 @@ HSqlBuilder& HSqlBuilder::setJsonExecutionMode(HSqlBuilder_JsonExecutionModeRequ
     return *this;
 }
 
-QString HSqlBuilder::local_cmd(bool vmm,bool nice)
+QString HSqlBuilder::local_cmd(bool vmm,bool nice,QString dialect)
 {
     if(type == Select)
-        return local_cmd_Select(vmm,nice);
+        return local_cmd_Select(vmm,nice,dialect);
     if(type == Insert)
-        return local_cmd_Insert(vmm,nice);
+        return local_cmd_Insert(vmm,nice,dialect);
     if(type == Update)
-        return local_cmd_Update(vmm,nice);
+        return local_cmd_Update(vmm,nice,dialect);
     if(type == Delete)
-        return local_cmd_Delete(vmm,nice);
+        return local_cmd_Delete(vmm,nice,dialect);
     return QString();
 }
 
-QString HSqlBuilder::local_cmd_Select(bool vmm,bool nice)
+QString HSqlBuilder::local_cmd_Select(bool vmm,bool nice,QString dialect)
 {
     QString sql = "";
     forBind.clear();
@@ -1198,9 +1298,9 @@ QString HSqlBuilder::local_cmd_Select(bool vmm,bool nice)
     if(!base_alias.isEmpty())
         sql += " AS " + base_alias;
 
-    sql += local_cmd_JoinPart(vmm,nice);
+    sql += local_cmd_JoinPart(vmm,nice,dialect);
 
-    QString condPart = condition.local_cmd(this,true,vmm);
+    QString condPart = condition.local_cmd(this,true,vmm,dialect);
     if(!condPart.isEmpty())
     {
         sql += " ";
@@ -1209,7 +1309,7 @@ QString HSqlBuilder::local_cmd_Select(bool vmm,bool nice)
         sql += "WHERE ";
         sql += condPart;
     }
-    sql += local_cmd_SortingPart(vmm,nice);
+    sql += local_cmd_SortingPart(vmm,nice,dialect);
 
     if(limitquery > 0)
     {
@@ -1221,7 +1321,7 @@ QString HSqlBuilder::local_cmd_Select(bool vmm,bool nice)
     return sql;
 }
 
-QString HSqlBuilder::local_cmd_JoinPart(bool vmm,bool nice)
+QString HSqlBuilder::local_cmd_JoinPart(bool vmm,bool nice,QString dialect)
 {
     QString jstr = "";
     QList<HSqlBuilderJoin>::iterator ji = join_list.begin();
@@ -1232,14 +1332,15 @@ QString HSqlBuilder::local_cmd_JoinPart(bool vmm,bool nice)
         jstr += " ";
         if(nice)
             jstr += "\n";
-        jstr += ji->local_cmd(this,vmm);
+        jstr += ji->local_cmd(this,vmm,dialect);
         ++ji;
     }
     return jstr;
 }
 
-QString HSqlBuilder::local_cmd_SortingPart(bool vmm,bool nice)
+QString HSqlBuilder::local_cmd_SortingPart(bool vmm,bool nice,QString dialect)
 {
+    Q_UNUSED(vmm)
     QString sql = "";
     int sc = 0;
     QList<HSqlBuilderSort>::iterator si = sort_list.begin();
@@ -1255,7 +1356,7 @@ QString HSqlBuilder::local_cmd_SortingPart(bool vmm,bool nice)
             sql += "ORDER BY ";
         }
 
-        sql += si->local_cmd();
+        sql += si->local_cmd(dialect);
 
         ++sc;
         ++si;
@@ -1263,7 +1364,7 @@ QString HSqlBuilder::local_cmd_SortingPart(bool vmm,bool nice)
     return sql;
 }
 
-QString HSqlBuilder::local_cmd_Insert(bool vmm,bool nice)
+QString HSqlBuilder::local_cmd_Insert(bool vmm,bool nice,QString dialect)
 {
     QString sql = "";
     forBind.clear();
@@ -1276,7 +1377,7 @@ QString HSqlBuilder::local_cmd_Insert(bool vmm,bool nice)
     while(fi != field_list.end())
     {
         keypart += (fc == 0 ? "":",") + fi->local_cmd_Key();
-        valpart += (fc == 0 ? "":",") + fi->local_cmd_Val(this,vmm);
+        valpart += (fc == 0 ? "":",") + fi->local_cmd_Val(this,vmm,dialect);
         ++fc;
         ++fi;
     }
@@ -1288,7 +1389,7 @@ QString HSqlBuilder::local_cmd_Insert(bool vmm,bool nice)
     return sql;
 }
 
-QString HSqlBuilder::local_cmd_Update(bool vmm,bool nice)
+QString HSqlBuilder::local_cmd_Update(bool vmm,bool nice,QString dialect)
 {
     QString sql = "";
     forBind.clear();
@@ -1304,12 +1405,12 @@ QString HSqlBuilder::local_cmd_Update(bool vmm,bool nice)
     while(fi != field_list.end())
     {
         sql += (fc == 0 ? "":",");
-        sql += fi->local_cmd_Key() + "=" + fi->local_cmd_Val(this,vmm);
+        sql += fi->local_cmd_Key() + "=" + fi->local_cmd_Val(this,vmm,dialect);
         ++fc;
         ++fi;
     }
 
-    QString condPart = condition.local_cmd(this,true,vmm);
+    QString condPart = condition.local_cmd(this,true,vmm,dialect);
     if(!condPart.isEmpty())
     {
         sql += " ";
@@ -1321,7 +1422,7 @@ QString HSqlBuilder::local_cmd_Update(bool vmm,bool nice)
     return sql;
 }
 
-QString HSqlBuilder::local_cmd_Delete(bool vmm,bool nice)
+QString HSqlBuilder::local_cmd_Delete(bool vmm,bool nice,QString dialect)
 {
     QString sql = "";
     forBind.clear();
@@ -1332,7 +1433,7 @@ QString HSqlBuilder::local_cmd_Delete(bool vmm,bool nice)
     if(nice)
         sql += "\n";
 
-    QString condPart = condition.local_cmd(this,true,vmm);
+    QString condPart = condition.local_cmd(this,true,vmm,dialect);
     if(!condPart.isEmpty())
     {
         sql += " ";
@@ -1356,6 +1457,12 @@ QString HSqlBuilder::json_string(void)
         return json_string_Delete();
     return "";
 }
+
+HSqlBuilder_JsonExecutionModeRequest HSqlBuilder::getJsonExecutionMode(void)
+{
+    return jsonExModeReq;
+}
+
 QString HSqlBuilder::json_string_ExecutionModeReqStr(void)
 {
     QString m = "auto";
