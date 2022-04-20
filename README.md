@@ -21,3 +21,10 @@ work on all platform where the Qt runs.
 - Documentation:      http://hyperprog.com/gsafe/doc/html/index.html
 - Sample program:     http://hyperprog.com/prepo/index.html
 - Written by Peter Deak (C) hyper80@gmail.com , License is Lesser GPLv2.1
+
+
+Git branches
+-------------
+- master - The newest gSAFE. Versions above 2.0.0 codes. It based on Qt 6.X
+- gsafe_1.x.x_qt4-5 - The old gSAFE 1.X.X codes. It supports Qt 4.X - 5.X
+
