@@ -27,6 +27,7 @@ HDialogData::HDialogData()
 
     toolButtonReceiverMap.clear();
     toolButtonMethodMap.clear();
+    makeGui_called = false;
 }
 
 HDialogData::HDialogData(QString configName)
@@ -38,6 +39,7 @@ HDialogData::HDialogData(QString configName)
     toolButtonReceiverMap.clear();
     toolButtonMethodMap.clear();
 
+    makeGui_called = false;
     setConfig(configName);
 }
 
@@ -146,6 +148,10 @@ HDialogData* HDialogData::addToolButtonHandler(QString code,QObject *receiver,co
 
 void HDialogData::makeGui(QWidget *base)
 {
+    if(makeGui_called)
+        return;
+
+    makeGui_called = true;
     base->setWindowTitle(!attribute("window_title").isEmpty() ? attribute("window_title") : "Dialog...");
     QVBoxLayout *mlay = new QVBoxLayout(base);
     if(!attribute("title").isEmpty())

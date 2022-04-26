@@ -64,6 +64,7 @@ public:
 public slots:
     int guiElementsNeedUpdateSlot();
     int valueUpdatedInMemory();
+    int timedUpdateSlot(void);
 
 protected:
     virtual void valueSetOnGui_internal();
@@ -73,8 +74,11 @@ protected:
 
     virtual void updateValueEditorRoStatus(void);
 
+    virtual void paintEvent(QPaintEvent *e);
+
     bool progressUpdatingData;
     HField *dLink;
+    int blink;
 
     HDispObjectFlags startflags;
 

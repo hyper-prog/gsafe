@@ -106,6 +106,7 @@ HFieldDisplay::HFieldDisplay(QWidget *parent,HField *data,HDispObjectFlags flags
     beforeLabel = NULL;
     afterLabel = NULL;
     progressUpdatingData = false;
+    blink = 0;
 
     layout = new QHBoxLayout(this);
     if(flagOn(flags,HDispFlag_NoMergeFlagsWithHField))
@@ -249,6 +250,42 @@ void HFieldDisplay::valueSetOnGui_internal()
 void HFieldDisplay::updateValueEditorRoStatus()
 {
 
+}
+
+int HFieldDisplay::timedUpdateSlot(void)
+{
+    if(!dLink->getLastValidatorCheckStatus())
+    {
+        blink = 0;
+        update();
+    }
+
+    if(blink > 0)
+    {
+        blink++;
+            if(blink >= 3) blink = 1;
+
+        update();
+        QTimer::singleShot(500,this,SLOT(timedUpdateSlot()));
+    }
+    return 0;
+}
+
+void HFieldDisplay::paintEvent(QPaintEvent *e)
+{
+    if((blink == 0 && dLink->getLastValidatorCheckStatus()) )
+    {
+        blink = 1;
+        timedUpdateSlot();
+    }
+
+    if(blink > 0)
+    {
+        QPainter p(this);
+        p.setPen( blink%2 == 0 ? Qt::red : Qt::black);
+        p.drawRect(0,0,width()-1,height()-1);
+    }
+    QFrame::paintEvent(e);
 }
 
 HFieldDisplay::~HFieldDisplay()

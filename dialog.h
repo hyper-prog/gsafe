@@ -71,6 +71,7 @@ public:
     HDialogData* addToolButtonHandler(QString code,QObject *receiver,const char *method);
 
 protected:
+    bool makeGui_called;
     QList<HNamed *> objs;
     HDispObjectFlags dispFlags;
     QMap<QString,QString> attributeMap;

@@ -36,6 +36,14 @@ HField* newHFieldObjByName(QString type,QString sqlname,QString desc,QString tit
     return NULL;
 }
 
+HBaseValidator* newHValidatorObjByName(QString type,QString failMessage)
+{
+    if(type == "notempty")  return new HNotEmptyValidator(failMessage);
+    if(type == "regex")     return new HRegexValidator(failMessage);
+    if(type == "range")     return new HRangeValidator(failMessage);
+    if(type == "set")       return new HSetValidator(failMessage);
+    return NULL;
+}
 // //////// HRecordSkel ///////////////////////////////////////////////////////////////
 
 QString HRecordSkel::toJson(HJsonFlag flags)
@@ -449,6 +457,40 @@ bool HField::applyJson_inWork(QJsonObject jsonObject)
         }
     }
 
+    if(jsonObject.contains("validators"))
+    {
+        QJsonArray va = jsonObject.value("validators").toArray();
+        int vi,vc = va.count();
+        for(vi = 0 ; vi < vc ; ++vi)
+        {
+            QJsonObject vao = va.at(vi).toObject();
+            QString v_type = vao.value("type").toString();
+            QString v_fmsg = vao.value("failmessage").toString();
+            if(v_type.isEmpty() && v_fmsg.isEmpty())
+                continue;
+
+            HBaseValidator *n_validator = newHValidatorObjByName(v_type,v_fmsg);
+            if(n_validator == NULL)
+                continue;
+
+            if(vao.contains("attributes"))
+            {
+                QJsonArray voaa = vao.value("attributes").toArray();
+                int vai,vac = voaa.count();
+                for(vai = 0 ; vai < vac ; ++vai)
+                {
+                    QJsonObject vaao = voaa.at(vai).toObject();
+                    QString key = vaao.keys().at(0);
+                    if(key.isEmpty())
+                        continue;
+                    QString value = vaao.value(key).toString();
+                    n_validator->setAttribute(key,value);
+                }
+            }
+            addValidator(n_validator);
+        }
+    }
+
     if(jsonObject.contains("tags"))
         addTags(jsonObject.value("tags").toString());
 
@@ -485,6 +527,35 @@ QJsonValue HField::toJson_inWork(HJsonFlag flags)
             aa.push_back(ao);
         }
         f.insert("attributes",aa);
+    }
+
+    if(validators().count() > 0)
+    {
+        QList<HBaseValidator *> vs = validators();
+        QJsonArray va;
+        int vi,vc = vs.count();
+        for(vi = 0 ; vi < vc ; ++vi)
+        {
+            QJsonObject vo;
+            vo.insert("type",vs[vi]->validatorType());
+            vo.insert("failmessage",vs[vi]->failMessage());
+            QStringList vatts = vs[vi]->allDefinedAttributes();
+            if(vatts.count() > 0)
+            {
+                QJsonArray vaa;
+                int vai,vac = vatts.count();
+                for(vai = 0 ; vai < vac ; ++vai)
+                {
+                    QJsonObject vao;
+                    vao.insert(vatts[vai],vs[vi]->attribute(vatts[vai]));
+                    vaa.push_back(vao);
+                }
+                vo.insert("attributes",vaa);
+            }
+
+            va.push_back(vo);
+        }
+        f.insert("validators",va);
     }
 
     if(tags().count() > 0)

@@ -69,6 +69,7 @@ enum SqlOperationFlags
     SqlOpFlag_DataUpdateSignalDisabled   = 1 << 1,
     SqlOpFlag_ForExtendendedItems        = 1 << 2,
     SqlOpFlag_LeaveStatusesUntouched     = 1 << 3,
+    SqlOpFlag_ValidationOmit             = 1 << 4,
 };
 
 enum HDispObjectFlags
@@ -98,6 +99,86 @@ QString getOptionValue(QString options,QString name,QString defval);
 
 class HCheckField;
 class HDataMatrix;
+class HField;
+
+/** The base and empty field validator class, every validator class extends this. */
+class HBaseValidator
+{
+public:
+    HBaseValidator(QString failMessage);
+    virtual ~HBaseValidator();
+
+    virtual QString validate(QString strValue);
+
+    QString attribute(QString name);
+    QStringList allDefinedAttributes();
+    HBaseValidator* setAttribute(QString name,QString value);
+    HBaseValidator* setAttribute(QString name,int ivalue);
+    HBaseValidator* setAttribute(QString name,double dvalue);
+
+    QString validatorType();
+    QString failMessage();
+
+    /** Sets the connected field of the validator. It does not need to call this, the
+     *  HField::addValidator function automatically call this. */
+    void setConnectedHField(HField *c);
+
+protected:
+    HField *connected;
+    QString vType;
+    QString fMessage;
+    QMap<QString,QString> attributeMap;
+};
+
+/** Simple field validator which raise validation error if the field is empty */
+class HNotEmptyValidator : public HBaseValidator
+{
+public:
+    HNotEmptyValidator(QString failMessage);
+    virtual ~HNotEmptyValidator();
+
+    virtual QString validate(QString strValue);
+};
+
+/** A field validator which raise validation error if the field match (or not match) against a regex
+ *  attributes:
+ *     "valid_regex": "REGEX"
+ *     "notvalid_regex": "REGEX" */
+class HRegexValidator : public HBaseValidator
+{
+public:
+    HRegexValidator(QString failMessage);
+    virtual ~HRegexValidator();
+
+    virtual QString validate(QString strValue);
+};
+
+/** A field validator which raise validation error if the field value is not match to a mathematical range.
+ *  attributes:
+ *     "minimum": "VALUE"
+ *     "maximum": "VALUE" */
+class HRangeValidator : public HBaseValidator
+{
+public:
+    HRangeValidator(QString failMessage);
+    virtual ~HRangeValidator();
+
+    virtual QString validate(QString strValue);
+};
+
+/** A field validator which raise validation error if the field value is in (or not in) a set.
+ *  attributes:
+ *     "separator": "CHAR"  (default is ; )
+ *     "valid_set": "STRING"  (sample: "red;blue;green" )
+ *     "notvalid_set": "STRING" */
+class HSetValidator : public HBaseValidator
+{
+public:
+    HSetValidator(QString failMessage);
+    virtual ~HSetValidator();
+
+    virtual QString validate(QString strValue);
+};
 
 /** HField is the base class of all typed Sql fields.
  *  It holds the common settings/operations which useable in all derived types. */
@@ -182,6 +263,13 @@ public:
     virtual bool isUpdateRequired(bool forRealUpdate = true);
     virtual void refreshRelatedDatabaseData();
 
+    HField *addValidator(HBaseValidator* v);
+    const QList<HBaseValidator *> validators();
+    void clearValidators();
+    bool getLastValidatorCheckStatus();
+
+    virtual QString validate();
+
     virtual QString convertToDisplay(QString fv);
     virtual QString displayValue();
 
@@ -213,6 +301,8 @@ protected:
     bool fDatabaseAndMemoryRepDiffers;
 
     QMap<QString,QString> defaultCreateTypes;
+    QList<HBaseValidator *> vValidators;
+    bool lastValidatorCheckFailed;
     bool inConfigure;
 
 public slots:
@@ -405,6 +495,8 @@ public:
 
     static HRecord* fromJson_embedded(QJsonObject jsonObject);
 
+    QString validate();
+
 protected:
     static HRecord* fromJson_inWork(QJsonObject jsonObject);
     virtual void subspec_toJson_inWork(QJsonObject *top);
@@ -418,6 +510,9 @@ public slots:
     int insert(SqlOperationFlags flags = SqlOpFlag_Default);
     void resetFieldStsAfterDbStore();
     int refreshRelatedDatabaseData();
+
+signals:
+    void validationFailed(QString message);
 };
 
 /** It holds a set of Sql records of same table. */

@@ -299,11 +299,13 @@ HField::HField(QString sqlname,QString description,QString title)
     fet = HFieldEdit_DefaultEditable;
     dispFlags = HDispFlag_Default;
     defaultCreateTypes.clear();
+    vValidators.clear();
+    lastValidatorCheckFailed = false;
 }
 
 HField::~HField()
 {
-    sdebug(QString("...Bye (%1)").arg(fSqlName));
+    clearValidators();
 }
 
 QString HField::className()
@@ -324,6 +326,17 @@ HField_Status HField::status()
 void HField::statusToDatabaseAfterStore()
 {
     sts = HFieldStatus_Database;
+}
+
+void HField::clearValidators()
+{
+    QList<HBaseValidator *>::iterator vi;
+    vi = vValidators.begin();
+    while(vi != vValidators.end())
+    {
+        delete (*vi);
+        vi++;
+    }
 }
 
 QString HField::alias()
@@ -585,6 +598,39 @@ QString HField::displayValue()
     return convertToDisplay(strValue());
 }
 
+HField *HField::addValidator(HBaseValidator* v)
+{
+    v->setConnectedHField(this);
+    vValidators.push_back(v);
+    return this;
+}
+
+const QList<HBaseValidator *> HField::validators()
+{
+    return vValidators;
+}
+
+QString HField::validate()
+{
+    int vNr = 1;
+    QString vtxt = "";
+    lastValidatorCheckFailed = false;
+    QList<HBaseValidator *>::iterator vi;
+    vi = vValidators.begin();
+    while(vi != vValidators.end())
+    {
+        QString vres = (*vi)->validate(strValue());
+        if(!vres.isEmpty())
+        {
+            lastValidatorCheckFailed = true;
+            vtxt.append(QString("%1 - %2: %3\n").arg(title()).arg(vNr).arg(vres));
+            vNr++;
+        }
+        vi++;
+    }
+    return vtxt;
+}
+
 void HField::putsOnSetter(HSqlBuilder *b,QString tableName)
 {
     Q_UNUSED(tableName)
@@ -722,6 +768,11 @@ void HField::initialize(void)
 void HField::refreshRelatedDatabaseData()
 {
 
+}
+
+bool HField::getLastValidatorCheckStatus()
+{
+    return lastValidatorCheckFailed;
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////// //
@@ -1064,6 +1115,16 @@ int HRecord::update(SqlOperationFlags flags)
     }
     if(!isUpdateRequired(false))
         return 0;
+    if(!flagOn(flags,SqlOpFlag_ValidationOmit))
+    {
+        QString vtxt = validate();
+        if(!vtxt.isEmpty())
+        {
+            emit validationFailed(vtxt);
+            sdebug(QString("HRecord::update, validation error:\n%1").arg(vtxt));
+            return 1;
+        }
+    }
     if(updateGuardAlert())
     {
         sdebug("HRecord::update, Disabled update: Update guard found modified timestamp!");
@@ -1097,6 +1158,17 @@ int HRecord::insert(SqlOperationFlags flags)
     {
         sdebug("HRecord::insert, Disabled insert: Key value not empty!");
         return 1;
+    }
+
+    if(!flagOn(flags,SqlOpFlag_ValidationOmit))
+    {
+        QString vtxt = validate();
+        if(!vtxt.isEmpty())
+        {
+            emit validationFailed(vtxt);
+            sdebug(QString("HRecord::insert, validation error:\n%1").arg(vtxt));
+            return 1;
+        }
     }
 
     HSql sql = getSql();
@@ -1168,6 +1240,20 @@ void HRecord::tagSetStrValue(QString t,QString value)
     for(i = 0 ; i < fc ; ++i )
         if(fields[i]->hasTag(t))
             fields[i]->setStrValue(value);
+}
+
+QString HRecord::validate()
+{
+    QString vtxt = "";
+    int i,fc = fieldCount();
+    for(i = 0 ; i < fc ; ++i )
+    {
+        QString vres;
+        vres = fields[i]->validate();
+        if(!vres.isEmpty())
+            vtxt.append(vres);
+    }
+    return vtxt;
 }
 
 QString HRecord::generateString(int verbose)
@@ -1300,6 +1386,197 @@ void HRecordLines::addOnItemAction(QString actionName,QString displayText)
 const QMap<QString,QString> HRecordLines::allOnItemActions()
 {
     return onItemActions;
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////////////////// //
+
+HBaseValidator::HBaseValidator(QString failMessage)
+{
+    vType = "";
+    fMessage = failMessage;
+    attributeMap.clear();
+}
+
+HBaseValidator::~HBaseValidator()
+{
+}
+
+QString HBaseValidator::validate(QString strValue)
+{
+    Q_UNUSED(strValue);
+    return "";
+}
+
+QString HBaseValidator::attribute(QString name)
+{
+    if(attributeMap.contains(name))
+        return attributeMap[name];
+    return "";
+}
+
+QStringList HBaseValidator::allDefinedAttributes()
+{
+    return attributeMap.keys();
+}
+
+HBaseValidator* HBaseValidator::setAttribute(QString name,QString value)
+{
+    attributeMap[name] = value;
+    return this;
+}
+
+HBaseValidator* HBaseValidator::setAttribute(QString name,int ivalue)
+{
+    attributeMap[name] = QString::asprintf("%d",ivalue);
+    return this;
+}
+
+HBaseValidator* HBaseValidator::setAttribute(QString name,double dvalue)
+{
+    attributeMap[name] = QString::asprintf("%f",dvalue);
+    return this;
+}
+
+QString HBaseValidator::validatorType()
+{
+    return vType;
+}
+
+QString HBaseValidator::failMessage()
+{
+    return fMessage;
+}
+
+void HBaseValidator::setConnectedHField(HField *c)
+{
+    connected = c;
+}
+
+HNotEmptyValidator::HNotEmptyValidator(QString failMessage)
+: HBaseValidator(failMessage)
+{
+    vType = "notempty";
+}
+
+HNotEmptyValidator::~HNotEmptyValidator()
+{
+}
+
+QString HNotEmptyValidator::validate(QString strValue)
+{
+    if(strValue.isEmpty())
+        return fMessage;
+    return "";
+};
+
+HRegexValidator::HRegexValidator(QString failMessage)
+: HBaseValidator(failMessage)
+{
+    vType = "regex";
+}
+
+HRegexValidator::~HRegexValidator()
+{
+}
+
+QString HRegexValidator::validate(QString strValue)
+{
+    QRegularExpression::MatchType mt = QRegularExpression::NormalMatch;
+    QRegularExpression::PatternOptions po = QRegularExpression::NoPatternOption;
+
+    if(attribute("unicode") == "yes")
+        po |= (QRegularExpression::UseUnicodePropertiesOption);
+    if(attribute("case_insesitive") == "yes")
+        po |= (QRegularExpression::CaseInsensitiveOption);
+
+    if(!attribute("valid_regex").isEmpty())
+    {
+        QRegularExpression rx(attribute("valid_regex"),po);
+        QRegularExpressionMatch m = rx.match(strValue,0,mt);
+        if(m.hasMatch())
+            return "";
+        else
+            return fMessage;
+
+    }
+    if(!attribute("notvalid_regex").isEmpty())
+    {
+        QRegularExpression rx(attribute("notvalid_regex"),po);
+        QRegularExpressionMatch m = rx.match(strValue,0,mt);
+        if(m.hasMatch())
+            return fMessage;
+        else
+            return "";
+    }
+    return "";
+}
+
+HRangeValidator::HRangeValidator(QString failMessage)
+: HBaseValidator(failMessage)
+{
+    vType = "range";
+}
+
+HRangeValidator::~HRangeValidator()
+{
+}
+
+QString HRangeValidator::validate(QString strValue)
+{
+    bool ok;
+    double v,m;
+    v = strValue.toDouble(&ok);
+    if(!ok)
+        return "";
+
+    if(!attribute("minimum").isEmpty())
+    {
+        m = attribute("minimum").toDouble(&ok);
+        if(ok && m > v)
+            return fMessage;
+    }
+    if(!attribute("maximum").isEmpty())
+    {
+        m = attribute("maximum").toDouble(&ok);
+        if(ok && m < v)
+            return fMessage;
+    }
+    return "";
+}
+
+HSetValidator::HSetValidator(QString failMessage)
+: HBaseValidator(failMessage)
+{
+    vType = "set";
+}
+
+HSetValidator::~HSetValidator()
+{
+}
+
+QString HSetValidator::validate(QString strValue)
+{
+    QString separator = ";";
+    if(!attribute("separator").isEmpty())
+        separator = attribute("separator");
+
+    if(!attribute("valid_set").isEmpty())
+    {
+        QStringList sset = attribute("valid_set").split(separator);
+        if(sset.contains(strValue))
+            return "";
+        else
+            return fMessage;
+    }
+    if(!attribute("notvalid_set").isEmpty())
+    {
+        QStringList sset = attribute("notvalid_set").split(separator);
+        if(sset.contains(strValue))
+            return fMessage;
+        else
+            return "";
+    }
+    return "";
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////////// //
