@@ -32,6 +32,8 @@ class QToolButton;
 class QSpinBox;
 class QButtonGroup;
 class HFieldDisplay;
+class QTableWidget;
+class QTableWidgetItem;
 
 class HSqlXChooseDisplayPopup;
 
@@ -168,6 +170,7 @@ public:
 
 public slots:
     int valueUpdatedOnGui();
+    int valueUpdatedOnGuiTbl(QTableWidgetItem *twi);
 
 protected:
     virtual void valueSetOnGui_internal();
@@ -175,6 +178,7 @@ protected:
     HLargeTextField *myHLargeTextField();
 
     QTextEdit *valueEditor;
+    QTableWidget *valueTableEditor;
     QTextEdit *valueShow;
 };
 

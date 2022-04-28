@@ -462,6 +462,7 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
 {
     valueShow = NULL;
     valueEditor = NULL;
+    valueTableEditor = NULL;
 
     generateGuiElementsBefore();
     int minw=100,minh=50,maxw = 0,maxh = 0;
@@ -475,33 +476,65 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
     if(!dLink->attribute("gui_maxheight").isEmpty())
         maxh = dLink->attribute("gui_maxheight").toInt();
 
-    if(data->fieldEditType() == HFieldEdit_DefaultEditable || data->fieldEditType() == HFieldEdit_Readonly)
+    if(dLink->attribute("csvtable") == "yes")
     {
-        valueEditor = new QTextEdit(this);
-        valueEditor->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
-        valueSetOnGui_internal();
-        valueEditor->setTabChangesFocus(true);
-        valueEditor->setMinimumSize(minw,minh);
-        if(maxw > 0 && maxh > 0)
-            valueEditor->setMaximumSize(maxw,maxh);
-        connect(valueEditor,SIGNAL(textChanged()),this,SLOT(valueUpdatedOnGui()));
-        layout->addWidget(valueEditor);
-    }
-    if(data->fieldEditType() == HFieldEdit_ShowReadonly)
-    {
-        valueShow = new QTextEdit(this);
-        valueShow->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
-        valueSetOnGui_internal();
-        valueShow->setReadOnly(true);
-        valueShow->setMinimumSize(minw,minh);
-        if(maxw > 0 && maxh > 0)
-            valueEditor->setMaximumSize(maxw,maxh);
+        valueTableEditor = new QTableWidget(this);
+        QStringList cols = dLink->attribute("csvtable_columns").split(";");
+        QStringList rows = dLink->attribute("csvtable_rows").split(";");
+        valueTableEditor->setColumnCount(cols.count());
+        valueTableEditor->setRowCount(rows.count());
+        valueTableEditor->setHorizontalHeaderLabels(cols);
+        valueTableEditor->setVerticalHeaderLabels(rows);
+        valueTableEditor->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        valueTableEditor->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        valueTableEditor->setStyleSheet("QTableWidget::item { padding: 1px; }");
 
-        QColor winColor = this->palette().color(QPalette::Window);
-        QPalette palette;
-        palette.setColor(QPalette::Base,winColor);
-        valueShow->setPalette(palette);
-        layout->addWidget(valueShow);
+        int ri,ci;
+        int rc = valueTableEditor->rowCount(), cc = valueTableEditor->columnCount();
+        QString csv = "";
+        for(ri = 0 ; ri < rc ; ++ri)
+            for(ci = 0 ; ci < cc ; ++ci)
+                valueTableEditor->setItem(ri,ci,new QTableWidgetItem(""));
+
+        valueSetOnGui_internal();
+        connect(valueTableEditor,SIGNAL(itemChanged(QTableWidgetItem *)),this,SLOT(valueUpdatedOnGuiTbl(QTableWidgetItem *)));
+
+        valueTableEditor->setMinimumSize(minw,minh);
+        if(maxw > 0 && maxh > 0)
+            valueTableEditor->setMaximumSize(maxw,maxh);
+
+        layout->addWidget(valueTableEditor);
+    }
+    else
+    {
+        if(data->fieldEditType() == HFieldEdit_DefaultEditable || data->fieldEditType() == HFieldEdit_Readonly)
+        {
+            valueEditor = new QTextEdit(this);
+            valueEditor->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+            valueSetOnGui_internal();
+            valueEditor->setTabChangesFocus(true);
+            valueEditor->setMinimumSize(minw,minh);
+            if(maxw > 0 && maxh > 0)
+                valueEditor->setMaximumSize(maxw,maxh);
+            connect(valueEditor,SIGNAL(textChanged()),this,SLOT(valueUpdatedOnGui()));
+            layout->addWidget(valueEditor);
+        }
+        if(data->fieldEditType() == HFieldEdit_ShowReadonly)
+        {
+            valueShow = new QTextEdit(this);
+            valueShow->setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+            valueSetOnGui_internal();
+            valueShow->setReadOnly(true);
+            valueShow->setMinimumSize(minw,minh);
+            if(maxw > 0 && maxh > 0)
+                valueEditor->setMaximumSize(maxw,maxh);
+
+            QColor winColor = this->palette().color(QPalette::Window);
+            QPalette palette;
+            palette.setColor(QPalette::Base,winColor);
+            valueShow->setPalette(palette);
+            layout->addWidget(valueShow);
+        }
     }
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
@@ -519,18 +552,75 @@ int HLargeTextDisplay::valueUpdatedOnGui()
     return 0;
 }
 
+int HLargeTextDisplay::valueUpdatedOnGuiTbl(QTableWidgetItem *twi)
+{
+    Q_UNUSED(twi)
+    if(progressUpdatingData)
+        return 0;
+
+    progressUpdatingData = true;
+    int ri,ci;
+    int rc = valueTableEditor->rowCount(), cc = valueTableEditor->columnCount();
+    QString csv = "";
+    for(ri = 0 ; ri < rc ; ++ri)
+    {
+        bool has_content = false;
+        QString rstr = "";
+        for(ci = 0 ; ci < cc ; ++ci)
+        {
+            if(ci > 0)
+                rstr.append(";");
+
+            QString cell_str = valueTableEditor->item(ri,ci)->text();
+            if(!cell_str.isEmpty())
+                has_content = true;
+            rstr.append(cell_str);
+        }
+        if(has_content || dLink->attribute("csvtable_emptyrows") == "keep")
+        {
+            csv.append(rstr);
+            csv.append("\n");
+        }
+    }
+    dLink->setStrValue_Gui(csv);
+    progressUpdatingData = false;
+    return 0;
+}
+
 void HLargeTextDisplay::valueSetOnGui_internal()
 {
     if(valueEditor != NULL)
         valueEditor->setText(dLink->strValue());
     if(valueShow != NULL)
         valueShow->setText(dLink->strValue());
+    if(valueTableEditor != NULL)
+    {
+        QString csv = dLink->strValue();
+        QStringList rows = csv.split("\n",Qt::SkipEmptyParts);
+        int r,c;
+        for(r = 0 ; r < rows.count() ; r++)
+        {
+            if(r > valueTableEditor->rowCount())
+                break;
+            QStringList cells = rows[r].split(";",Qt::KeepEmptyParts);
+            for(c = 0 ; c < cells.count() ; c++)
+            {
+                if(c > valueTableEditor->columnCount())
+                    break;
+                valueTableEditor->item(r,c)->setText(cells[c]);
+
+            }
+        }
+
+    }
 }
 
 void HLargeTextDisplay::updateValueEditorRoStatus(void)
 {
     if(valueEditor != NULL)
         valueEditor->setEnabled(dLink->fieldEditType() == HFieldEdit_DefaultEditable);
+    if(valueTableEditor != NULL)
+        valueTableEditor->setEnabled(dLink->fieldEditType() == HFieldEdit_DefaultEditable);
 }
 
 HLargeTextField* HLargeTextDisplay::myHLargeTextField()

@@ -93,6 +93,11 @@ public:
  *   "gui_maxwidth"
  *   "gui_minheight"
  *   "gui_maxheight"
+ *
+ *   "csvtable" = "yes"
+ *   "csvtable_columns" = "HEAD1;HEAD2;..."
+ *   "csvtable_rows" = "ROWNAME1;ROWNAME2;..."
+ *   "csvtable_emptyrows" = "keep"
  */
 class HLargeTextField : public HField
 {
@@ -103,7 +108,6 @@ public:
     ~HLargeTextField();
     virtual QString className();
     virtual HSqlBuilder_FieldValueType fvType();
-
 };
 
 /** A static Key-Value selectable item with string key type
