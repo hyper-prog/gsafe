@@ -141,7 +141,10 @@ HField* HRecordSkel::fieldByIndex(int index)
 
 HField* HRecordSkel::fieldByName(QString sqlname)
 {
-    return fields[fieldIndexByName(sqlname)];
+    int idx = fieldIndexByName(sqlname);
+    if(idx < 0)
+        return NULL;
+    return fields[idx];
 }
 
 int HRecordSkel::fieldIndexByName(QString sqlname)
