@@ -6,7 +6,7 @@
 
     License: LGPLv2.1
 
-    dm.cpp
+    xo.cpp
 */
 
 #include <string.h>

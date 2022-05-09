@@ -88,11 +88,24 @@ enum HDispObjectFlags
     HDispFlag_AddStretchAfterFields             = 1 << 10, //1024
 };
 
+enum HBorderFlag
+{
+    HBorderFlag_None        = 0,
+    HBorderFlag_Top         = 1 << 0,
+    HBorderFlag_Right       = 1 << 1, // 2
+    HBorderFlag_Bottom      = 1 << 2, // 4
+    HBorderFlag_Left        = 1 << 3, // 8
+    HBorderFlag_All         = 15,
+    HBorderFlag_Fill        = 1 << 4, // 16
+};
+
 H_DECLARE_OPERATORS_FOR_FLAGS(HJsonFlag)
 
 H_DECLARE_OPERATORS_FOR_FLAGS(HDispObjectFlags)
 
 H_DECLARE_OPERATORS_FOR_FLAGS(SqlOperationFlags)
+
+H_DECLARE_OPERATORS_FOR_FLAGS(HBorderFlag)
 
 QString statusToString(HField_Status s);
 QString getOptionValue(QString options,QString name,QString defval);

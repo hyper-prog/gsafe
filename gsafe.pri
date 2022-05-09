@@ -32,6 +32,7 @@ SOURCES += \
     $${GSAFE_PATH}database.cpp \
     $${GSAFE_PATH}dialog.cpp \
     $${GSAFE_PATH}xo.cpp \
+    $${GSAFE_PATH}po.cpp \
     $${GSAFE_PATH}dconsole.cpp
 
 HEADERS  += \
@@ -48,6 +49,7 @@ HEADERS  += \
     $${GSAFE_PATH}database.h \
     $${GSAFE_PATH}dialog.h \
     $${GSAFE_PATH}xo.h \
+    $${GSAFE_PATH}po.h \
     $${GSAFE_PATH}dconsole.h
 
 RESOURCES += $${GSAFE_PATH}gsafe.qrc

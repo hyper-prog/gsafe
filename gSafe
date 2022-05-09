@@ -15,5 +15,6 @@
 #include <dialog.h>
 #include <quicktable.h>
 #include <xo.h>
+#include <po.h>
 
 #endif // GSAFE_ALL_HEADER_FILE_H

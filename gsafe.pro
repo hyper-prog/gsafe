@@ -23,6 +23,7 @@ SOURCES += \
     database.cpp \
     dialog.cpp \
     xo.cpp \
+    po.cpp \
     dconsole.cpp
 
 HEADERS  += \
@@ -38,6 +39,7 @@ HEADERS  += \
     database.h \
     dialog.h \
     xo.h \
+    po.h \
     dconsole.h
 
 RESOURCES += gsafe.qrc
