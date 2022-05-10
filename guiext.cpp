@@ -164,13 +164,13 @@ int HSqlXChooseDisplayPopup::updateList(void)
     QStringList v = dparent->uniField_selectableValues();
     QStringList k = dparent->uniField_selectableKeysAsStr();
 
-    table->setHeadTexts(headertext.split(";",Qt::SkipEmptyParts));
+    table->setHeadTexts(headertext.split(";",Qt::KeepEmptyParts));
 
     QStringList::Iterator itv = v.begin();
     QStringList::Iterator itk = k.begin();
     while ( itv != v.end() && itk != k.end() )
     {
-        QStringList vals = itv->split(";",Qt::SkipEmptyParts);
+        QStringList vals = itv->split(";",Qt::KeepEmptyParts);
         table->addElement( new HQuickTableElement(*itk,&vals) );
         ++itv;
         ++itk;

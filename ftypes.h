@@ -233,6 +233,7 @@ public:
 
     virtual QString convertToDisplay(QString fv);
     virtual void putsOnSetter(HSqlBuilder *b,QString tableName = QString());
+    virtual QString defaultValueCalc(QString def);
 
     QString lastValidValue;
 

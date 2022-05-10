@@ -684,7 +684,7 @@ QString HDateField::fallbackDateValue = "1900-01-01";
 HDateField::HDateField(QString sqlname,QString description,QString title)
  : HField(sqlname,description,title)
 {
-    unkAllowed = true;
+    unkAllowed = false;
     lastValidValue = v;
     defaultCreateTypes["sqlite"] = "varchar";
     defaultCreateTypes["pgsql"]  = "date";
@@ -815,6 +815,13 @@ QString HDateField::val2str(QDate d,bool unknownAllowed)
             return fallbackDateValue;
     }
     return d.toString(Qt::ISODate);
+}
+
+QString HDateField::defaultValueCalc(QString def)
+{
+    if(def.toLower() == "now")
+        return QDate::currentDate().toString(Qt::ISODate);
+    return def;
 }
 
 void HDateField::putsOnSetter(HSqlBuilder *b,QString tableName)
