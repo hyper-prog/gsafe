@@ -197,6 +197,17 @@ HTxtSelectField::~HTxtSelectField(void)
 {
 }
 
+void HTxtSelectField::initialize(void)
+{
+    if(!attribute("autofill_selectables_start").isEmpty() && !attribute("autofill_selectables_end").isEmpty())
+    {
+        int i;
+        for(i = attribute("autofill_selectables_start").toInt() ; i <= attribute("autofill_selectables_end").toInt() ; ++i)
+            addSelectableItem(QString("%1").arg(i),QString("%1").arg(i));
+    }
+    HField::initialize();
+}
+
 QString HTxtSelectField::className(void)
 {
     return "HTxtSelectField";
@@ -287,6 +298,17 @@ HNumSelectField::HNumSelectField(QString sqlname,QString description,QString tit
 
 HNumSelectField::~HNumSelectField(void)
 {
+}
+
+void HNumSelectField::initialize(void)
+{
+    if(!attribute("autofill_selectables_start").isEmpty() && !attribute("autofill_selectables_end").isEmpty())
+    {
+        int i;
+        for(i = attribute("autofill_selectables_start").toInt() ; i <= attribute("autofill_selectables_end").toInt() ; ++i)
+            addSelectableItem(i,QString("%1").arg(i));
+    }
+    HField::initialize();
 }
 
 QString HNumSelectField::className(void)
@@ -963,6 +985,9 @@ void HSqlXChooseField::setKVSource_X(QString tablename,QString keyfield,QString 
 void HSqlXChooseField::refreshKVs_X()
 {
     if(inConfigure)
+        return;
+
+    if(jKeyFieldName.isEmpty() || jShowFields.isEmpty())
         return;
 
     HSql sql = getSql();

@@ -1040,6 +1040,28 @@ void HRecord::putsOnSetter(HSqlBuilder *b)
             fields[i]->putsOnSetter(b,tblName);
 }
 
+QMap<QString,QString> HRecord::getValueMap(bool sqlonly)
+{
+    QMap<QString,QString> vm;
+    vm.clear();
+    int i,fc = fieldCount();
+    for(i = 0 ; i < fc ; ++i )
+        if(!fields[i]->noSql() || !sqlonly)
+            vm[fields[i]->sqlName()] = fields[i]->strValue();
+    return vm;
+}
+
+QMap<QString,QString> HRecord::getDisplayValueMap(bool sqlonly)
+{
+    QMap<QString,QString> vm;
+    vm.clear();
+    int i,fc = fieldCount();
+    for(i = 0 ; i < fc ; ++i )
+        if(!fields[i]->noSql() || !sqlonly)
+            vm[fields[i]->sqlName()] = fields[i]->displayValue();
+    return vm;
+}
+
 int HRecord::returnToDefault(SqlOperationFlags flags)
 {
     Q_UNUSED(flags)

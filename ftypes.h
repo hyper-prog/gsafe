@@ -114,6 +114,8 @@ public:
  *  Attributes:
  *   "radiobuttons" = "yes"
  *   "radiobutton_space"
+ *   "autofill_selectables_start" => INTEGER
+ *   "autofill_selectables_end" => INTEGER
  */
 class HTxtSelectField : public HField , public HFieldWithValueStore<QString>
 {
@@ -133,6 +135,7 @@ public:
 
     virtual QString convertToDisplay(QString fv);
 
+    virtual void initialize(void);
 protected:
     virtual void setStrValue_NoStatusChange(QString value);
 
@@ -146,6 +149,8 @@ protected:
  *  Attributes:
  *   "radiobuttons" = "yes"
  *   "radiobutton_space"
+ *   "autofill_selectables_start" => INTEGER
+ *   "autofill_selectables_end" => INTEGER
  */
 class HNumSelectField : public HField , public HFieldWithValueStore<int>
 {
@@ -165,6 +170,7 @@ public:
 
     virtual QString convertToDisplay(QString fv);
 
+    virtual void initialize(void);
 protected:
     virtual void setStrValue_NoStatusChange(QString value);
 

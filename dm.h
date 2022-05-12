@@ -299,6 +299,7 @@ public:
 
     static HField* fromJson_inWork(QJsonValue jsonValue);
     virtual bool applyJson_inWork(QJsonObject jsonObject);
+    virtual bool applyJson_inWork_valueOnly(QJsonObject jsonObject);
     virtual QJsonValue toJson_inWork(HJsonFlag flags);
 
 protected:
@@ -495,8 +496,8 @@ public:
     HRecord* setStrValue(QString sqlname,QString value);
     HRecord* setStrValue(int index,QString value);
 
-    static HRecord* fromJson(QString jsonData);
-    static HRecord* fromJsonFile(QString jsonFileName);
+    static HRecord* fromJson(QString jsonData,QString inDatabase = "");
+    static HRecord* fromJsonFile(QString jsonFileName,QString inDatabase = "");
 
     virtual QString generateString(int verbose = 0);
 
@@ -510,8 +511,11 @@ public:
 
     QString validate();
 
+    QMap<QString,QString> getValueMap(bool sqlonly = false);
+    QMap<QString,QString> getDisplayValueMap(bool sqlonly = false);
+
 protected:
-    static HRecord* fromJson_inWork(QJsonObject jsonObject);
+    static HRecord* fromJson_inWork(QJsonObject jsonObject,QString inDatabase = "");
     virtual void subspec_toJson_inWork(QJsonObject *top);
     virtual void subspec_applyJson_inWork(QJsonObject *top);
 

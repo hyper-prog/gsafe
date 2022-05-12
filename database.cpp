@@ -456,10 +456,6 @@ void HSqlConnector_HttpRest::parseAnswerTable(QString payload,QStringList fields
     if(payload.isEmpty())
         return;
 
-sdebug("<<<<<<<<<<<<<<<<<<<<<<<<");
-sdebug(payload);
-sdebug("<<<<<<<<<<<<<<<<<<<<<<<<");
-
     QJsonParseError jpe;
     QJsonDocument answer;
     answer = QJsonDocument::fromJson(payload.toUtf8(),&jpe);

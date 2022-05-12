@@ -110,6 +110,7 @@ bool HRecordSkel::applyAddFieldsJson_inWork(QJsonObject jsonObject)
         if(f == NULL)
             continue;
         addField(f);
+        f->applyJson_inWork_valueOnly(fa.at(i).toObject());
     }
     return false;
 }
@@ -179,7 +180,7 @@ void HRecordSkel::subspec_applyJson_inWork(QJsonObject *top)
 
 // //////// HRecord ///////////////////////////////////////////////////////////////////
 
-HRecord* HRecord::fromJson(QString jsonData)
+HRecord* HRecord::fromJson(QString jsonData,QString inDatabase)
 {
     QJsonDocument jdoc;
     QJsonParseError jpe;
@@ -190,16 +191,16 @@ HRecord* HRecord::fromJson(QString jsonData)
                         .arg(jpe.errorString()));
         return NULL;
     }
-    return fromJson_inWork(jdoc.object());
+    return fromJson_inWork(jdoc.object(),inDatabase);
 }
 
-HRecord* HRecord::fromJsonFile(QString jsonFileName)
+HRecord* HRecord::fromJsonFile(QString jsonFileName,QString inDatabase)
 {
-    HRecord *r = HRecord::fromJson(readJsonFile_inWork(jsonFileName));
+    HRecord *r = HRecord::fromJson(readJsonFile_inWork(jsonFileName),inDatabase);
     return r;
 }
 
-HRecord* HRecord::fromJson_inWork(QJsonObject jsonObject)
+HRecord* HRecord::fromJson_inWork(QJsonObject jsonObject,QString inDatabase)
 {
     if(!jsonObject.contains("name") ||
        !jsonObject.contains("title") ||
@@ -212,6 +213,8 @@ HRecord* HRecord::fromJson_inWork(QJsonObject jsonObject)
     }
     HRecord *r = new HRecord(jsonObject.value("name").toString(),
                              jsonObject.value("title").toString());
+    if(!inDatabase.isEmpty())
+        r->db(inDatabase);
     r->applyAddFieldsJson_inWork(jsonObject);
     r->subspec_applyJson_inWork(&jsonObject);
     return r;
@@ -409,6 +412,14 @@ HField* HField::fromJson_inWork(QJsonValue jsonValue)
     return f;
 }
 
+bool HField::applyJson_inWork_valueOnly(QJsonObject jsonObject)
+{
+    if(jsonObject.contains("value"))
+        if(strValue() != jsonObject.value("value").toString())
+            setStrValue(jsonObject.value("value").toString());
+    return false;
+}
+
 bool HField::applyJson_inWork(QJsonObject jsonObject)
 {
     if(jsonObject.contains("description"))
@@ -419,9 +430,6 @@ bool HField::applyJson_inWork(QJsonObject jsonObject)
 
     if(jsonObject.contains("default"))
         setStrDefault(jsonObject.value("default").toString());
-
-    if(jsonObject.contains("value"))
-        setStrValue(jsonObject.value("value").toString());
 
     if(jsonObject.contains("nosql") && jsonObject.value("nosql").toString() == "yes")
         setNoSql(true);
@@ -495,6 +503,11 @@ bool HField::applyJson_inWork(QJsonObject jsonObject)
         addTags(jsonObject.value("tags").toString());
 
     applyJson_inWork_spec(jsonObject);
+
+    if(jsonObject.contains("value"))
+        if(strValue() != jsonObject.value("value").toString())
+            setStrValue(jsonObject.value("value").toString());
+
     return false;
 }
 
