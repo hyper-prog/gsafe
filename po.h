@@ -14,6 +14,7 @@
 
 #include <QtCore>
 #include <QtGui>
+#include <QtWidgets>
 
 #include "dm.h"
 
@@ -58,6 +59,10 @@ public:
     void setBrush(QBrush b);
     void setFont(QFont f);
 
+    void renderFromInstructions(QString txtintr);
+
+    int currentPageIndex();
+
 protected:
     int sizeStrToInt(QString str,QString xy);
     void drawBorders(int w,int h);
@@ -76,6 +81,51 @@ protected:
     QPen pen;
     QBrush brush;
     HBorderFlag border;
+};
+
+/** Frame to be render the pdf content. Used by HPdfPreviewDialog. */
+class HPdfPreviewFrame : public QFrame
+{
+    Q_OBJECT
+
+public:
+    HPdfPreviewFrame(QWidget *parent);
+    ~HPdfPreviewFrame();
+
+    int showPageIndex;
+    QString rawContent;
+    int maxPage;
+
+protected:
+    void paintEvent(QPaintEvent *e);
+};
+
+/** Pdf preview dialog with generator possibility */
+class HPdfPreviewDialog : public QDialog
+{
+    Q_OBJECT
+
+public:
+    HPdfPreviewDialog(QWidget *parent,bool generate_button = true);
+    ~HPdfPreviewDialog();
+
+    void setRawContent(QString c);
+    void addAttachmentFile(QString name,QString content);
+
+    int generatePdfFile(QString filename);
+
+public slots:
+    int generatePdf(void);
+    int startNewPage();
+    int changePage(int p);
+    int nextPage();
+    int prevPage();
+
+protected:
+    QMap<QString,QString> attachmentFiles;
+    QLabel *pageShow;
+    QPdfWriter *pdfWriter;
+    HPdfPreviewFrame *ppf;
 };
 
 /* @} */

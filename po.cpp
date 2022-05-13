@@ -288,4 +288,219 @@ void HPageTileRenderer::newPage()
     emit startNewPage();
 }
 
+int HPageTileRenderer::currentPageIndex()
+{
+    return currentPage;
+}
+
+void HPageTileRenderer::renderFromInstructions(QString txtintr)
+{
+    QList<QString> lines = txtintr.split("\n");
+    QList<QString>::Iterator li;
+    for(li = lines.begin() ; li != lines.end() ; ++li)
+    {
+        if(li->isEmpty())
+            continue;
+        QList<QString> parts = li->split("#",Qt::KeepEmptyParts);
+
+        if(parts.at(0) == "movr")
+        {
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            moveCursorRelative(pp[0],pp[1]);
+        }
+        if(parts.at(0) == "mova")
+        {
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            moveCursorRelative(pp[0],pp[1]);
+        }
+
+        if(parts.at(0) == "newl")
+            newLine();
+        if(parts.at(0) == "newp")
+            newPage();
+
+        if(parts.at(0) == "text")
+            addText(parts.at(1),parts.at(2),HTextType_Plain);
+        if(parts.at(0) == "html")
+            addText(parts.at(1),parts.at(2),HTextType_Html);
+        if(parts.at(0) == "mark")
+            addText(parts.at(1),parts.at(2),HTextType_Markdown);
+
+        if(parts.at(0) == "fram")
+        {
+            HBorderFlag b = HBorderFlag_None;
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            if(pp.contains("all"))
+                b = b | HBorderFlag_All;
+            if(pp.contains("top"))
+                b = b | HBorderFlag_Top;
+            if(pp.contains("right"))
+                b = b | HBorderFlag_Right;
+            if(pp.contains("bottom"))
+                b = b | HBorderFlag_Bottom;
+            if(pp.contains("left"))
+                b = b | HBorderFlag_Left;
+            if(pp.contains("fill"))
+                b = b | HBorderFlag_Fill;
+            setBorder(b);
+        }
+        if(parts.at(0) == "alig")
+        {
+            if(parts.at(1) == "left")
+                setTextAlignment(Qt::AlignLeft);
+            if(parts.at(1) == "right")
+                setTextAlignment(Qt::AlignRight);
+            if(parts.at(1) == "center")
+                setTextAlignment(Qt::AlignCenter);
+        }
+        if(parts.at(0) == "font")
+        {
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            setFont(QFont(pp[0],pp[1].toInt()));
+        }
+    }
+}
+
+// ////////////////////////////////////////////////////////////////////////////////// //
+
+HPdfPreviewFrame::HPdfPreviewFrame(QWidget *parent)
+ : QFrame(parent)
+{
+    showPageIndex = 0;
+}
+
+HPdfPreviewFrame::~HPdfPreviewFrame()
+{
+
+}
+
+void HPdfPreviewFrame::paintEvent(QPaintEvent *e)
+{
+    Q_UNUSED(e)
+    QPainter pp(this);
+    pp.setWindow(0,0,1652,2338); // PageSite A4 on 200 dpi
+    HPageTileRenderer renderer(&pp);
+    renderer.setPageFilter(showPageIndex);
+    renderer.renderFromInstructions(rawContent);
+    if(renderer.currentPageIndex() != maxPage)
+        maxPage = renderer.currentPageIndex();
+}
+
+HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,bool generate_button)
+ : QDialog(parent)
+{
+    pdfWriter = NULL;
+    attachmentFiles.clear();
+    QVBoxLayout *mlay = new QVBoxLayout(this);
+    QHBoxLayout *toplay = new QHBoxLayout(0);
+
+    ppf = new HPdfPreviewFrame(this);
+    ppf->maxPage = 0;
+    if(generate_button)
+    {
+        QPushButton *generateButton = new QPushButton(tr("Generate Pdf"),this);
+        connect(generateButton,SIGNAL(clicked()),this,SLOT(generatePdf()));
+        toplay->addWidget(generateButton);
+    }
+
+    QPushButton *closeButton = new QPushButton(tr("Close"),this);
+    QPushButton *prevpButton = new QPushButton("<",this);
+    QPushButton *nextpButton = new QPushButton(">",this);
+    pageShow = new QLabel("1",this);
+
+    connect(closeButton,SIGNAL(clicked()),this,SLOT(close()));
+    connect(prevpButton,SIGNAL(clicked()),this,SLOT(prevPage()));
+    connect(nextpButton,SIGNAL(clicked()),this,SLOT(nextPage()));
+
+    toplay->addStretch();
+    toplay->addWidget(prevpButton);
+    toplay->addWidget(pageShow);
+    toplay->addWidget(nextpButton);
+    toplay->addStretch();
+    toplay->addWidget(closeButton);
+    mlay->addLayout(toplay);
+    mlay->addWidget(ppf);
+}
+
+void HPdfPreviewDialog::setRawContent(QString c)
+{
+    ppf->rawContent = c;
+}
+
+void HPdfPreviewDialog::addAttachmentFile(QString name,QString content)
+{
+    attachmentFiles[name] = content;
+}
+
+int HPdfPreviewDialog::generatePdfFile(QString filename)
+{
+    QPdfWriter pw(filename);
+    pdfWriter = &pw;
+
+    pw.setResolution(200);
+    pw.setPageSize(QPageSize(QPageSize::A4));  /*8.26 x 11.69  -> *200 -> 1652 x 2338*/
+    pw.setPageOrientation(QPageLayout::Portrait);
+
+    QMap<QString,QString>::Iterator i;
+    for(i = attachmentFiles.begin() ; i != attachmentFiles.end() ; ++i )
+        pw.addFileAttachment(i.key(),i.value().toUtf8());
+
+    QPainter pp(pdfWriter);
+    pp.setWindow(0,0,1652,2338); // PageSite A4 on 200 dpi (Set elsewhere...)
+    HPageTileRenderer renderer(&pp);
+    connect(&renderer,SIGNAL(startNewPage()),this,SLOT(startNewPage()));
+    renderer.renderFromInstructions(ppf->rawContent);
+    pdfWriter = NULL;
+    return 0;
+}
+
+int HPdfPreviewDialog::generatePdf(void)
+{
+    QString fn = QFileDialog::getSaveFileName(this,tr("Pdf file to save"),"","*.pdf");
+    if(fn.isEmpty())
+        return 0;
+    return generatePdfFile(fn);
+}
+
+int HPdfPreviewDialog::changePage(int p)
+{
+    ppf->showPageIndex = p;
+    pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
+    update();
+    return 0;
+}
+
+int HPdfPreviewDialog::nextPage()
+{
+    ppf->showPageIndex++;
+    if(ppf->showPageIndex > ppf->maxPage)
+        ppf->showPageIndex = ppf->maxPage;
+    pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
+    update();
+    return 0;
+}
+
+int HPdfPreviewDialog::prevPage()
+{
+    ppf->showPageIndex--;
+    if(ppf->showPageIndex < 0)
+        ppf->showPageIndex = 0;
+    pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
+    update();
+    return 0;
+}
+
+int HPdfPreviewDialog::startNewPage()
+{
+    if(pdfWriter != NULL)
+        pdfWriter->newPage();
+    return 0;
+}
+
+HPdfPreviewDialog::~HPdfPreviewDialog()
+{
+
+}
+
+
 //End of gSAFE po.cpp
