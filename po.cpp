@@ -376,7 +376,6 @@ HPdfPreviewFrame::~HPdfPreviewFrame()
 
 void HPdfPreviewFrame::paintEvent(QPaintEvent *e)
 {
-    Q_UNUSED(e)
     QPainter pp(this);
     pp.setWindow(0,0,1652,2338); // PageSite A4 on 200 dpi
     HPageTileRenderer renderer(&pp);
@@ -384,6 +383,7 @@ void HPdfPreviewFrame::paintEvent(QPaintEvent *e)
     renderer.renderFromInstructions(rawContent);
     if(renderer.currentPageIndex() != maxPage)
         maxPage = renderer.currentPageIndex();
+    QFrame::paintEvent(e);
 }
 
 HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,bool generate_button)

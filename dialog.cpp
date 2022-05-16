@@ -166,6 +166,9 @@ void HDialogData::makeGui(QWidget *base)
         mlay->addLayout(titleLayout);
     }
 
+    if(attribute("progress_indicator") == "after_titlebar")
+        addProgressIndicator(base,mlay);
+
     if(!attribute("toolbutton_count").isEmpty() && attribute("toolbutton_count").toInt() > 0)
     {
         int ti,tc = attribute("toolbutton_count").toInt();
@@ -184,6 +187,9 @@ void HDialogData::makeGui(QWidget *base)
             toolLayout->addStretch();
         mlay->addLayout(toolLayout);
     }
+
+    if(attribute("progress_indicator") == "after_toolbar")
+        addProgressIndicator(base,mlay);
 
     QBoxLayout *coreLay;
     if(attribute("orientation") == "horizontal")
@@ -259,6 +265,9 @@ void HDialogData::makeGui(QWidget *base)
 
     mlay->addLayout(coreLay);
 
+    if(attribute("progress_indicator") == "after_core")
+        addProgressIndicator(base,mlay);
+
     bool need_sep_space = false;
     QHBoxLayout *bottomLay = new QHBoxLayout(0);
     bottomLay->addStretch();
@@ -288,8 +297,18 @@ void HDialogData::makeGui(QWidget *base)
 
     mlay->addLayout(bottomLay);
 
+    if(attribute("progress_indicator") == "after_all")
+        addProgressIndicator(base,mlay);
+
     if(!attribute("width").isEmpty() && !attribute("height").isEmpty())
         base->resize(attribute("width").toInt(),attribute("height").toInt());
+}
+
+void HDialogData::addProgressIndicator(QWidget *base,QVBoxLayout *mlay)
+{
+    HProgressIndicator *bcw = new HProgressIndicator(base,attribute("progressindicator_max").toInt());
+    bcw->setCurrent(attribute("progressindicator_current").toInt());
+    mlay->addWidget(bcw);
 }
 
 HRecord* HDialogData::getHRecord(int objIndex)
@@ -342,4 +361,89 @@ HDialog::~HDialog()
 {
 
 }
+
+// //////////////////////////////////////////////////////////////////////// //
+
+HProgressIndicator::HProgressIndicator(QWidget *parent,int steps)
+ :QFrame(parent)
+{
+    current = 0;
+    all_steps = steps;
+    setMaximumHeight(80);
+    setMinimumHeight(45);
+    number_pointsize = 26;
+}
+
+HProgressIndicator::~HProgressIndicator()
+{
+
+}
+
+int HProgressIndicator::setCurrent(int c)
+{
+    current = c;
+    update();
+    return 0;
+}
+
+int HProgressIndicator::step()
+{
+    current++;
+    if(current > all_steps)
+        current = all_steps;
+    update();
+    return current;
+}
+
+
+void HProgressIndicator::paintEvent(QPaintEvent *e)
+{
+    QFrame::paintEvent(e);
+    QPainter p(this);
+    QPointF polygonPoints[6];
+
+    p.fillRect(0,0,width(),height(),QBrush(QColor(100,100,120),Qt::SolidPattern));
+    int stepw = width() / all_steps;
+
+    QFont indfont = QFont("Arial",number_pointsize);
+    indfont.setBold(true);
+    QFontMetrics fm(indfont);
+    int fontw = fm.averageCharWidth()*1.5;
+    int starts = 0;
+    p.setFont(indfont);
+    p.setPen(QColor(200,200,200));
+    for(int s = all_steps - 1 ; s >= 0 ; --s)
+    {
+        starts = s * stepw;
+
+        QColor c;
+        if(current <= s)
+            c = QColor(100+s*15,100+s*15,100+s*15);
+        else
+            c = QColor(100+s*15,100+s*15,170+s*15);
+        p.setBrush(QBrush(c,Qt::SolidPattern));
+
+        if(s == all_steps - 1)
+        {
+            polygonPoints[0] = QPointF(starts,0);
+            polygonPoints[1] = QPointF(starts+stepw,0);
+            polygonPoints[2] = QPointF(starts+stepw,height());
+            polygonPoints[3] = QPointF(starts,height());
+            p.drawPolygon(polygonPoints,4);
+        }
+        else
+        {
+            polygonPoints[0] = QPointF(starts,0);
+            polygonPoints[1] = QPointF(starts+stepw,0);
+            polygonPoints[2] = QPointF(starts+stepw+height()/2,height()/2);
+            polygonPoints[3] = QPointF(starts+stepw,height());
+            polygonPoints[4] = QPointF(starts,height());
+            p.drawPolygon(polygonPoints,5);
+        }
+
+        p.drawText(QRect(starts+stepw-stepw/4,10,fontw,height()-20),Qt::AlignHCenter | Qt::AlignVCenter,QString("%1").arg(s+1));
+    }
+
+}
+
 //end code.

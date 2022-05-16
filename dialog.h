@@ -24,6 +24,7 @@
 #include "guiext.h"
 
 class HDialog;
+class HProcessIndicator;
 
 /** Base data class to rapid build dialogs for gSAFE structures. */
 class HDialogData : public HNamed
@@ -71,6 +72,8 @@ public:
     HDialogData* addToolButtonHandler(QString code,QObject *receiver,const char *method);
 
 protected:
+    void addProgressIndicator(QWidget *base,QVBoxLayout *mlay);
+
     bool makeGui_called;
     QList<HNamed *> objs;
     HDispObjectFlags dispFlags;
@@ -86,6 +89,8 @@ protected:
 /** Rapid dialog for gSAFE structures, based on HDialogData. */
 class HDialog : public QDialog , public HDialogData
 {
+    Q_OBJECT
+
 public:
     HDialog(QWidget *parent);
     HDialog(QString configName,QWidget *parent);
@@ -101,6 +106,28 @@ public:
 
 public slots:
     virtual int exec();
+
+};
+
+class HProgressIndicator : public QFrame
+{
+    Q_OBJECT
+
+public:
+    HProgressIndicator(QWidget *parent,int steps);
+    ~HProgressIndicator();
+
+    int setCurrent(int c);
+    int step();
+
+public:
+    int number_pointsize;
+
+protected:
+    int all_steps;
+    int current;
+
+    void paintEvent(QPaintEvent *e);
 
 };
 
