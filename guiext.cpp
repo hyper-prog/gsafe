@@ -29,6 +29,21 @@
 #include <QtGui>
 #include <QtWidgets>
 
+QColor html6HexColor(QString hc)
+{
+    bool ok;
+    int r,g,b;
+    r = hc.mid(0,2).toInt(&ok,16);
+    if(!ok)
+        r = 0;
+    g = hc.mid(2,2).toInt(&ok,16);
+    if(!ok)
+        g = 0;
+    b = hc.mid(4,2).toInt(&ok,16);
+    if(!ok)
+        b = 0;
+    return QColor(r,g,b);
+}
 // /////////////////////////////////////////////////////////////////////////////////////
 // HSqlXChoose related gui calss
 // /////////////////////////////////////////////////////////////////////////////////////

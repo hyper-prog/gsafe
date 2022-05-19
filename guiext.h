@@ -38,6 +38,8 @@ class HFieldDisplay;
 class HDynTable;
 class HSqlXChooseDisplay;
 
+QColor html6HexColor(QString hc);
+
 class HSqlXChooseDisplayPopup : public QDialog
 {
     Q_OBJECT

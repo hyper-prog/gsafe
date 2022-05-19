@@ -125,22 +125,8 @@ HFieldDisplay::HFieldDisplay(QWidget *parent,HField *data,HDispObjectFlags flags
 
     if(!dLink->attribute("color").isEmpty())
     {
-        QString chex = dLink->attribute("color");
-        bool ok;
-        int r,g,b;
-
-        r = chex.mid(0,2).toInt(&ok,16);
-        if(!ok)
-            r = 0;
-        g = chex.mid(2,2).toInt(&ok,16);
-        if(!ok)
-            g = 0;
-        b = chex.mid(4,2).toInt(&ok,16);
-        if(!ok)
-            b = 0;
-
         QPalette palette;
-        palette.setColor(QPalette::Window,QColor(r,g,b));
+        palette.setColor(QPalette::Window,html6HexColor(dLink->attribute("color")));
         setPalette(palette);
         setAutoFillBackground(true);
     }
@@ -206,22 +192,8 @@ int HFieldDisplay::guiElementsNeedUpdate()
 
     if(!dLink->attribute("color").isEmpty())
     {
-        QString chex = dLink->attribute("color");
-        bool ok;
-        int r,g,b;
-
-        r = chex.mid(0,2).toInt(&ok,16);
-        if(!ok)
-            r = 0;
-        g = chex.mid(2,2).toInt(&ok,16);
-        if(!ok)
-            g = 0;
-        b = chex.mid(4,2).toInt(&ok,16);
-        if(!ok)
-            b = 0;
-
         QPalette palette;
-        palette.setColor(QPalette::Window,QColor(r,g,b));
+        palette.setColor(QPalette::Window,html6HexColor(dLink->attribute("color")));
 
         setPalette(palette);
         setAutoFillBackground(true);
@@ -595,9 +567,14 @@ void HLargeTextDisplay::valueSetOnGui_internal()
         valueShow->setText(dLink->strValue());
     if(valueTableEditor != NULL)
     {
+        int r,c;
+        for(r = 0 ; r < valueTableEditor->rowCount() ; r++)
+            for(c = 0 ; c < valueTableEditor->columnCount() ; c++)
+                valueTableEditor->item(r,c)->setText("");
+
         QString csv = dLink->strValue();
         QStringList rows = csv.split("\n",Qt::SkipEmptyParts);
-        int r,c;
+
         for(r = 0 ; r < rows.count() ; r++)
         {
             if(r > valueTableEditor->rowCount())

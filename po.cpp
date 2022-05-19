@@ -13,6 +13,33 @@
 #include <QtGui>
 
 #include "po.h"
+#include "dconsole.h"
+#include "guiext.h"
+
+HTextDocument::HTextDocument()
+    : QTextDocument()
+{
+
+}
+
+HTextDocument::~HTextDocument()
+{
+
+}
+
+
+void HTextDocument::drawColorContents(QPainter *p,const QColor& color, const QRectF &rect)
+{
+    p->save();
+    QAbstractTextDocumentLayout::PaintContext ctx;
+    if (rect.isValid()) {
+        p->setClipRect(rect);
+        ctx.clip = rect;
+    }
+    ctx.palette.setColor(QPalette::Text, color);
+    documentLayout()->draw(p, ctx);
+    p->restore();
+}
 
 HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
 {
@@ -24,6 +51,7 @@ HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
     currentPage = 0;
     pageFilter = -1;
     defaultFont = QFont("Arial",18);
+    fontColor = QColor(0,0,0);
 
     p->setPen(QPen(QColor(0,0,0),5));
     p->setPen(Qt::SolidLine);
@@ -119,7 +147,7 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
         newLine();
 
     QRect r(cursorX,cursorY,w_px,1000);
-    QTextDocument td;
+    HTextDocument td;
     if(type == HTextType_Plain)
         td.setPlainText(text);
     if(type == HTextType_Html)
@@ -128,6 +156,7 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
         td.setMarkdown(text);
     td.setDefaultFont(defaultFont);
     td.setTextWidth(r.width());
+
     td.setDefaultTextOption(QTextOption(alignment));
 
     if(td.size().height() + cursorY > p->window().height())
@@ -142,7 +171,7 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
         p->translate(r.topLeft());
         if(flagOn(border,HBorderFlag_Fill))
             p->fillRect(0,0,td.size().width(),minLineHeight > td.size().height() ? minLineHeight : td.size().height(),brush);
-        td.drawContents(p);
+        td.drawColorContents(p,fontColor);
         drawBorders(td.size().width(),minLineHeight > td.size().height() ? minLineHeight : td.size().height());
         p->restore();
     }
@@ -161,7 +190,7 @@ void HPageTileRenderer::drawText(QString xpos,QString ypos,QString width,QString
     int y = sizeStrToInt(ypos,"y");
     int w_px = sizeStrToInt(width,"x");
     QRect r(x,y,w_px,1000);
-    QTextDocument td;
+    HTextDocument td;
     if(type == HTextType_Plain)
         td.setPlainText(text);
     if(type == HTextType_Html)
@@ -178,7 +207,7 @@ void HPageTileRenderer::drawText(QString xpos,QString ypos,QString width,QString
         p->translate(r.topLeft());
         if(flagOn(border,HBorderFlag_Fill))
             p->fillRect(0,0,td.size().width(),td.size().height(),brush);
-        td.drawContents(p);
+        td.drawColorContents(p,fontColor);
         drawBorders(td.size().width(),td.size().height());
         p->restore();
     }
@@ -261,6 +290,13 @@ int  HPageTileRenderer::calcTextHeight(QString width,QString text,HPageTileRende
     return td.size().height();
 }
 
+void HPageTileRenderer::incrementMinLineHeightToTextHeight(QString width,QString text,HPageTileRenderer_TextType type)
+{
+    int ch = calcTextHeight(width,text,type);
+    if(minLineHeight < ch)
+        minLineHeight = ch;
+}
+
 void HPageTileRenderer::newLine()
 {
     if(currentLineHeight > 0)
@@ -293,6 +329,16 @@ int HPageTileRenderer::currentPageIndex()
     return currentPage;
 }
 
+void HPageTileRenderer::setFontColor(QColor c)
+{
+    fontColor = c;
+}
+
+QColor HPageTileRenderer::getFontColor()
+{
+    return fontColor;
+}
+
 void HPageTileRenderer::renderFromInstructions(QString txtintr)
 {
     QList<QString> lines = txtintr.split("\n");
@@ -302,31 +348,46 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
         if(li->isEmpty())
             continue;
         QList<QString> parts = li->split("#",Qt::KeepEmptyParts);
+        QString cmd = parts.at(0).trimmed();
 
-        if(parts.at(0) == "movr")
+        if(cmd == "movr")
         {
             QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
             moveCursorRelative(pp[0],pp[1]);
         }
-        if(parts.at(0) == "mova")
+        if(cmd == "mova")
         {
             QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
             moveCursorRelative(pp[0],pp[1]);
         }
 
-        if(parts.at(0) == "newl")
+        if(cmd == "newl")
             newLine();
-        if(parts.at(0) == "newp")
+        if(cmd == "newp")
             newPage();
 
-        if(parts.at(0) == "text")
+        if(cmd == "text")
             addText(parts.at(1),parts.at(2),HTextType_Plain);
-        if(parts.at(0) == "html")
+        if(cmd == "html")
             addText(parts.at(1),parts.at(2),HTextType_Html);
-        if(parts.at(0) == "mark")
+        if(cmd == "mark")
             addText(parts.at(1),parts.at(2),HTextType_Markdown);
 
-        if(parts.at(0) == "fram")
+        if(cmd == "smht")
+            incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Plain);
+        if(cmd == "smhh")
+            incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Html);
+        if(cmd == "smhm")
+            incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Markdown);
+        if(cmd == "smhz")
+            setMinimumLineHeight(0);
+
+        if(cmd == "colf")
+            setFontColor(html6HexColor(parts.at(1)));
+        if(cmd == "coll")
+            setPen(QPen(html6HexColor(parts.at(1))));
+
+        if(cmd == "fram")
         {
             HBorderFlag b = HBorderFlag_None;
             QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
@@ -344,7 +405,7 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
                 b = b | HBorderFlag_Fill;
             setBorder(b);
         }
-        if(parts.at(0) == "alig")
+        if(cmd == "alig")
         {
             if(parts.at(1) == "left")
                 setTextAlignment(Qt::AlignLeft);
@@ -353,11 +414,12 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
             if(parts.at(1) == "center")
                 setTextAlignment(Qt::AlignCenter);
         }
-        if(parts.at(0) == "font")
+        if(cmd == "font")
         {
             QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
             setFont(QFont(pp[0],pp[1].toInt()));
         }
+
     }
 }
 
@@ -502,5 +564,112 @@ HPdfPreviewDialog::~HPdfPreviewDialog()
 
 }
 
+// //////////////////////////////////////////////////////////////////////////////// //
+
+QString instructionPreprocessor(QString in)
+{
+    QString out = "";
+    QList<QString> lines = in.split("\n");
+    QList<QString>::Iterator li;
+    QList<bool> conds;
+    conds.clear();
+    for(li = lines.begin() ; li != lines.end() ; ++li)
+    {
+        QList<QString> parts = li->split("#",Qt::KeepEmptyParts);
+        QString cmd = parts.at(0).trimmed();
+
+        if(cmd.startsWith("//"))
+            continue;
+
+        if(cmd == "COND")
+        {
+            if(!conds.empty() && !conds.first())
+            {
+                conds.push_front(false);
+                continue;
+            }
+
+            if(parts.count() < 4) //Badly formed condition
+            {
+                conds.push_front(false);
+                continue;
+            }
+
+            if(parts.at(2) == "=")
+            {
+                if(parts.at(1).trimmed() == parts.at(3).trimmed())
+                    conds.push_front(true);
+                else
+                    conds.push_front(false);
+                continue;
+            }
+            if(parts.at(2) == "!=")
+            {
+                if(parts.at(1).trimmed() == parts.at(3).trimmed())
+                    conds.push_front(false);
+                else
+                    conds.push_front(true);
+                continue;
+            }
+
+            bool ok1,ok3;
+            double p1dv = parts.at(1).toDouble(&ok1);
+            double p3dv =  parts.at(3).toDouble(&ok3);
+
+            if(!ok1 || !ok3)
+            {
+                conds.push_front(false);
+                continue;
+            }
+
+            if(parts.at(2) == ">")
+            {
+                if(p1dv > p3dv)
+                    conds.push_front(true);
+                else
+                    conds.push_front(false);
+                continue;
+            }
+            if(parts.at(2) == "<")
+            {
+                if(p1dv < p3dv)
+                    conds.push_front(true);
+                else
+                    conds.push_front(false);
+                continue;
+            }
+            if(parts.at(2) == ">=")
+            {
+                if(p1dv >= p3dv)
+                    conds.push_front(true);
+                else
+                    conds.push_front(false);
+                continue;
+            }
+            if(parts.at(2) == "<=")
+            {
+                if(p1dv <= p3dv)
+                    conds.push_front(true);
+                else
+                    conds.push_front(false);
+                continue;
+            }
+            continue;
+        }
+
+        if(cmd == "ENDC")
+        {
+            conds.pop_front();
+            continue;
+        }
+
+        if(conds.empty() || conds.first())
+        {
+            out.append(*li);
+            out.append("\n");
+        }
+    }
+    return out;
+}
 
 //End of gSAFE po.cpp

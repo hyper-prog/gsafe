@@ -26,6 +26,17 @@ enum HPageTileRenderer_TextType {
     HTextType_Markdown  = 2,
 };
 
+/** A minimal modified version of QTextDocument.
+ *  Its able to draw content with different colors by drawColorContents method */
+class HTextDocument : public QTextDocument
+{
+public:
+    HTextDocument();
+    ~HTextDocument();
+
+    void drawColorContents(QPainter *p, const QColor& color,const QRectF &rect = QRectF());
+};
+
 /** This class can render a QPainter device by tiled text and image fields.
  *  Useable to generate screen, pdf or printer output.
  *  The text fields can receive html or markdown texts while the borders and alignments are also configurable.
@@ -49,6 +60,7 @@ public:
     void newPage();
 
     int  calcTextHeight(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
+    void incrementMinLineHeightToTextHeight(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
 
     void setPageFilter(int pf);
 
@@ -58,6 +70,8 @@ public:
     void setPen(QPen npen);
     void setBrush(QBrush b);
     void setFont(QFont f);
+    void setFontColor(QColor c);
+    QColor getFontColor();
 
     void renderFromInstructions(QString txtintr);
 
@@ -77,11 +91,14 @@ protected:
     int currentPage,pageFilter;
     int cursorX,cursorY,currentLineHeight,minLineHeight;
     QFont defaultFont;
+    QColor fontColor;
     Qt::Alignment alignment;
     QPen pen;
     QBrush brush;
     HBorderFlag border;
 };
+
+QString instructionPreprocessor(QString in);
 
 /** Frame to be render the pdf content. Used by HPdfPreviewDialog. */
 class HPdfPreviewFrame : public QFrame
