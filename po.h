@@ -37,6 +37,18 @@ public:
     void drawColorContents(QPainter *p, const QColor& color,const QRectF &rect = QRectF());
 };
 
+class HPageTileRendererPosition
+{
+public:
+    HPageTileRendererPosition();
+
+    bool valid;
+    int page;
+    int pixel_x,pixel_y,pixel_w,pixel_h;
+    double percent_x,percent_y,percent_w,percent_h;
+
+};
+
 /** This class can render a QPainter device by tiled text and image fields.
  *  Useable to generate screen, pdf or printer output.
  *  The text fields can receive html or markdown texts while the borders and alignments are also configurable.
@@ -62,15 +74,24 @@ public:
     int  calcTextHeight(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
     void incrementMinLineHeightToTextHeight(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
 
+    void storePositionOfNextAddElement(QString withName);
+    HPageTileRendererPosition storedPosition(QString withName);
+    QMap<QString,HPageTileRendererPosition> storedPositions();
+
+    /** The numbering starts from 0
+     *  -1 means no page filter */
     void setPageFilter(int pf);
 
     void setMinimumLineHeight(int mlh);
+    void setMinimumLineHeight(QString mlh);
     void setBorder(HBorderFlag b);
     void setTextAlignment(Qt::Alignment textAlignment);
     void setPen(QPen npen);
     void setBrush(QBrush b);
-    void setFont(QFont f);
     void setFontColor(QColor c);
+    void setFont(QFont f);
+    void setDefaultFont(QFont f);
+    void resetToDefaultFont(void);
     QColor getFontColor();
 
     void renderFromInstructions(QString txtintr);
@@ -80,6 +101,7 @@ public:
 protected:
     int sizeStrToInt(QString str,QString xy);
     void drawBorders(int w,int h);
+    void storePos(int w,int h);
 
 signals:
     void startNewPage(void);
@@ -90,15 +112,32 @@ protected:
 
     int currentPage,pageFilter;
     int cursorX,cursorY,currentLineHeight,minLineHeight;
-    QFont defaultFont;
+    QFont defaultFont,font;
     QColor fontColor;
     Qt::Alignment alignment;
     QPen pen;
     QBrush brush;
     HBorderFlag border;
+    QString storePosOfNext;
+    QMap<QString,HPageTileRendererPosition> storedPos;
 };
 
-QString instructionPreprocessor(QString in);
+/** Text preprocessor for HPageTileRenderer's renderFromInstructions method */
+class HTextProcessor
+{
+public:
+    HTextProcessor();
+    ~HTextProcessor();
+
+    QString processDoc(QString in);
+    QString processLine(QString in);
+    QString processToken(QString in);
+
+    void addValueMap(QString name,const QMap<QString,QString>& m);
+
+protected:
+    QMap<QString, QMap<QString,QString> > smaps;
+};
 
 /** Frame to be render the pdf content. Used by HPdfPreviewDialog. */
 class HPdfPreviewFrame : public QFrame
@@ -143,6 +182,9 @@ protected:
     QLabel *pageShow;
     QPdfWriter *pdfWriter;
     HPdfPreviewFrame *ppf;
+
+public:
+    QMap<QString,HPageTileRendererPosition> lastRenderStoredPositions;
 };
 
 /* @} */

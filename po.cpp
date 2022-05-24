@@ -41,6 +41,20 @@ void HTextDocument::drawColorContents(QPainter *p,const QColor& color, const QRe
     p->restore();
 }
 
+HPageTileRendererPosition::HPageTileRendererPosition()
+{
+    valid = false;
+    page = 0;
+    pixel_x = 0;
+    pixel_y = 0;
+    pixel_w = 0;
+    pixel_h = 0;
+    percent_x = 0.0;
+    percent_y = 0.0;
+    percent_w = 0.0;
+    percent_h = 0.0;
+}
+
 HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
 {
     p = configuredPainter;
@@ -51,6 +65,7 @@ HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
     currentPage = 0;
     pageFilter = -1;
     defaultFont = QFont("Arial",18);
+    font = QFont("Arial",18);
     fontColor = QColor(0,0,0);
 
     p->setPen(QPen(QColor(0,0,0),5));
@@ -59,11 +74,30 @@ HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
     pen = QPen(QColor(255,255,255));
     brush = QBrush(QColor(100,100,100),Qt::SolidPattern);
     border = HBorderFlag_None;
+    storePosOfNext = "";
+    storedPos.clear();
 }
 
 HPageTileRenderer::~HPageTileRenderer()
 {
 
+}
+
+void HPageTileRenderer::storePositionOfNextAddElement(QString withName)
+{
+    storePosOfNext = withName;
+}
+
+HPageTileRendererPosition HPageTileRenderer::storedPosition(QString withName)
+{
+    if(storedPos.contains(withName))
+        return storedPos[withName];
+    return HPageTileRendererPosition();
+}
+
+QMap<QString,HPageTileRendererPosition> HPageTileRenderer::storedPositions()
+{
+    return storedPos;
 }
 
 void HPageTileRenderer::setPageFilter(int pf)
@@ -74,6 +108,11 @@ void HPageTileRenderer::setPageFilter(int pf)
 void HPageTileRenderer::setMinimumLineHeight(int mlh)
 {
     minLineHeight = mlh;
+}
+
+void HPageTileRenderer::setMinimumLineHeight(QString mlh)
+{
+    minLineHeight = sizeStrToInt(mlh,"y");
 }
 
 void HPageTileRenderer::setBorder(HBorderFlag b)
@@ -100,7 +139,18 @@ void HPageTileRenderer::setBrush(QBrush b)
 
 void HPageTileRenderer::setFont(QFont f)
 {
+    font = f;
+}
+
+void HPageTileRenderer::setDefaultFont(QFont f)
+{
     defaultFont = f;
+    font = f;
+}
+
+void HPageTileRenderer::resetToDefaultFont()
+{
+    font = defaultFont;
 }
 
 int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
@@ -118,13 +168,31 @@ int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
     if(str.endsWith("em"))
     {
         int mul = str.mid(0,str.length()-2).toInt();
-        QFontMetrics fm(defaultFont);
+        QFontMetrics fm(font);
         if(xy == "x")
             return fm.averageCharWidth() * mul;
         if(xy == "y")
             return fm.height() * mul;
     }
     return str.toInt();
+}
+
+void HPageTileRenderer::storePos(int w,int h)
+{
+    HPageTileRendererPosition sp;
+    sp.valid = true;
+    sp.page = currentPage + 1;
+    sp.pixel_x = cursorX;
+    sp.pixel_y = cursorY;
+    sp.pixel_w = w;
+    sp.pixel_h = h;
+    sp.percent_x = ((double)sp.pixel_x * 100.0) / p->window().width();
+    sp.percent_y = ((double)sp.pixel_y * 100.0) / p->window().height();
+    sp.percent_w = ((double)sp.pixel_w * 100.0) / p->window().width();
+    sp.percent_h = ((double)sp.pixel_h * 100.0) / p->window().height();
+
+    storedPos[storePosOfNext] = sp;
+    storePosOfNext = "";
 }
 
 void HPageTileRenderer::moveCursorRelative(QString x,QString y)
@@ -154,7 +222,7 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
         td.setHtml(text);
     if(type == HTextType_Markdown)
         td.setMarkdown(text);
-    td.setDefaultFont(defaultFont);
+    td.setDefaultFont(font);
     td.setTextWidth(r.width());
 
     td.setDefaultTextOption(QTextOption(alignment));
@@ -167,6 +235,7 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
 
     if(pageFilter < 0 || pageFilter == currentPage)
     {
+
         p->save();
         p->translate(r.topLeft());
         if(flagOn(border,HBorderFlag_Fill))
@@ -175,6 +244,9 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
         drawBorders(td.size().width(),minLineHeight > td.size().height() ? minLineHeight : td.size().height());
         p->restore();
     }
+
+    if(!storePosOfNext.isEmpty())
+        storePos(td.size().width(), minLineHeight > td.size().height() ? minLineHeight : td.size().height());
 
     if(currentLineHeight < minLineHeight)
         currentLineHeight = minLineHeight;
@@ -197,7 +269,7 @@ void HPageTileRenderer::drawText(QString xpos,QString ypos,QString width,QString
         td.setHtml(text);
     if(type == HTextType_Markdown)
         td.setMarkdown(text);
-    td.setDefaultFont(defaultFont);
+    td.setDefaultFont(font);
     td.setTextWidth(r.width());
     td.setDefaultTextOption(QTextOption(alignment));
 
@@ -247,6 +319,9 @@ void HPageTileRenderer::addImage(QString width,QImage image)
         p->drawImage(r,image);
     }
 
+    if(!storePosOfNext.isEmpty())
+        storePos(w_px, height);
+
     if(currentLineHeight < minLineHeight)
         currentLineHeight = minLineHeight;
     if(currentLineHeight < height)
@@ -283,7 +358,7 @@ int  HPageTileRenderer::calcTextHeight(QString width,QString text,HPageTileRende
         td.setHtml(text);
     if(type == HTextType_Markdown)
         td.setMarkdown(text);
-    td.setDefaultFont(defaultFont);
+    td.setDefaultFont(font);
     td.setTextWidth(r.width());
     td.setDefaultTextOption(QTextOption(alignment));
 
@@ -307,7 +382,7 @@ void HPageTileRenderer::newLine()
     }
     else
     {
-        QFontMetrics fm(defaultFont);
+        QFontMetrics fm(font);
         cursorY += fm.height();
         cursorX = 0;
         currentLineHeight = 0;
@@ -373,6 +448,9 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
         if(cmd == "mark")
             addText(parts.at(1),parts.at(2),HTextType_Markdown);
 
+        if(cmd == "imgr")
+            addImage(parts.at(1),QImage(parts.at(2)));
+
         if(cmd == "smht")
             incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Plain);
         if(cmd == "smhh")
@@ -381,11 +459,15 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
             incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Markdown);
         if(cmd == "smhz")
             setMinimumLineHeight(0);
+        if(cmd == "smhv")
+            setMinimumLineHeight(parts.at(1));
 
         if(cmd == "colf")
             setFontColor(html6HexColor(parts.at(1)));
         if(cmd == "coll")
             setPen(QPen(html6HexColor(parts.at(1))));
+        if(cmd == "colb")
+            setBrush(QBrush(html6HexColor(parts.at(1))));
 
         if(cmd == "fram")
         {
@@ -414,13 +496,223 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
             if(parts.at(1) == "center")
                 setTextAlignment(Qt::AlignCenter);
         }
-        if(cmd == "font")
+
+        if(cmd == "setf")
         {
             QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
             setFont(QFont(pp[0],pp[1].toInt()));
         }
+        if(cmd == "setd")
+        {
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            setDefaultFont(QFont(pp[0],pp[1].toInt()));
+        }
+        if(cmd == "deff")
+        {
+            resetToDefaultFont();
+        }
 
+        if(cmd == "getp")
+        {
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            storePositionOfNextAddElement(parts.at(1));
+        }
     }
+}
+
+// ////////////////////////////////////////////////////////////////////////////////// //
+HTextProcessor::HTextProcessor()
+{
+    smaps.clear();
+}
+
+HTextProcessor::~HTextProcessor()
+{
+}
+
+void HTextProcessor::addValueMap(QString name,const QMap<QString,QString>& m)
+{
+    smaps[name] = m;
+}
+
+QString HTextProcessor::processDoc(QString in)
+{
+    QString out = "";
+    QList<QString> lines = in.split("\n");
+    QList<QString>::Iterator li;
+    QList<bool> conds;
+    conds.clear();
+    for(li = lines.begin() ; li != lines.end() ; ++li)
+    {
+        QList<QString> parts = li->split("#",Qt::KeepEmptyParts);
+        QString cmd = parts.at(0).trimmed();
+
+        if(cmd.startsWith("//"))
+            continue;
+
+        if(cmd == "COND")
+        {
+            if(!conds.empty() && !conds.first())
+            {
+                conds.push_front(false);
+                continue;
+            }
+
+            if(parts.count() < 4) //Badly formed condition
+            {
+                conds.push_front(false);
+                continue;
+            }
+
+            if(parts.at(2) == "=")
+            {
+                if( processLine(parts.at(1).trimmed()).trimmed() == processLine(parts.at(3).trimmed()).trimmed() )
+                    conds.push_front(true);
+                else
+                    conds.push_front(false);
+                continue;
+            }
+            if(parts.at(2) == "!=")
+            {
+                if( processLine(parts.at(1).trimmed()).trimmed() == processLine(parts.at(3).trimmed()).trimmed() )
+                    conds.push_front(false);
+                else
+                    conds.push_front(true);
+                continue;
+            }
+
+            bool ok1,ok3;
+            double p1dv = processLine(parts.at(1)).toDouble(&ok1);
+            double p3dv =  processLine(parts.at(3)).toDouble(&ok3);
+
+            if(!ok1 || !ok3)
+            {
+                conds.push_front(false);
+                continue;
+            }
+
+            if(parts.at(2) == ">")
+            {
+                if(p1dv > p3dv)
+                    conds.push_front(true);
+                else
+                    conds.push_front(false);
+                continue;
+            }
+            if(parts.at(2) == "<")
+            {
+                if(p1dv < p3dv)
+                    conds.push_front(true);
+                else
+                    conds.push_front(false);
+                continue;
+            }
+            if(parts.at(2) == ">=")
+            {
+                if(p1dv >= p3dv)
+                    conds.push_front(true);
+                else
+                    conds.push_front(false);
+                continue;
+            }
+            if(parts.at(2) == "<=")
+            {
+                if(p1dv <= p3dv)
+                    conds.push_front(true);
+                else
+                    conds.push_front(false);
+                continue;
+            }
+            continue;
+        }
+
+        if(cmd == "ENDC")
+        {
+            conds.pop_front();
+            continue;
+        }
+
+        if(conds.empty() || conds.first())
+        {
+            out.append(processLine(*li));
+            out.append("\n");
+        }
+    }
+    return out;
+}
+
+QString HTextProcessor::processLine(QString in)
+{
+    int ps,pe;
+
+    while((ps = in.indexOf("{{",0)) != -1)
+    {
+        pe = in.indexOf("}}",ps);
+        if(pe > 0)
+        {
+            QString sam = in.mid(ps+2,pe-ps-2);
+            QString to = "";
+
+            if(sam.indexOf("|",0) > -1)
+            {
+                QStringList sams = sam.split("|",Qt::KeepEmptyParts);
+                QList<QString>::iterator si = sams.begin();
+                while(si != sams.end())
+                {
+                    to = processToken(*si);
+                    if(!to.isEmpty())
+                        break;
+                    ++si;
+                }
+            }
+            else if(sam.indexOf("?",0) > -1 && sam.indexOf(":",0) > -1)
+            {
+                QStringList t,cp,rp;
+                t = sam.split("?",Qt::KeepEmptyParts);
+                if(t.count() == 2)
+                {
+                    cp = t[0].split("=",Qt::KeepEmptyParts);
+                    rp = t[1].split(":",Qt::KeepEmptyParts);
+                    if(cp.count() == 2 && rp.count() == 2)
+                    {
+                        if(processToken(cp[0]) == processToken(cp[1]))
+                            to = processToken(rp[0]);
+                        else
+                            to = processToken(rp[1]);
+                    }
+                }
+            }
+            else
+            {
+                to = processToken(sam);
+            }
+
+            in.replace(ps,pe-ps+2,to);
+        }
+        else
+        {
+            in.replace(ps,2,"");
+            break;
+        }
+    }
+    return in;
+}
+
+QString HTextProcessor::processToken(QString in)
+{
+    if(in.startsWith("."))
+    {
+        QStringList tp = in.mid(1).split(".",Qt::SkipEmptyParts);
+        if(tp.count() == 2)
+        {
+            if(smaps.contains(tp[0]) && smaps[tp[0]].contains(tp[1]))
+            {
+                return smaps[tp[0]][tp[1]];
+            }
+        }
+        return "";
+    }
+    return in;
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -453,6 +745,7 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,bool generate_button)
 {
     pdfWriter = NULL;
     attachmentFiles.clear();
+    lastRenderStoredPositions.clear();
     QVBoxLayout *mlay = new QVBoxLayout(this);
     QHBoxLayout *toplay = new QHBoxLayout(0);
 
@@ -512,6 +805,7 @@ int HPdfPreviewDialog::generatePdfFile(QString filename)
     HPageTileRenderer renderer(&pp);
     connect(&renderer,SIGNAL(startNewPage()),this,SLOT(startNewPage()));
     renderer.renderFromInstructions(ppf->rawContent);
+    lastRenderStoredPositions = renderer.storedPositions();
     pdfWriter = NULL;
     return 0;
 }
@@ -562,114 +856,6 @@ int HPdfPreviewDialog::startNewPage()
 HPdfPreviewDialog::~HPdfPreviewDialog()
 {
 
-}
-
-// //////////////////////////////////////////////////////////////////////////////// //
-
-QString instructionPreprocessor(QString in)
-{
-    QString out = "";
-    QList<QString> lines = in.split("\n");
-    QList<QString>::Iterator li;
-    QList<bool> conds;
-    conds.clear();
-    for(li = lines.begin() ; li != lines.end() ; ++li)
-    {
-        QList<QString> parts = li->split("#",Qt::KeepEmptyParts);
-        QString cmd = parts.at(0).trimmed();
-
-        if(cmd.startsWith("//"))
-            continue;
-
-        if(cmd == "COND")
-        {
-            if(!conds.empty() && !conds.first())
-            {
-                conds.push_front(false);
-                continue;
-            }
-
-            if(parts.count() < 4) //Badly formed condition
-            {
-                conds.push_front(false);
-                continue;
-            }
-
-            if(parts.at(2) == "=")
-            {
-                if(parts.at(1).trimmed() == parts.at(3).trimmed())
-                    conds.push_front(true);
-                else
-                    conds.push_front(false);
-                continue;
-            }
-            if(parts.at(2) == "!=")
-            {
-                if(parts.at(1).trimmed() == parts.at(3).trimmed())
-                    conds.push_front(false);
-                else
-                    conds.push_front(true);
-                continue;
-            }
-
-            bool ok1,ok3;
-            double p1dv = parts.at(1).toDouble(&ok1);
-            double p3dv =  parts.at(3).toDouble(&ok3);
-
-            if(!ok1 || !ok3)
-            {
-                conds.push_front(false);
-                continue;
-            }
-
-            if(parts.at(2) == ">")
-            {
-                if(p1dv > p3dv)
-                    conds.push_front(true);
-                else
-                    conds.push_front(false);
-                continue;
-            }
-            if(parts.at(2) == "<")
-            {
-                if(p1dv < p3dv)
-                    conds.push_front(true);
-                else
-                    conds.push_front(false);
-                continue;
-            }
-            if(parts.at(2) == ">=")
-            {
-                if(p1dv >= p3dv)
-                    conds.push_front(true);
-                else
-                    conds.push_front(false);
-                continue;
-            }
-            if(parts.at(2) == "<=")
-            {
-                if(p1dv <= p3dv)
-                    conds.push_front(true);
-                else
-                    conds.push_front(false);
-                continue;
-            }
-            continue;
-        }
-
-        if(cmd == "ENDC")
-        {
-            conds.pop_front();
-            continue;
-        }
-
-        if(conds.empty() || conds.first())
-        {
-            out.append(*li);
-            out.append("\n");
-        }
-    }
-    return out;
 }
 
 //End of gSAFE po.cpp
