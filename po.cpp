@@ -328,6 +328,43 @@ void HPageTileRenderer::drawText(QString xpos,QString ypos,QString width,QString
     }
 }
 
+void HPageTileRenderer::addRect(QString width,QString height)
+{
+    int w_px = sizeStrToInt(width,"x");
+    int h_px = sizeStrToInt(height,"y");
+
+    if(cursorX + w_px > p->window().width())
+        newLine();
+
+    QRect r(cursorX,cursorY,w_px,h_px);
+
+    if(h_px + cursorY > p->window().height())
+    {
+        newPage();
+        r = QRect(cursorX,cursorY,w_px,h_px);
+    }
+
+    if(pageFilter < 0 || pageFilter == currentPage)
+    {
+        p->save();
+        p->translate(r.topLeft());
+        if(flagOn(border,HBorderFlag_Fill))
+            p->fillRect(0,0,w_px,minLineHeight > h_px ? minLineHeight : h_px,brush);
+        drawBorders(w_px,minLineHeight > h_px ? minLineHeight : h_px);
+        p->restore();
+    }
+
+    if(!storePosOfNext.isEmpty())
+        storePos(w_px, minLineHeight > h_px ? minLineHeight : h_px);
+
+    if(currentLineHeight < minLineHeight)
+        currentLineHeight = minLineHeight;
+    if(currentLineHeight < h_px)
+        currentLineHeight = h_px;
+
+    cursorX += w_px;
+}
+
 void HPageTileRenderer::drawBorders(int w,int h)
 {
     if(flagOn(border,HBorderFlag_Top))
@@ -386,6 +423,25 @@ void HPageTileRenderer::drawImage(QString xpos,QString ypos,QString width,QImage
     if(pageFilter < 0 || pageFilter == currentPage)
     {
         p->drawImage(r,image);
+    }
+}
+
+void HPageTileRenderer::drawRect(QString xpos,QString ypos,QString width,QString height)
+{
+    int x = sizeStrToInt(xpos,"x");
+    int y = sizeStrToInt(ypos,"y");
+    int w_px = sizeStrToInt(width,"x");
+    int h_px = sizeStrToInt(height,"y");
+
+    QRect r(x,y,w_px,h_px);
+    if(pageFilter < 0 || pageFilter == currentPage)
+    {
+        p->save();
+        p->translate(r.topLeft());
+        if(flagOn(border,HBorderFlag_Fill))
+            p->fillRect(0,0,w_px,h_px,brush);
+        drawBorders(w_px,h_px);
+        p->restore();
     }
 }
 
@@ -471,12 +527,14 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
         if(cmd == "movr")
         {
             QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-            moveCursorRelative(pp[0],pp[1]);
+            if(pp.count() >= 2)
+                moveCursorRelative(pp[0],pp[1]);
         }
         if(cmd == "mova")
         {
             QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-            moveCursorAbsolute(pp[0],pp[1]);
+            if(pp.count() >= 2)
+                moveCursorAbsolute(pp[0],pp[1]);
         }
 
         if(cmd == "newl")
@@ -484,15 +542,56 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
         if(cmd == "newp")
             newPage();
 
+        if(cmd == "rect")
+        {
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            if(pp.count() == 2)
+                addRect(pp[0],pp[1]);
+            if(pp.count() == 4)
+                drawRect(pp[0],pp[1],pp[2],pp[3]);
+        }
         if(cmd == "text")
-            addText(parts.at(1),parts.at(2),HTextType_Plain);
+        {
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            if(pp.count() > 2)
+                drawText(pp[0],pp[1],pp[2],parts.at(2),HTextType_Plain);
+            else
+                addText(parts.at(1),parts.at(2),HTextType_Plain);
+        }
         if(cmd == "html")
-            addText(parts.at(1),parts.at(2),HTextType_Html);
+        {
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            if(pp.count() > 2)
+                drawText(pp[0],pp[1],pp[2],parts.at(2),HTextType_Html);
+            else
+                addText(parts.at(1),parts.at(2),HTextType_Html);
+        }
         if(cmd == "mark")
-            addText(parts.at(1),parts.at(2),HTextType_Markdown);
+        {
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            if(pp.count() > 2)
+                drawText(pp[0],pp[1],pp[2],parts.at(2),HTextType_Markdown);
+            else
+                addText(parts.at(1),parts.at(2),HTextType_Markdown);
+        }
 
         if(cmd == "imgr")
-            addImage(parts.at(1),QImage(parts.at(2)));
+        {
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            if(pp.count() > 2)
+                drawImage(pp[0],pp[1],pp[2],QImage(parts.at(2)));
+            else
+                addImage(parts.at(1),QImage(parts.at(2)));
+        }
+        if(cmd == "imgb")
+        {
+            QImage img = QImage::fromData(QByteArray::fromBase64(parts.at(2).toLocal8Bit()));
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            if(pp.count() > 2)
+                drawImage(pp[0],pp[1],pp[2],img);
+            else
+                addImage(parts.at(1),img);
+        }
 
         if(cmd == "smht")
             incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Plain);
@@ -543,12 +642,14 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
         if(cmd == "setf")
         {
             QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-            setFont(QFont(pp[0],pp[1].toInt()));
+            if(pp.count() >= 2)
+                setFont(QFont(pp[0],pp[1].toInt()));
         }
         if(cmd == "setd")
         {
             QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-            setDefaultFont(QFont(pp[0],pp[1].toInt()));
+            if(pp.count() >= 2)
+                setDefaultFont(QFont(pp[0],pp[1].toInt()));
         }
         if(cmd == "deff")
         {
@@ -556,10 +657,8 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
         }
 
         if(cmd == "getp")
-        {
-            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
             storePositionOfNextAddElement(parts.at(1));
-        }
+
     }
 }
 
