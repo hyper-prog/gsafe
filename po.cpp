@@ -157,24 +157,68 @@ int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
 {
     if(str.isEmpty())
         return 0;
+    int iv = 0;
+    bool reverse = false;
+    bool relative_to_pos = false;
+
+    if(str.startsWith(">"))
+    {
+        relative_to_pos = true;
+        str.remove(0,1);
+    }
+    if(str.startsWith("-"))
+    {
+        reverse = true;
+        str.remove(0,1);
+    }
+
+    str = str.trimmed();
+
+    if(!str[0].isDigit())
+        return 0;
+
+    if(str.endsWith("px"))
+        str = str.mid(0,str.length() - 2);
+
+    if(!str.endsWith("%") && !str.endsWith("em"))
+        iv = str.toInt();
+
     if(str.endsWith("%"))
     {
-        int percent = str.mid(0,str.length()-1).toInt();
+        double percent = str.mid(0,str.length()-1).toDouble();
         if(xy == "x")
-            return ((p->window().width()) * percent) / 100;
+            iv = ((p->window().width()) * percent) / 100.0;
         if(xy == "y")
-            return ((p->window().height()) * percent) / 100;
+            iv = ((p->window().height()) * percent) / 100.0;
     }
+
     if(str.endsWith("em"))
     {
-        int mul = str.mid(0,str.length()-2).toInt();
+        double mul = str.mid(0,str.length()-2).toDouble();
         QFontMetrics fm(font);
         if(xy == "x")
-            return fm.averageCharWidth() * mul;
+            iv = fm.averageCharWidth() * mul;
         if(xy == "y")
-            return fm.height() * mul;
+            iv = fm.height() * mul;
     }
-    return str.toInt();
+
+    if(reverse)
+    {
+        if(xy == "x")
+            iv = p->window().width() - iv;
+        if(xy == "y")
+            iv = p->window().height() - iv;
+    }
+
+    if(relative_to_pos)
+    {
+        if(xy == "x" && iv > cursorX)
+            iv = iv - cursorX;
+        if(xy == "y" && iv > cursorY)
+            iv = iv - cursorY;
+    }
+
+    return iv;
 }
 
 void HPageTileRenderer::storePos(int w,int h)
@@ -235,7 +279,6 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
 
     if(pageFilter < 0 || pageFilter == currentPage)
     {
-
         p->save();
         p->translate(r.topLeft());
         if(flagOn(border,HBorderFlag_Fill))
@@ -433,7 +476,7 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
         if(cmd == "mova")
         {
             QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-            moveCursorRelative(pp[0],pp[1]);
+            moveCursorAbsolute(pp[0],pp[1]);
         }
 
         if(cmd == "newl")
@@ -761,7 +804,7 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,bool generate_button)
     QPushButton *closeButton = new QPushButton(tr("Close"),this);
     QPushButton *prevpButton = new QPushButton("<",this);
     QPushButton *nextpButton = new QPushButton(">",this);
-    pageShow = new QLabel("1",this);
+    pageShow = new QLabel("",this);
 
     connect(closeButton,SIGNAL(clicked()),this,SLOT(close()));
     connect(prevpButton,SIGNAL(clicked()),this,SLOT(prevPage()));
@@ -775,6 +818,8 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,bool generate_button)
     toplay->addWidget(closeButton);
     mlay->addLayout(toplay);
     mlay->addWidget(ppf);
+
+    pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
 }
 
 void HPdfPreviewDialog::setRawContent(QString c)
@@ -828,20 +873,24 @@ int HPdfPreviewDialog::changePage(int p)
 
 int HPdfPreviewDialog::nextPage()
 {
+    setUpdatesEnabled(false);
     ppf->showPageIndex++;
     if(ppf->showPageIndex > ppf->maxPage)
         ppf->showPageIndex = ppf->maxPage;
     pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
+    setUpdatesEnabled(true);
     update();
     return 0;
 }
 
 int HPdfPreviewDialog::prevPage()
 {
+    setUpdatesEnabled(false);
     ppf->showPageIndex--;
     if(ppf->showPageIndex < 0)
         ppf->showPageIndex = 0;
     pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
+    setUpdatesEnabled(true);
     update();
     return 0;
 }
