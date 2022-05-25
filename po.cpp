@@ -19,14 +19,12 @@
 HTextDocument::HTextDocument()
     : QTextDocument()
 {
-
 }
 
 HTextDocument::~HTextDocument()
 {
 
 }
-
 
 void HTextDocument::drawColorContents(QPainter *p,const QColor& color, const QRectF &rect)
 {
@@ -63,7 +61,7 @@ HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
     currentLineHeight = 0;
     minLineHeight = 0;
     currentPage = 0;
-    pageFilter = -1;
+    pageFilter = -1; //No filter
     defaultFont = QFont("Arial",18);
     font = QFont("Arial",18);
     fontColor = QColor(0,0,0);
@@ -153,6 +151,20 @@ void HPageTileRenderer::resetToDefaultFont()
     font = defaultFont;
 }
 
+int HPageTileRenderer::areaWidth()
+{
+    if(!areastack.isEmpty())
+        return areastack.first().sizeW;
+    return p->window().width();
+}
+
+int HPageTileRenderer::areaHeight()
+{
+    if(!areastack.isEmpty())
+        return areastack.first().sizeH;
+    return p->window().height();
+}
+
 int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
 {
     if(str.isEmpty())
@@ -187,9 +199,9 @@ int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
     {
         double percent = str.mid(0,str.length()-1).toDouble();
         if(xy == "x")
-            iv = ((p->window().width()) * percent) / 100.0;
+            iv = (areaWidth() * percent) / 100.0;
         if(xy == "y")
-            iv = ((p->window().height()) * percent) / 100.0;
+            iv = (areaHeight() * percent) / 100.0;
     }
 
     if(str.endsWith("em"))
@@ -205,9 +217,9 @@ int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
     if(reverse)
     {
         if(xy == "x")
-            iv = p->window().width() - iv;
+            iv = areaWidth() - iv;
         if(xy == "y")
-            iv = p->window().height() - iv;
+            iv = areaHeight() - iv;
     }
 
     if(relative_to_pos)
@@ -255,8 +267,10 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
 {
     int w_px = sizeStrToInt(width,"x");
 
-    if(cursorX + w_px > p->window().width())
+    if(cursorX + w_px > areaWidth())
+    {
         newLine();
+    }
 
     QRect r(cursorX,cursorY,w_px,1000);
     HTextDocument td;
@@ -271,13 +285,13 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
 
     td.setDefaultTextOption(QTextOption(alignment));
 
-    if(td.size().height() + cursorY > p->window().height())
+    if(td.size().height() + cursorY > areaHeight())
     {
         newPage();
         r = QRect(cursorX,cursorY,w_px,1000);
     }
 
-    if(pageFilter < 0 || pageFilter == currentPage)
+    if(pageFilter == -1 || pageFilter == currentPage)
     {
         p->save();
         p->translate(r.topLeft());
@@ -316,7 +330,7 @@ void HPageTileRenderer::drawText(QString xpos,QString ypos,QString width,QString
     td.setTextWidth(r.width());
     td.setDefaultTextOption(QTextOption(alignment));
 
-    if(pageFilter < 0 || pageFilter == currentPage)
+    if(pageFilter == -1 || pageFilter == currentPage)
     {
         p->save();
         p->translate(r.topLeft());
@@ -333,18 +347,18 @@ void HPageTileRenderer::addRect(QString width,QString height)
     int w_px = sizeStrToInt(width,"x");
     int h_px = sizeStrToInt(height,"y");
 
-    if(cursorX + w_px > p->window().width())
+    if(cursorX + w_px > areaWidth())
         newLine();
 
     QRect r(cursorX,cursorY,w_px,h_px);
 
-    if(h_px + cursorY > p->window().height())
+    if(h_px + cursorY > areaHeight())
     {
         newPage();
         r = QRect(cursorX,cursorY,w_px,h_px);
     }
 
-    if(pageFilter < 0 || pageFilter == currentPage)
+    if(pageFilter == -1 || pageFilter == currentPage)
     {
         p->save();
         p->translate(r.topLeft());
@@ -381,20 +395,20 @@ void HPageTileRenderer::addImage(QString width,QImage image)
 {
     int w_px = sizeStrToInt(width,"x");
 
-    if(cursorX + w_px > p->window().width())
+    if(cursorX + w_px > areaWidth())
         newLine();
 
     int height = (int)(((double)w_px / (double)image.width()) * (double)image.height());
 
     QRect r(cursorX,cursorY,w_px,height);
 
-    if(height + cursorY > p->window().height())
+    if(height + cursorY > areaHeight())
     {
         newPage();
         r = QRect(cursorX,cursorY,w_px,height);
     }
 
-    if(pageFilter < 0 || pageFilter == currentPage)
+    if(pageFilter == -1 || pageFilter == currentPage)
     {
         p->drawImage(r,image);
     }
@@ -420,7 +434,7 @@ void HPageTileRenderer::drawImage(QString xpos,QString ypos,QString width,QImage
 
     QRect r(x,y,w_px,height);
 
-    if(pageFilter < 0 || pageFilter == currentPage)
+    if(pageFilter == -1 || pageFilter == currentPage)
     {
         p->drawImage(r,image);
     }
@@ -434,7 +448,7 @@ void HPageTileRenderer::drawRect(QString xpos,QString ypos,QString width,QString
     int h_px = sizeStrToInt(height,"y");
 
     QRect r(x,y,w_px,h_px);
-    if(pageFilter < 0 || pageFilter == currentPage)
+    if(pageFilter == -1 || pageFilter == currentPage)
     {
         p->save();
         p->translate(r.topLeft());
@@ -491,6 +505,11 @@ void HPageTileRenderer::newLine()
 
 void HPageTileRenderer::newPage()
 {
+    if(!areastack.isEmpty())
+    {
+        pageFilter = -2; //Complete disable drawing
+        return;
+    }
     ++currentPage;
     cursorX = 0;
     cursorY = 0;
@@ -511,6 +530,87 @@ void HPageTileRenderer::setFontColor(QColor c)
 QColor HPageTileRenderer::getFontColor()
 {
     return fontColor;
+}
+
+void HPageTileRenderer::enterArea(QString width,QString height)
+{
+    int w_px = sizeStrToInt(width,"x");
+    int h_px = sizeStrToInt(height,"y");
+
+    if(cursorX + w_px > areaWidth())
+        newLine();
+
+    QRect r(cursorX,cursorY,w_px,h_px);
+
+    if(h_px + cursorY > areaHeight())
+    {
+        newPage();
+        r = QRect(cursorX,cursorY,w_px,h_px);
+    }
+
+    if(currentLineHeight < minLineHeight)
+        currentLineHeight = minLineHeight;
+    if(currentLineHeight < h_px)
+        currentLineHeight = h_px;
+
+    cursorX += w_px;
+
+    AreaData area;
+    area.sizeW = w_px;
+    area.sizeH = h_px;
+    area.cursorX = cursorX;
+    area.cursorY = cursorY;
+    area.currentLineHeight = currentLineHeight;
+    area.currentPage = currentPage;
+    area.pageFilter = pageFilter;
+
+    areastack.push_front(area);
+    p->save();
+    p->translate(r.topLeft());
+
+    cursorX = 0;
+    cursorY = 0;
+    currentLineHeight = 0;
+}
+
+void HPageTileRenderer::enterArea(QString xpos,QString ypos,QString width,QString height)
+{
+    int x = sizeStrToInt(xpos,"x");
+    int y = sizeStrToInt(ypos,"y");
+    int w_px = sizeStrToInt(width,"x");
+    int h_px = sizeStrToInt(height,"y");
+
+    QRect r(x,y,w_px,h_px);
+
+    AreaData area;
+    area.sizeW = w_px;
+    area.sizeH = h_px;
+    area.cursorX = cursorX;
+    area.cursorY = cursorY;
+    area.currentLineHeight = currentLineHeight;
+    area.currentPage = currentPage;
+    area.pageFilter = pageFilter;
+
+    areastack.push_front(area);
+    p->save();
+    p->translate(r.topLeft());
+
+    cursorX = 0;
+    cursorY = 0;
+    currentLineHeight = 0;
+}
+
+void HPageTileRenderer::returnArea()
+{
+    if(areastack.isEmpty())
+        return;
+    cursorX = areastack.first().cursorX;
+    cursorY = areastack.first().cursorY;
+    currentLineHeight = areastack.first().currentLineHeight;
+    currentPage = areastack.first().currentPage;
+    pageFilter = areastack.first().pageFilter;
+    areastack.pop_front();
+    p->restore();
 }
 
 void HPageTileRenderer::renderFromInstructions(QString txtintr)
@@ -658,6 +758,17 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
 
         if(cmd == "getp")
             storePositionOfNextAddElement(parts.at(1));
+
+        if(cmd == "area")
+        {
+            QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
+            if(pp.count() == 2)
+                enterArea(pp[0],pp[1]);
+            if(pp.count() == 4)
+                enterArea(pp[0],pp[1],pp[2],pp[3]);
+        }
+        if(cmd == "reta")
+            returnArea();
 
     }
 }

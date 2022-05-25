@@ -73,6 +73,10 @@ public:
     void newLine();
     void newPage();
 
+    void enterArea(QString width,QString height);
+    void enterArea(QString xpos,QString ypos,QString width,QString height);
+    void returnArea();
+
     int  calcTextHeight(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
     void incrementMinLineHeightToTextHeight(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
 
@@ -100,6 +104,11 @@ public:
      * Line oriented renderer function.
      * Every line can holds one of the following instructions
      * The command name and arguments are separated by # hashmarks
+     *
+     * Note: The relative drawings (which does not have start position) positioned to the cursor
+     *       and moves the cursor position onward. (Eg: text#20%#Relative posotioned text )
+     *       In contrast the absolute drawing elements (which has a start position) does not modifies
+     *       the position of cursor!  (Eg: text#10%,1em,80%#Absolute posotioned text )
      *
      *   mova - Move cursor to absolute position
      *          mova#<pX>,<pY>
@@ -171,6 +180,14 @@ public:
      *          If the calculated height is larger than the current minimum line height,
      *          the value is updated the this calculated value
      *
+     *   area - Restrict the drawing to a specified area
+     *          area#<sX>
+     *          area#<pX>,<pY>,<sX>
+     *          <pX>,<pY> and <sX> is POSITION STRING's
+     *
+     *   reta - Return from the restricted drawing area which entered by "area" command
+     *          reta
+     *
      *   smhz - Set minimum line height to zero
      *          smhz
      *
@@ -232,11 +249,26 @@ protected:
     void drawBorders(int w,int h);
     void storePos(int w,int h);
 
+    int areaWidth();
+    int areaHeight();
+
 signals:
     void startNewPage(void);
     void startNewLine(void);
 
 protected:
+    class AreaData
+    {
+    public:
+        int sizeW;
+        int sizeH;
+        int cursorX;
+        int cursorY;
+        int currentLineHeight;
+        int currentPage;
+        int pageFilter;
+    };
+
     QPainter *p;
 
     int currentPage,pageFilter;
@@ -249,6 +281,7 @@ protected:
     HBorderFlag border;
     QString storePosOfNext;
     QMap<QString,HPageTileRendererPosition> storedPos;
+    QList<AreaData> areastack;
 };
 
 /** Text preprocessor for HPageTileRenderer's renderFromInstructions method */
