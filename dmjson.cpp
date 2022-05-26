@@ -414,7 +414,7 @@ HField* HField::fromJson_inWork(QJsonValue jsonValue)
 
 bool HField::applyJson_inWork_valueOnly(QJsonObject jsonObject)
 {
-    if(jsonObject.contains("value"))
+    if(jsonObject.contains("value") && attribute("prevent_json_update_value") != "prevent")
         if(strValue() != jsonObject.value("value").toString())
             setStrValue(jsonObject.value("value").toString());
     return false;
@@ -504,7 +504,7 @@ bool HField::applyJson_inWork(QJsonObject jsonObject)
 
     applyJson_inWork_spec(jsonObject);
 
-    if(jsonObject.contains("value"))
+    if(jsonObject.contains("value") && attribute("prevent_json_update_value") != "prevent")
         if(strValue() != jsonObject.value("value").toString())
             setStrValue(jsonObject.value("value").toString());
 

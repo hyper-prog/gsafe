@@ -12,6 +12,9 @@
 #include <QtCore>
 #include <QtGui>
 
+#include <QPrinter>
+#include <QPrintDialog>
+
 #include "po.h"
 #include "dconsole.h"
 #include "guiext.h"
@@ -285,7 +288,11 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
 
     td.setDefaultTextOption(QTextOption(alignment));
 
-    if(td.size().height() + cursorY > areaHeight())
+    int h_eff = td.size().height();
+    if(minLineHeight > h_eff)
+        h_eff = minLineHeight;
+
+    if(h_eff + cursorY > areaHeight())
     {
         newPage();
         r = QRect(cursorX,cursorY,w_px,1000);
@@ -296,19 +303,19 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
         p->save();
         p->translate(r.topLeft());
         if(flagOn(border,HBorderFlag_Fill))
-            p->fillRect(0,0,td.size().width(),minLineHeight > td.size().height() ? minLineHeight : td.size().height(),brush);
+            p->fillRect(0,0,td.size().width(),h_eff,brush);
         td.drawColorContents(p,fontColor);
-        drawBorders(td.size().width(),minLineHeight > td.size().height() ? minLineHeight : td.size().height());
+        drawBorders(td.size().width(),h_eff);
         p->restore();
     }
 
     if(!storePosOfNext.isEmpty())
-        storePos(td.size().width(), minLineHeight > td.size().height() ? minLineHeight : td.size().height());
+        storePos(td.size().width(),h_eff);
 
     if(currentLineHeight < minLineHeight)
         currentLineHeight = minLineHeight;
-    if(currentLineHeight < td.size().height())
-        currentLineHeight = td.size().height();
+    if(currentLineHeight < h_eff)
+        currentLineHeight = h_eff;
 
     cursorX += td.size().width();
 }
@@ -346,16 +353,20 @@ void HPageTileRenderer::addRect(QString width,QString height)
 {
     int w_px = sizeStrToInt(width,"x");
     int h_px = sizeStrToInt(height,"y");
+    int h_eff = h_px;
+
+    if(minLineHeight > h_px)
+        h_eff = minLineHeight;
 
     if(cursorX + w_px > areaWidth())
         newLine();
 
-    QRect r(cursorX,cursorY,w_px,h_px);
+    QRect r(cursorX,cursorY,w_px,h_eff);
 
-    if(h_px + cursorY > areaHeight())
+    if(h_eff + cursorY > areaHeight())
     {
         newPage();
-        r = QRect(cursorX,cursorY,w_px,h_px);
+        r = QRect(cursorX,cursorY,w_px,h_eff);
     }
 
     if(pageFilter == -1 || pageFilter == currentPage)
@@ -363,18 +374,18 @@ void HPageTileRenderer::addRect(QString width,QString height)
         p->save();
         p->translate(r.topLeft());
         if(flagOn(border,HBorderFlag_Fill))
-            p->fillRect(0,0,w_px,minLineHeight > h_px ? minLineHeight : h_px,brush);
-        drawBorders(w_px,minLineHeight > h_px ? minLineHeight : h_px);
+            p->fillRect(0,0,w_px,h_eff,brush);
+        drawBorders(w_px,h_eff);
         p->restore();
     }
 
     if(!storePosOfNext.isEmpty())
-        storePos(w_px, minLineHeight > h_px ? minLineHeight : h_px);
+        storePos(w_px,h_eff);
 
     if(currentLineHeight < minLineHeight)
         currentLineHeight = minLineHeight;
-    if(currentLineHeight < h_px)
-        currentLineHeight = h_px;
+    if(currentLineHeight < h_eff)
+        currentLineHeight = h_eff;
 
     cursorX += w_px;
 }
@@ -993,7 +1004,7 @@ void HPdfPreviewFrame::paintEvent(QPaintEvent *e)
     QFrame::paintEvent(e);
 }
 
-HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,bool generate_button)
+HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
  : QDialog(parent)
 {
     pdfWriter = NULL;
@@ -1001,14 +1012,22 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,bool generate_button)
     lastRenderStoredPositions.clear();
     QVBoxLayout *mlay = new QVBoxLayout(this);
     QHBoxLayout *toplay = new QHBoxLayout(0);
+    QStringList btns = buttons.split(",",Qt::SkipEmptyParts); // "print,generate"
 
     ppf = new HPdfPreviewFrame(this);
     ppf->maxPage = 0;
-    if(generate_button)
+    if(btns.contains("generate"))
     {
         QPushButton *generateButton = new QPushButton(tr("Generate Pdf"),this);
         connect(generateButton,SIGNAL(clicked()),this,SLOT(generatePdf()));
         toplay->addWidget(generateButton);
+    }
+
+    if(btns.contains("print"))
+    {
+        QPushButton *printButton = new QPushButton(tr("Print"),this);
+        connect(printButton,SIGNAL(clicked()),this,SLOT(print()));
+        toplay->addWidget(printButton);
     }
 
     QPushButton *closeButton = new QPushButton(tr("Close"),this);
@@ -1017,6 +1036,7 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,bool generate_button)
     pageShow = new QLabel("",this);
 
     connect(closeButton,SIGNAL(clicked()),this,SLOT(close()));
+
     connect(prevpButton,SIGNAL(clicked()),this,SLOT(prevPage()));
     connect(nextpButton,SIGNAL(clicked()),this,SLOT(nextPage()));
 
@@ -1062,6 +1082,7 @@ int HPdfPreviewDialog::generatePdfFile(QString filename)
     renderer.renderFromInstructions(ppf->rawContent);
     lastRenderStoredPositions = renderer.storedPositions();
     pdfWriter = NULL;
+    printer = NULL;
     return 0;
 }
 
@@ -1078,6 +1099,29 @@ int HPdfPreviewDialog::changePage(int p)
     ppf->showPageIndex = p;
     pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
     update();
+    return 0;
+}
+
+int HPdfPreviewDialog::print()
+{
+    printer = new QPrinter();
+    printer->setResolution(200);
+    printer->setPageSize(QPageSize(QPageSize::A4));  /*8.26 x 11.69  -> *200 -> 1652 x 2338*/
+    printer->setPageOrientation(QPageLayout::Portrait);
+
+    QPrintDialog *pd = new QPrintDialog(printer,this);
+    if(pd->exec())
+    {
+        QPainter pp(printer);
+        pp.setWindow(0,0,1652,2338); // PageSite A4 on 200 dpi (Set elsewhere...)
+        HPageTileRenderer *renderer = new HPageTileRenderer(&pp);
+        connect(renderer,SIGNAL(startNewPage()),this,SLOT(startNewPage()));
+        renderer->renderFromInstructions(ppf->rawContent);
+        delete renderer;
+    }
+    delete pd;
+    delete printer;
+    printer = NULL;
     return 0;
 }
 
@@ -1109,7 +1153,17 @@ int HPdfPreviewDialog::startNewPage()
 {
     if(pdfWriter != NULL)
         pdfWriter->newPage();
+    if(printer != NULL)
+        printer->newPage();
     return 0;
+}
+
+void HPdfPreviewDialog::wheelEvent(QWheelEvent *e)
+{
+    if(e->angleDelta().y() < 0)
+        nextPage();
+    if(e->angleDelta().y() > 0)
+        prevPage();
 }
 
 HPdfPreviewDialog::~HPdfPreviewDialog()

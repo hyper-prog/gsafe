@@ -15,6 +15,7 @@
 #include <QtCore>
 #include <QtGui>
 #include <QtWidgets>
+#include <QPrinter>
 
 #include "dm.h"
 
@@ -324,7 +325,7 @@ class HPdfPreviewDialog : public QDialog
     Q_OBJECT
 
 public:
-    HPdfPreviewDialog(QWidget *parent,bool generate_button = true);
+    HPdfPreviewDialog(QWidget *parent,QString buttons = "print,generate");
     ~HPdfPreviewDialog();
 
     void setRawContent(QString c);
@@ -338,11 +339,15 @@ public slots:
     int changePage(int p);
     int nextPage();
     int prevPage();
+    int print();
 
 protected:
+    void wheelEvent(QWheelEvent *e);
+
     QMap<QString,QString> attachmentFiles;
     QLabel *pageShow;
     QPdfWriter *pdfWriter;
+    QPrinter *printer;
     HPdfPreviewFrame *ppf;
 
 public:
