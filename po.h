@@ -15,7 +15,10 @@
 #include <QtCore>
 #include <QtGui>
 #include <QtWidgets>
+
+#ifndef GSAFE_DISABLE_PRINTERMODULE
 #include <QPrinter>
+#endif
 
 #include "dm.h"
 
@@ -65,6 +68,7 @@ public:
 
     void moveCursorRelative(QString x,QString y);
     void moveCursorAbsolute(QString x,QString y);
+    void addSpace(QString width,QString height);
     void addRect(QString width,QString height);
     void addText(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
     void addImage(QString width,QImage image);
@@ -79,7 +83,10 @@ public:
     void returnArea();
 
     int  calcTextHeight(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
+    int  calcImageHeight(QString width,QImage image);
     void incrementMinLineHeightToTextHeight(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
+    void incrementMinLineHeightToImageHeight(QString width,QImage image);
+    void incrementMinLineHeightToValue(QString height);
 
     void storePositionOfNextAddElement(QString withName);
     HPageTileRendererPosition storedPosition(QString withName);
@@ -123,11 +130,25 @@ public:
      *
      *   newp - Start a new page
      *
+     *   fixh - Enables calculated fix line height for the following items until the line end
+     *          fixh
+     *          This command will enable buffering the subsequent commands until the line end.
+     *          Therefore, this instruction always must be followed by "newl" instruction!
+     *          When the line end is received the line height is calculated on the buffered elements
+     *          so the rendering is done with the derived maximum of minimum line height on all item.
+     *
+     *   spac - Adds an empty space (box) at the cursor position
+     *          spac#<sX>,<sY>
+     *          <sX> and <sY> are POSITION STRINGS (see below)
+     *          It does not have border or fill regardless the current settings
+     *          but moves the cursor or increase line height if necessary
+     *
      *   rect - Adds an empty rectangle at the cursor position or absolute position
      *          rect#<sX>,<sY>
      *          rect#<pX>,<pY>,<sX>
      *          <sX> and <sY> are POSITION STRINGS (see below)
      *          The rectangle can have frame and fill color but no content
+     *          If relative then moves the cursor or increase line height if necessary
      *
      *   text - Adds a plain text at the cursor position or absolute position
      *          text#<sX>#<Text until the line end>
@@ -162,6 +183,14 @@ public:
      *          imgr#<pX>,<pY>,<sX>#<base64 encoded image>
      *          <sX> is POSITION STRING specify the width of the image
      *          The height is automatically calculated
+     *
+     *   smhr - Increment minimum line height to the calculated heigt of the image passed by filename
+     *          smhf#<sX>#<filename>
+     *          <sX> is POSITION STRING specify the width of the image
+     *
+     *   smhi - Increment minimum line height to the calculated heigt of the image passed as base64
+     *          smhi#<sX>#<base64 encoded image>
+     *          <sX> is POSITION STRING specify the width of the image
      *
      *   smht - Increment minimum line height to the calculated heigt of the text fragment
      *          smht#<sX>#<Text until the line end>
@@ -246,6 +275,9 @@ public:
     int currentPageIndex();
 
 protected:
+    void renderFromInstructionLineHL(const QStringList& parts);
+    void renderFromInstructionLineLL(const QStringList& parts);
+
     int sizeStrToInt(QString str,QString xy);
     void drawBorders(int w,int h);
     void storePos(int w,int h);
@@ -283,6 +315,7 @@ protected:
     QString storePosOfNext;
     QMap<QString,HPageTileRendererPosition> storedPos;
     QList<AreaData> areastack;
+    QList<QStringList> instruction_buffer;
 };
 
 /** Text preprocessor for HPageTileRenderer's renderFromInstructions method */
@@ -347,7 +380,9 @@ protected:
     QMap<QString,QString> attachmentFiles;
     QLabel *pageShow;
     QPdfWriter *pdfWriter;
+#ifndef GSAFE_DISABLE_PRINTERMODULE
     QPrinter *printer;
+#endif
     HPdfPreviewFrame *ppf;
 
 public:
