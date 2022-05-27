@@ -258,6 +258,13 @@ public:
      *   getp - Store the redered position of the next "Add element" and hold under the specified name
      *          getp#<Name>
      *
+     *   EVERYPAGE_START - Start a section which is re-played on every new page
+     *          EVERYPAGE_START
+     *
+     *   EVERYPAGE_END - End the section which is re-played on every new page
+     *          EVERYPAGE_END
+
+*
      *  The POSITION STRING can be:
      *   Type             String  Means
      *   Simple string    120     120 pixel
@@ -281,9 +288,12 @@ protected:
     int sizeStrToInt(QString str,QString xy);
     void drawBorders(int w,int h);
     void storePos(int w,int h);
+    QString strSubstTokens(QString in);
 
     int areaWidth();
     int areaHeight();
+
+    int playPageBoot();
 
 signals:
     void startNewPage(void);
@@ -316,6 +326,8 @@ protected:
     QMap<QString,HPageTileRendererPosition> storedPos;
     QList<AreaData> areastack;
     QList<QStringList> instruction_buffer;
+    QList<QStringList> pageboot_buffer;
+    bool inPageBoot;
 };
 
 /** Text preprocessor for HPageTileRenderer's renderFromInstructions method */
@@ -330,9 +342,12 @@ public:
     QString processToken(QString in);
 
     void addValueMap(QString name,const QMap<QString,QString>& m);
+    void addValueMapPtr(QString name,QMap<QString,QString>* m);
+    void clearValueMaps();
 
 protected:
     QMap<QString, QMap<QString,QString> > smaps;
+    QMap<QString, QMap<QString,QString> * > dmaps;
 };
 
 /** Frame to be render the pdf content. Used by HPdfPreviewDialog. */

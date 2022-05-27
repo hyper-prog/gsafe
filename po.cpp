@@ -80,6 +80,8 @@ HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
     storePosOfNext = "";
     storedPos.clear();
     instruction_buffer.clear();
+    pageboot_buffer.clear();
+    inPageBoot = false;
 }
 
 HPageTileRenderer::~HPageTileRenderer()
@@ -269,6 +271,27 @@ void HPageTileRenderer::moveCursorAbsolute(QString x,QString y)
     cursorY = sizeStrToInt(y,"y");
 }
 
+QString HPageTileRenderer::strSubstTokens(QString in)
+{
+    int ps;
+    if((ps = in.indexOf("@@{",0)) == -1)
+        return in;
+    int pe;
+    if((pe = in.indexOf("}@@",ps)) == -1)
+        return in;
+
+    QString token;
+    token = in.mid(ps+3,pe-ps-3);
+    if(token == "pagenum")
+        in.replace(ps,pe-ps+3,QString("%1").arg(currentPage + 1));
+    if(token == "renderdate")
+        in.replace(ps,pe-ps+3,QString("%1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd")));
+    if(token == "rendertime")
+        in.replace(ps,pe-ps+3,QString("%1").arg(QDateTime::currentDateTime().toString("hh:mm:ss")));
+
+    return strSubstTokens(in);
+}
+
 void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_TextType type)
 {
     int w_px = sizeStrToInt(width,"x");
@@ -281,11 +304,11 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
     QRect r(cursorX,cursorY,w_px,1000);
     HTextDocument td;
     if(type == HTextType_Plain)
-        td.setPlainText(text);
+        td.setPlainText(strSubstTokens(text));
     if(type == HTextType_Html)
-        td.setHtml(text);
+        td.setHtml(strSubstTokens(text));
     if(type == HTextType_Markdown)
-        td.setMarkdown(text);
+        td.setMarkdown(strSubstTokens(text));
     td.setDefaultFont(font);
     td.setTextWidth(r.width());
 
@@ -331,11 +354,11 @@ void HPageTileRenderer::drawText(QString xpos,QString ypos,QString width,QString
     QRect r(x,y,w_px,1000);
     HTextDocument td;
     if(type == HTextType_Plain)
-        td.setPlainText(text);
+        td.setPlainText(strSubstTokens(text));
     if(type == HTextType_Html)
-        td.setHtml(text);
+        td.setHtml(strSubstTokens(text));
     if(type == HTextType_Markdown)
-        td.setMarkdown(text);
+        td.setMarkdown(strSubstTokens(text));
     td.setDefaultFont(font);
     td.setTextWidth(r.width());
     td.setDefaultTextOption(QTextOption(alignment));
@@ -514,11 +537,11 @@ int  HPageTileRenderer::calcTextHeight(QString width,QString text,HPageTileRende
     QRect r(cursorX,cursorY,w_px,1000);
     QTextDocument td;
     if(type == HTextType_Plain)
-        td.setPlainText(text);
+        td.setPlainText(strSubstTokens(text));
     if(type == HTextType_Html)
-        td.setHtml(text);
+        td.setHtml(strSubstTokens(text));
     if(type == HTextType_Markdown)
-        td.setMarkdown(text);
+        td.setMarkdown(strSubstTokens(text));
     td.setDefaultFont(font);
     td.setTextWidth(r.width());
     td.setDefaultTextOption(QTextOption(alignment));
@@ -577,6 +600,7 @@ void HPageTileRenderer::newPage()
     cursorY = 0;
     currentLineHeight = 0;
     emit startNewPage();
+    playPageBoot();
 }
 
 int HPageTileRenderer::currentPageIndex()
@@ -689,9 +713,24 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
     }
 }
 
+int HPageTileRenderer::playPageBoot()
+{
+    QList<QStringList>::Iterator i;
+    for( i = pageboot_buffer.begin() ; i != pageboot_buffer.end() ; ++i )
+        renderFromInstructionLineLL(*i);
+    return 0;
+}
+
 void HPageTileRenderer::renderFromInstructionLineHL(const QStringList& parts)
 {
     QString cmd = parts.at(0).trimmed();
+
+    if(cmd == "EVERYPAGE_END")
+        inPageBoot = false;
+    if(inPageBoot)
+        pageboot_buffer.push_back(parts);
+    if(cmd == "EVERYPAGE_START")
+        inPageBoot = true;
 
     if(cmd == "fixh")
     {
@@ -933,7 +972,7 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
 // ////////////////////////////////////////////////////////////////////////////////// //
 HTextProcessor::HTextProcessor()
 {
-    smaps.clear();
+    clearValueMaps();
 }
 
 HTextProcessor::~HTextProcessor()
@@ -943,6 +982,17 @@ HTextProcessor::~HTextProcessor()
 void HTextProcessor::addValueMap(QString name,const QMap<QString,QString>& m)
 {
     smaps[name] = m;
+}
+
+void HTextProcessor::addValueMapPtr(QString name,QMap<QString,QString>* m)
+{
+    dmaps[name] = m;
+}
+
+void HTextProcessor::clearValueMaps()
+{
+    smaps.clear();
+    dmaps.clear();
 }
 
 QString HTextProcessor::processDoc(QString in)
@@ -1053,9 +1103,9 @@ QString HTextProcessor::processDoc(QString in)
 
 QString HTextProcessor::processLine(QString in)
 {
-    int ps,pe;
-
-    while((ps = in.indexOf("{{",0)) != -1)
+    int startsearch,ps,pe;
+    startsearch = 0;
+    while((ps = in.indexOf("{{",startsearch)) != -1)
     {
         pe = in.indexOf("}}",ps);
         if(pe > 0)
@@ -1098,6 +1148,7 @@ QString HTextProcessor::processLine(QString in)
             }
 
             in.replace(ps,pe-ps+2,to);
+            startsearch = ps;
         }
         else
         {
@@ -1116,9 +1167,9 @@ QString HTextProcessor::processToken(QString in)
         if(tp.count() == 2)
         {
             if(smaps.contains(tp[0]) && smaps[tp[0]].contains(tp[1]))
-            {
-                return smaps[tp[0]][tp[1]];
-            }
+                return smaps[tp[0]].value(tp[1]);
+            if(dmaps.contains(tp[0]) && dmaps[tp[0]] != NULL && dmaps[tp[0]]->contains(tp[1]))
+                return dmaps[tp[0]]->value(tp[1]);
         }
         return "";
     }
