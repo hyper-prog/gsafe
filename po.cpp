@@ -983,6 +983,9 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
 HTextProcessor::HTextProcessor()
 {
     clearValueMaps();
+    definingFunctionName = "";
+    definingFunctionBody = "";
+    functions.clear();
 }
 
 HTextProcessor::~HTextProcessor()
@@ -1019,6 +1022,21 @@ QString HTextProcessor::processDoc(QString in)
 
         if(cmd.startsWith("//"))
             continue;
+
+        if(cmd == "ENDF")
+        {
+            functions[definingFunctionName] = definingFunctionBody;
+            definingFunctionName = "";
+            definingFunctionBody = "";
+            continue;
+        }
+
+        if(!definingFunctionName.isEmpty())
+        {
+            definingFunctionBody.append(*li);
+            definingFunctionBody.append("\n");
+            continue;
+        }
 
         if(cmd == "COND")
         {
@@ -1099,6 +1117,24 @@ QString HTextProcessor::processDoc(QString in)
         if(cmd == "ENDC")
         {
             conds.pop_front();
+            continue;
+        }
+
+        if(cmd == "FUNC")
+        {
+            definingFunctionName = parts.at(1).trimmed();
+            definingFunctionBody = "";
+            continue;
+        }
+
+        if(cmd == "CALL")
+        {
+            QString fname = parts.at(1).trimmed();
+            if(functions.contains(fname))
+            {
+                out.append(processDoc(functions[fname]));
+                out.append("\n");
+            }
             continue;
         }
 

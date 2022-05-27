@@ -350,6 +350,9 @@ public:
 protected:
     QMap<QString, QMap<QString,QString> > smaps;
     QMap<QString, QMap<QString,QString> * > dmaps;
+    QString definingFunctionName;
+    QString definingFunctionBody;
+    QMap<QString,QString> functions;
 };
 
 /** Frame to be render the pdf content. Used by HPdfPreviewDialog. */
