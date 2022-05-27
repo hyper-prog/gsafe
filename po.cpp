@@ -736,6 +736,9 @@ void HPageTileRenderer::renderFromInstructionLineHL(const QStringList& parts)
     {
         instruction_buffer.push_back(parts);
         setMinimumLineHeight(0);
+        fs_font = font;
+        fs_defaultFont = defaultFont;
+        fs_alignment = alignment;
         return;
     }
 
@@ -745,6 +748,10 @@ void HPageTileRenderer::renderFromInstructionLineHL(const QStringList& parts)
         {
             instruction_buffer.push_back(QString("smhz").split("#",Qt::KeepEmptyParts));
             instruction_buffer.push_back(parts);
+
+            font = fs_font;
+            defaultFont = fs_defaultFont;
+            alignment = fs_alignment;
 
             while(!instruction_buffer.isEmpty())
             {
@@ -785,6 +792,9 @@ void HPageTileRenderer::renderFromInstructionLineHL(const QStringList& parts)
             if(pp.count() == 2)
                 incrementMinLineHeightToValue(pp[1]);
         }
+
+        if(cmd == "alig" || cmd == "setf" || cmd == "setd" || cmd == "deff")
+            renderFromInstructionLineLL(parts);
 
         instruction_buffer.push_back(parts);
         return;

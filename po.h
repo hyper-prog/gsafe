@@ -317,8 +317,10 @@ protected:
     int currentPage,pageFilter;
     int cursorX,cursorY,currentLineHeight,minLineHeight;
     QFont defaultFont,font;
-    QColor fontColor;
     Qt::Alignment alignment;
+    QFont fs_defaultFont,fs_font;
+    Qt::Alignment fs_alignment;
+    QColor fontColor;
     QPen pen;
     QBrush brush;
     HBorderFlag border;
