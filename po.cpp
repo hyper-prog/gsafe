@@ -720,6 +720,7 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
             }
             concatenated.append(li->trimmed());
             concatenated.append(" ");
+            continue;
         }
         if(li->trimmed().endsWith("#{"))
         {
@@ -826,135 +827,44 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
 {
     QString cmd = parts.at(0).trimmed();
 
+    //Commands without arguments
     if(cmd == "fixh")
     {
+        return;
     }
-    if(cmd == "movr")
-    {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() >= 2)
-            moveCursorRelative(pp[0],pp[1]);
-    }
-    if(cmd == "mova")
-    {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() >= 2)
-            moveCursorAbsolute(pp[0],pp[1]);
-    }
-
     if(cmd == "newl")
+    {
         newLine();
+        return;
+    }
     if(cmd == "newp")
+    {
         newPage();
-
-    if(cmd == "spac")
-    {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() == 1)
-            addSpace(pp[0],"1");
-        if(pp.count() == 2)
-            addSpace(pp[0],pp[1]);
+        return;
     }
-    if(cmd == "rect")
-    {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() == 2)
-            addRect(pp[0],pp[1]);
-        if(pp.count() == 4)
-            drawRect(pp[0],pp[1],pp[2],pp[3]);
-    }
-    if(cmd == "text")
-    {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() > 2)
-            drawText(pp[0],pp[1],pp[2],parts.at(2),HTextType_Plain);
-        else
-            addText(parts.at(1),parts.at(2),HTextType_Plain);
-    }
-    if(cmd == "html")
-    {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() > 2)
-            drawText(pp[0],pp[1],pp[2],parts.at(2),HTextType_Html);
-        else
-            addText(parts.at(1),parts.at(2),HTextType_Html);
-    }
-    if(cmd == "mark")
-    {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() > 2)
-            drawText(pp[0],pp[1],pp[2],parts.at(2),HTextType_Markdown);
-        else
-            addText(parts.at(1),parts.at(2),HTextType_Markdown);
-    }
-
-    if(cmd == "imgr")
-    {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() > 2)
-            drawImage(pp[0],pp[1],pp[2],QImage(parts.at(2)));
-        else
-            addImage(parts.at(1),QImage(parts.at(2)));
-    }
-    if(cmd == "imgb")
-    {
-        QImage img = QImage::fromData(QByteArray::fromBase64(parts.at(2).toLocal8Bit()));
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() > 2)
-            drawImage(pp[0],pp[1],pp[2],img);
-        else
-            addImage(parts.at(1),img);
-    }
-
-    if(cmd == "smhr")
-    {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() < 3)
-            incrementMinLineHeightToImageHeight(parts.at(1),QImage(parts.at(2)));
-    }
-    if(cmd == "smhi")
-    {
-        QImage img = QImage::fromData(QByteArray::fromBase64(parts.at(2).toLocal8Bit()));
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() < 3)
-            incrementMinLineHeightToImageHeight(parts.at(1),img);
-    }
-    if(cmd == "smht")
-        incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Plain);
-    if(cmd == "smhh")
-        incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Html);
-    if(cmd == "smhm")
-        incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Markdown);
     if(cmd == "smhz")
-        setMinimumLineHeight(0);
-    if(cmd == "smhv")
-        setMinimumLineHeight(parts.at(1));
-
-    if(cmd == "colf")
-        setFontColor(html6HexColor(parts.at(1)));
-    if(cmd == "coll")
-        setPen(QPen(html6HexColor(parts.at(1))));
-    if(cmd == "colb")
-        setBrush(QBrush(html6HexColor(parts.at(1))));
-
-    if(cmd == "fram")
     {
-        HBorderFlag b = HBorderFlag_None;
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.contains("all"))
-            b = b | HBorderFlag_All;
-        if(pp.contains("top"))
-            b = b | HBorderFlag_Top;
-        if(pp.contains("right"))
-            b = b | HBorderFlag_Right;
-        if(pp.contains("bottom"))
-            b = b | HBorderFlag_Bottom;
-        if(pp.contains("left"))
-            b = b | HBorderFlag_Left;
-        if(pp.contains("fill"))
-            b = b | HBorderFlag_Fill;
-        setBorder(b);
+        setMinimumLineHeight(0);
+        return;
     }
+    if(cmd == "deff")
+    {
+        resetToDefaultFont();
+        return;
+    }
+    if(cmd == "reta")
+    {
+        returnArea();
+        return;
+    }
+
+    if(parts.count() < 2)
+    {
+        sdebug(QString("HPageTileRenderer warning, unknown or not complete command: %1").arg(parts.join("#")));
+        return;
+    }
+
+    //Commands with one arguments
     if(cmd == "alig")
     {
         if(parts.at(1) == "left")
@@ -963,39 +873,178 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
             setTextAlignment(Qt::AlignRight);
         if(parts.at(1) == "center")
             setTextAlignment(Qt::AlignCenter);
+        return;
     }
-
-    if(cmd == "setf")
+    if(cmd == "smhv")
     {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() >= 2)
-            setFont(QFont(pp[0],pp[1].toInt()));
+        setMinimumLineHeight(parts.at(1));
+        return;
     }
-    if(cmd == "setd")
+    if(cmd == "colf")
     {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() >= 2)
-            setDefaultFont(QFont(pp[0],pp[1].toInt()));
+        setFontColor(html6HexColor(parts.at(1)));
+        return;
     }
-    if(cmd == "deff")
+    if(cmd == "coll")
     {
-        resetToDefaultFont();
+        setPen(QPen(html6HexColor(parts.at(1))));
+        return;
     }
-
+    if(cmd == "colb")
+    {
+        setBrush(QBrush(html6HexColor(parts.at(1))));
+        return;
+    }
     if(cmd == "getp")
+    {
         storePositionOfNextAddElement(parts.at(1));
+        return;
+    }
 
+    QStringList fpp = parts.at(1).split(",",Qt::KeepEmptyParts);
+
+    //Commands with (only) one splitted arguments
+    if(cmd == "movr" && fpp.count() >= 2)
+    {
+        moveCursorRelative(fpp[0],fpp[1]);
+        return;
+    }
+    if(cmd == "mova" && fpp.count() >= 2)
+    {
+        moveCursorAbsolute(fpp[0],fpp[1]);
+        return;
+    }
+    if(cmd == "setf" && fpp.count() >= 2)
+    {
+        setFont(QFont(fpp[0],fpp[1].toInt()));
+        return;
+    }
+    if(cmd == "setd" && fpp.count() >= 2)
+    {
+        setDefaultFont(QFont(fpp[0],fpp[1].toInt()));
+        return;
+    }
+    if(cmd == "spac")
+    {
+        if(fpp.count() == 1)
+            addSpace(fpp[0],"1");
+        if(fpp.count() == 2)
+            addSpace(fpp[0],fpp[1]);
+        return;
+    }
+    if(cmd == "rect")
+    {
+        if(fpp.count() == 2)
+            addRect(fpp[0],fpp[1]);
+        if(fpp.count() == 4)
+            drawRect(fpp[0],fpp[1],fpp[2],fpp[3]);
+        return;
+    }
+    if(cmd == "fram")
+    {
+        HBorderFlag b = HBorderFlag_None;
+        if(fpp.contains("all"))
+            b = b | HBorderFlag_All;
+        if(fpp.contains("top"))
+            b = b | HBorderFlag_Top;
+        if(fpp.contains("right"))
+            b = b | HBorderFlag_Right;
+        if(fpp.contains("bottom"))
+            b = b | HBorderFlag_Bottom;
+        if(fpp.contains("left"))
+            b = b | HBorderFlag_Left;
+        if(fpp.contains("fill"))
+            b = b | HBorderFlag_Fill;
+        setBorder(b);
+        return;
+    }
     if(cmd == "area")
     {
-        QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
-        if(pp.count() == 2)
-            enterArea(pp[0],pp[1]);
-        if(pp.count() == 4)
-            enterArea(pp[0],pp[1],pp[2],pp[3]);
+        if(fpp.count() == 2)
+            enterArea(fpp[0],fpp[1]);
+        if(fpp.count() == 4)
+            enterArea(fpp[0],fpp[1],fpp[2],fpp[3]);
+        return;
     }
-    if(cmd == "reta")
-        returnArea();
 
+    if(parts.count() < 3)
+    {
+        sdebug(QString("HPageTileRenderer warning, unknown or not complete command: %1").arg(parts.join("#")));
+        return;
+    }
+
+    //Commands with two arguments
+    if(cmd == "text")
+    {
+        if(fpp.count() > 2)
+            drawText(fpp[0],fpp[1],fpp[2],parts.at(2),HTextType_Plain);
+        else
+            addText(parts.at(1),parts.at(2),HTextType_Plain);
+        return;
+    }
+    if(cmd == "html")
+    {
+        if(fpp.count() > 2)
+            drawText(fpp[0],fpp[1],fpp[2],parts.at(2),HTextType_Html);
+        else
+            addText(parts.at(1),parts.at(2),HTextType_Html);
+        return;
+    }
+    if(cmd == "mark")
+    {
+        if(fpp.count() > 2)
+            drawText(fpp[0],fpp[1],fpp[2],parts.at(2),HTextType_Markdown);
+        else
+            addText(parts.at(1),parts.at(2),HTextType_Markdown);
+        return;
+    }
+    if(cmd == "imgr")
+    {
+        if(fpp.count() > 2)
+            drawImage(fpp[0],fpp[1],fpp[2],QImage(parts.at(2)));
+        else
+            addImage(parts.at(1),QImage(parts.at(2)));
+        return;
+    }
+    if(cmd == "imgb")
+    {
+        QImage img = QImage::fromData(QByteArray::fromBase64(parts.at(2).toLocal8Bit()));
+        if(fpp.count() > 2)
+            drawImage(fpp[0],fpp[1],fpp[2],img);
+        else
+            addImage(parts.at(1),img);
+        return;
+    }
+    if(cmd == "smhr")
+    {
+        if(fpp.count() < 3)
+            incrementMinLineHeightToImageHeight(parts.at(1),QImage(parts.at(2)));
+        return;
+    }
+    if(cmd == "smhi")
+    {
+        QImage img = QImage::fromData(QByteArray::fromBase64(parts.at(2).toLocal8Bit()));
+        if(fpp.count() < 3)
+            incrementMinLineHeightToImageHeight(parts.at(1),img);
+        return;
+    }
+    if(cmd == "smht")
+    {
+        incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Plain);
+        return;
+    }
+    if(cmd == "smhh")
+    {
+        incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Html);
+        return;
+    }
+    if(cmd == "smhm")
+    {
+        incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Markdown);
+        return;
+    }
+
+    sdebug(QString("HPageTileRenderer warning, unknown command: %1").arg(parts.join("#")));
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -1272,8 +1321,10 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
     pdfWriter = NULL;
     attachmentFiles.clear();
     lastRenderStoredPositions.clear();
-    QVBoxLayout *mlay = new QVBoxLayout(this);
-    QHBoxLayout *toplay = new QHBoxLayout(0);
+    main_horizontal_layout = new QHBoxLayout(this);
+    main_vertical_layout = new QVBoxLayout(0);
+    main_horizontal_layout->addLayout(main_vertical_layout);
+    toplay = new QHBoxLayout(0);
     QStringList btns = buttons.split(",",Qt::SkipEmptyParts); // "print,generate"
 
     ppf = new HPdfPreviewFrame(this);
@@ -1311,8 +1362,8 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
     toplay->addWidget(nextpButton);
     toplay->addStretch();
     toplay->addWidget(closeButton);
-    mlay->addLayout(toplay);
-    mlay->addWidget(ppf);
+    main_vertical_layout->addLayout(toplay);
+    main_vertical_layout->addWidget(ppf);
 
     pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
 }

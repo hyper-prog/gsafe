@@ -414,6 +414,9 @@ protected:
     QPrinter *printer;
 #endif
     HPdfPreviewFrame *ppf;
+    QHBoxLayout *main_horizontal_layout;
+    QVBoxLayout *main_vertical_layout;
+    QHBoxLayout *toplay;
 
 public:
     QMap<QString,HPageTileRendererPosition> lastRenderStoredPositions;
