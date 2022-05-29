@@ -746,11 +746,17 @@ void HPageTileRenderer::renderFromInstructionLineHL(const QStringList& parts)
     QString cmd = parts.at(0).trimmed();
 
     if(cmd == "EVERYPAGE_END")
+    {
         inPageBoot = false;
+        return;
+    }
     if(inPageBoot)
         pageboot_buffer.push_back(parts);
     if(cmd == "EVERYPAGE_START")
+    {
         inPageBoot = true;
+        return;
+    }
 
     if(cmd == "fixh")
     {
@@ -780,24 +786,25 @@ void HPageTileRenderer::renderFromInstructionLineHL(const QStringList& parts)
             }
             return;
         }
-        if(cmd == "text")
+
+        if(cmd == "text" && parts.count() > 2)
             if(parts.at(1).split(",",Qt::KeepEmptyParts).count() < 3)
                 incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Plain);
-        if(cmd == "html")
+        if(cmd == "html" && parts.count() > 2)
             if(parts.at(1).split(",",Qt::KeepEmptyParts).count() < 3)
                 incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Html);
-        if(cmd == "mark")
+        if(cmd == "mark" && parts.count() > 2)
             if(parts.at(1).split(",",Qt::KeepEmptyParts).count() < 3)
                 incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Markdown);
 
-        if(cmd == "imgr")
+        if(cmd == "imgr" && parts.count() > 2)
             if(parts.at(1).split(",",Qt::KeepEmptyParts).count() < 3)
             {
                 QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
                 if(pp.count() < 3)
                     incrementMinLineHeightToImageHeight(parts.at(1),QImage(parts.at(2)));
             }
-        if(cmd == "imgb")
+        if(cmd == "imgb" && parts.count() > 2)
             if(parts.at(1).split(",",Qt::KeepEmptyParts).count() < 3)
             {
                 QImage img = QImage::fromData(QByteArray::fromBase64(parts.at(2).toLocal8Bit()));
@@ -1106,7 +1113,7 @@ QString HTextProcessor::processDoc(QString in)
             continue;
         }
 
-        if(cmd == "COND")
+        if(cmd == "COND" && parts.count() > 3)
         {
             if(!conds.empty() && !conds.first())
             {
@@ -1188,14 +1195,14 @@ QString HTextProcessor::processDoc(QString in)
             continue;
         }
 
-        if(cmd == "FUNC")
+        if(cmd == "FUNC" && parts.count() > 1)
         {
             definingFunctionName = parts.at(1).trimmed();
             definingFunctionBody = "";
             continue;
         }
 
-        if(cmd == "CALL")
+        if(cmd == "CALL" && parts.count() > 1)
         {
             QString fname = parts.at(1).trimmed();
             if(functions.contains(fname))
