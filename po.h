@@ -276,6 +276,16 @@ public:
      *                            to the half (50%) of the page width or height
      *                    >-2em   Caclulate the width until 2 letter less than page width or height
      *
+     *   Although the renderFromInstructions interprets one instruction per line you can write
+     *   multiline instructions if the last characters of the line is #{
+     *   If you write so, the following lines are concatenated together until a line is received which only ontains a }
+     *   Sample:
+     *
+     *    html#100%#{
+     *        This is a <strong>multiline</strong> text,
+     *        which show you how to write
+     *        multiline texts!
+     *    }
      */
     void renderFromInstructions(QString txtintr);
 

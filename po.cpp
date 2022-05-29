@@ -701,6 +701,7 @@ void HPageTileRenderer::returnArea()
 
 void HPageTileRenderer::renderFromInstructions(QString txtintr)
 {
+    QString concatenated = "";
     QList<QString> lines = txtintr.split("\n");
     QList<QString>::Iterator li;
     for(li = lines.begin() ; li != lines.end() ; ++li)
@@ -708,6 +709,24 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
         if(li->isEmpty())
             continue;
 
+        if(!concatenated.isEmpty())
+        {
+            if(li->trimmed() == "}")
+            {
+                QList<QString> parts = concatenated.trimmed().split("#",Qt::KeepEmptyParts);
+                renderFromInstructionLineHL(parts);
+                concatenated = "";
+                continue;
+            }
+            concatenated.append(li->trimmed());
+            concatenated.append(" ");
+        }
+        if(li->trimmed().endsWith("#{"))
+        {
+            concatenated = li->trimmed();
+            concatenated.chop(1);
+            continue;
+        }
         QList<QString> parts = li->split("#",Qt::KeepEmptyParts);
         renderFromInstructionLineHL(parts);
     }
