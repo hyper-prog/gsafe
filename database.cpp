@@ -27,6 +27,7 @@ QString HSql::overwrittenDefaultDbName = "";
 int     HSql::trans = 0;
 QMap<QString,QString> HSql::specifiedDialects = QMap<QString,QString>();
 
+QMap<QString,HRestSqlSessionData> HRestSqlDatabase::sessions = QMap<QString,HRestSqlSessionData>();
 QMap<QString,HRestSqlDatabase *> HRestSqlDatabase::rest_databases = QMap<QString,HRestSqlDatabase *>();
 
 
@@ -131,6 +132,22 @@ HRestSqlDatabase::~HRestSqlDatabase(void)
 
 }
 
+QString HRestSqlDatabase::currentSessionUserLogin()
+{
+    if(sessions.contains(databaseName))
+        if(sessions[databaseName].auth)
+            return sessions[databaseName].login;
+    return "";
+}
+
+QString HRestSqlDatabase::currentSessionUserName()
+{
+    if(sessions.contains(databaseName))
+        if(sessions[databaseName].auth)
+            return sessions[databaseName].name;
+    return "";
+}
+
 int HRestSqlDatabase::sslErrorHandler(const QList<QSslError>& errors)
 {
     int n=0;
@@ -155,29 +172,163 @@ bool HRestSqlDatabase::rollback(void)
     return true; //The class not support transaction through rest.
 }
 
-QString HRestSqlDatabase::sendRequest(HSqlBuilder& request)
+QString HRestSqlDatabase::sendRequest(HSqlBuilder& request,QMap<QString,QString> toplevelExtraFields)
 {
-    QString data = buildDataReqMessageFromRequest(request);
-    return sendRawRequest(data);
+    QString data = buildDataReqMessageFromRequest(request,toplevelExtraFields);
+    QString responsePayload = sendRawRequest(data);
+    processSessionBlockIfExists(responsePayload);
+    return responsePayload;
 }
 
-bool HRestSqlDatabase::sendFieldExistenceCheckRequest(QString tablename,QStringList fields)
+bool HRestSqlDatabase::sendFieldExistenceCheckRequest(QString tablename,QStringList fields,QMap<QString,QString> toplevelExtraFields)
 {
-    QString data = buildDataReqMessageFromFlExChRequest(tablename,fields);
+    QString data = buildDataReqMessageFromFlExChRequest(tablename,fields,toplevelExtraFields);
     QString payload = sendRawRequest(data);
 
     QJsonParseError jpe;
     QJsonDocument answer = QJsonDocument::fromJson(payload.toUtf8(),&jpe);
     QJsonObject jo = answer.object();
+    if(answer.object().contains("session"))
+    {
+        QJsonObject jso = answer.object().value("session").toObject();
+        processSessionJsonObject(jso);
+    }
     if(!answer.isNull() && jo.value("status") == "Ok")
         return true;
     return false;
 }
 
-QString HRestSqlDatabase::sendCustomRequest(QString reqId,QString& request)
+QString HRestSqlDatabase::sendCustomRequest(QString reqId,QString& request,QMap<QString,QString> toplevelExtraFields)
 {
-    QString data = buildDataReqMessageFromCustomRequest(reqId,request);
-    return sendRawRequest(data);
+    QString data = buildDataReqMessageFromCustomRequest(reqId,request,toplevelExtraFields);
+    QString responsePayload = sendRawRequest(data);
+    processSessionBlockIfExists(responsePayload);
+    return responsePayload;
+}
+
+void HRestSqlDatabase::processSessionBlockIfExists(QString data)
+{
+    QJsonParseError jpe;
+    QJsonDocument answer = QJsonDocument::fromJson(data.toUtf8(),&jpe);
+    QJsonObject jo = answer.object();
+    if(answer.object().contains("session"))
+    {
+        QJsonObject jso = answer.object().value("session").toObject();
+        processSessionJsonObject(jso);
+    }
+}
+
+void HRestSqlDatabase::processSessionJsonObject(QJsonObject jso)
+{
+    if(jso.contains("keychange") && jso.value("keychange").toString() == "required")
+    {
+        if(sessions.contains(databaseName) && sessions[databaseName].auth)
+        {
+            sessions[databaseName].chkval = jso.value("chkval").toString();
+            sdebug("*** communication keychange applied ***");
+            return;
+        }
+    }
+}
+
+QString HRestSqlDatabase::sendLoginToCodkep(QString login,QString credential)
+{
+    HRestSqlSessionData sess;
+    sess.auth = false;
+    sess.login = "";
+    sess.name = "";
+    sess.apitoken = "";
+    sess.chkval = "";
+    sessions[databaseName] = sess;
+
+    QMap<QString,QString> param;
+    param["login"] = login;
+    param["cred"] = credential;
+    QString parameterJson = strmapToJsonObject(param);
+    QString payload = sendCustomRequest("login_user",parameterJson);
+    QJsonParseError jpe;
+    QJsonDocument answer = QJsonDocument::fromJson(payload.toUtf8(),&jpe);
+    if(answer.isNull())
+        return "";
+    QJsonObject jo = answer.object();
+    if(jo.contains("status") && jo.value("status") == "Ok")
+    {
+        if(jo.contains("array"))
+        {
+            QJsonObject ijo = jo.value("array").toObject();
+            if(ijo.contains("login") && !ijo.value("login").toString().isEmpty() &&
+               ijo.contains("name") && !ijo.value("name").toString().isEmpty() &&
+               ijo.contains("chkval") && !ijo.value("chkval").toString().isEmpty() &&
+               ijo.contains("apitoken") && !ijo.value("apitoken").toString().isEmpty())
+            {
+                sess.auth = true;
+                sess.login = ijo.value("login").toString();
+                sess.name = ijo.value("name").toString();
+                sess.apitoken = ijo.value("apitoken").toString();
+                sess.chkval = ijo.value("chkval").toString();
+                sessions[databaseName] = sess;
+
+                sdebug(QString("Succesful login: %1").arg(sess.login));
+                return sess.login;
+            }
+        }
+    }
+    return "";
+}
+
+QString HRestSqlDatabase::sendWhoamiToCodkep()
+{
+    QMap<QString,QString> param;
+    QString parameterJson = strmapToJsonObject(param);
+    QString payload = sendCustomRequest("whoami_user",parameterJson);
+
+    QJsonParseError jpe;
+    QJsonDocument answer = QJsonDocument::fromJson(payload.toUtf8(),&jpe);
+    if(answer.isNull())
+        return "";
+    QJsonObject jo = answer.object();
+    if(jo.contains("status") && jo.value("status") == "Ok")
+    {
+        if(jo.contains("array"))
+        {
+            QJsonObject ijo = jo.value("array").toObject();
+            if(ijo.contains("auth") && !ijo.value("auth").toString().isEmpty() &&
+               ijo.contains("login") && !ijo.value("login").toString().isEmpty())
+            {
+                if(ijo.value("auth").toString() == "yes" &&
+                   ijo.value("login").toString() == sessions[databaseName].login)
+                {
+                    return sessions[databaseName].login;
+                }
+                return "";
+            }
+        }
+    }
+    return "";
+}
+
+QString HRestSqlDatabase::sendLogoutFromCodkep()
+{
+    QMap<QString,QString> param;
+    QString parameterJson = strmapToJsonObject(param);
+    QString payload = sendCustomRequest("logout_user",parameterJson);
+
+    HRestSqlSessionData sess;
+    sess.auth = false;
+    sess.login = "";
+    sess.name = "";
+    sess.apitoken = "";
+    sess.chkval = "";
+    sessions[databaseName] = sess;
+
+    QJsonParseError jpe;
+    QJsonDocument answer = QJsonDocument::fromJson(payload.toUtf8(),&jpe);
+    if(answer.isNull())
+        return "";
+    QJsonObject jo = answer.object();
+    if(jo.contains("status") && jo.value("status") == "Ok")
+        return "";
+    return "Error";
 }
 
 QString HRestSqlDatabase::sendRawRequest(QString& data)
@@ -259,7 +410,25 @@ QString HRestSqlDatabase::processResponse(QByteArray response)
     return QString::fromUtf8(response);
 }
 
-QString HRestSqlDatabase::buildDataReqMessageFromRequest(HSqlBuilder& request)
+QString HRestSqlDatabase::buildJsonToplevelExtra(QMap<QString,QString> toplevelExtraFields)
+{
+    QString efpart = "";
+    QMap<QString,QString>::iterator iter;
+    for( iter = toplevelExtraFields.begin() ; iter != toplevelExtraFields.end() ; ++iter )
+        efpart.append(QString(" \"%1\": \"%2\",")
+                        .arg(iter.key())
+                        .arg(iter.value()));
+
+    if(sessions.contains(databaseName) && sessions[databaseName].auth)
+    {
+        efpart.append(QString(" \"session\": {\"apitoken\": \"%1\", \"chkval\": \"%2\"},")
+                            .arg(sessions[databaseName].apitoken)
+                            .arg(sessions[databaseName].chkval));
+    }
+    return efpart;
+}
+
+QString HRestSqlDatabase::buildDataReqMessageFromRequest(HSqlBuilder& request,QMap<QString,QString> toplevelExtraFields)
 {
     QString rmode = "table";
 
@@ -270,26 +439,32 @@ QString HRestSqlDatabase::buildDataReqMessageFromRequest(HSqlBuilder& request)
     if(request.getJsonExecutionMode() == TableReturn)
         rmode = "table";
 
-    return QString("{\"reqId\": \"query_uni\", \"return\": \"%1\", \"query_spec\": %2}")
+    return QString("{\"reqId\": \"query_uni\",%1 \"return\": \"%2\", \"query_spec\": %3}")
+                    .arg(buildJsonToplevelExtra(toplevelExtraFields))
                     .arg(rmode)
                     .arg(request.json_string());
 }
 
-QString HRestSqlDatabase::buildDataReqMessageFromFlExChRequest(QString tablename,QStringList fields)
+QString HRestSqlDatabase::buildDataReqMessageFromFlExChRequest(QString tablename,QStringList fields,QMap<QString,QString> toplevelExtraFields)
 {
-    return QString("{\"reqId\": \"check_fields_exists\",\"tablename\": \"%1\",\"fields\": %2}")
+    return QString("{\"reqId\": \"check_fields_exists\",%1 \"tablename\": \"%2\",\"fields\": %3}")
+                    .arg(buildJsonToplevelExtra(toplevelExtraFields))
                     .arg(tablename)
                     .arg(strlistToJsonArray(fields));
 }
 
-QString HRestSqlDatabase::buildDataReqMessageFromCustomRequest(QString reqId,QString& request)
+QString HRestSqlDatabase::buildDataReqMessageFromCustomRequest(QString reqId,QString& request,QMap<QString,QString> toplevelExtraFields)
 {
+    QString efpart = buildJsonToplevelExtra(toplevelExtraFields);
+
     if(request.startsWith("{") && request.endsWith("}"))
-        return QString("{\"reqId\": \"%1\", \"parameters\": %2}")
+        return QString("{\"reqId\": \"%1\",%2 \"parameters\": %3}")
                         .arg(reqId)
+                        .arg(efpart)
                         .arg(request);
-    return QString("{\"reqId\": \"%1\", \"parameters\": \"%2\"}")
+    return QString("{\"reqId\": \"%1\",%2 \"parameters\": \"%3\"}")
                     .arg(reqId)
+                    .arg(efpart)
                     .arg(request);
 }
 
@@ -307,6 +482,35 @@ QString strlistToJsonArray(QStringList sl)
     jsp.append("]");
     return jsp;
 
+}
+
+QString strmapToJsonObject(QMap<QString,QString> m)
+{
+    int i;
+    QString jsp="{";
+    QMapIterator<QString,QString> it(m);
+    for(i=0;it.hasNext();)
+    {
+        it.next();
+        jsp.append(i==0 ? "" : ",");
+        QString k = it.key();
+        QString v =it.value();
+        if(v.trimmed().startsWith("{") && v.trimmed().endsWith("}"))
+        {
+            jsp.append(QString("\"%1\": %2")
+                  .arg(k)
+                  .arg(v.trimmed()));
+        }
+        else
+        {
+            jsp.append(QString("\"%1\": \"%2\"")
+                  .arg(k)
+                  .arg(v));
+        }
+        ++i;
+    }
+    jsp.append("}");
+    return jsp;
 }
 
 // ///////////////////////////////////////////////////////////////////// //

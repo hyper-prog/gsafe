@@ -127,6 +127,13 @@ class HSql : public QObject
         void errorSignal(QString err);
 };
 
+class HRestSqlSessionData {
+public:
+    bool auth;
+    QString login,name;
+    QString apitoken,chkval;
+};
+
 /** Represents a REST style database connection.
  *  When use this class as an Sql connection, all request
  *  send to a server as Json data channel. */
@@ -149,6 +156,7 @@ protected:
 
 private:
     static QMap<QString,HRestSqlDatabase *> rest_databases;
+    static QMap<QString,HRestSqlSessionData> sessions;
 
 public:
 
@@ -158,11 +166,18 @@ public:
     static QStringList connectionNames();
     static HRestSqlDatabase& database(QString name);
 
-    QString sendRequest(HSqlBuilder& request);
-    bool sendFieldExistenceCheckRequest(QString tablename,QStringList fields);
-    QString sendCustomRequest(QString reqId,QString& request);
+    QString sendRequest(HSqlBuilder& request,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
+    bool sendFieldExistenceCheckRequest(QString tablename,QStringList fields,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
+    QString sendCustomRequest(QString reqId,QString& request,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
 
     QString sendRawRequest(QString& data);
+
+    QString currentSessionUserLogin();
+    QString currentSessionUserName();
+
+    QString sendLoginToCodkep(QString login,QString credential);
+    QString sendWhoamiToCodkep();
+    QString sendLogoutFromCodkep();
 
     virtual bool transaction(void);
     virtual bool commit(void);
@@ -172,15 +187,18 @@ public slots:
     int sslErrorHandler(const QList<QSslError>& errors);
 
 protected:
+    virtual QString buildJsonToplevelExtra(QMap<QString,QString> toplevelExtraFields);
+
     static void registerDatabase(HRestSqlDatabase *new_instance);
 
     QString restAnswerReceived(QNetworkReply* restNetworkActionReply);
     virtual QByteArray processRequest(QString data);
     virtual QString processResponse(QByteArray response);
-    virtual QString buildDataReqMessageFromRequest(HSqlBuilder& request);
-    virtual QString buildDataReqMessageFromFlExChRequest(QString tablename,QStringList fields);
-    virtual QString buildDataReqMessageFromCustomRequest(QString reqId,QString& request);
-
+    virtual QString buildDataReqMessageFromRequest(HSqlBuilder& request,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
+    virtual QString buildDataReqMessageFromFlExChRequest(QString tablename,QStringList fields,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
+    virtual QString buildDataReqMessageFromCustomRequest(QString reqId,QString& request,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
+    virtual void processSessionBlockIfExists(QString data);
+    virtual void processSessionJsonObject(QJsonObject jso);
 public:
     ~HRestSqlDatabase(void);
 };
@@ -269,6 +287,7 @@ public:
 /** This functions returns the Sql dialect text accoring to the Qt native driver string */
 QString dialectFromDriverHandlerType(QString dht);
 QString strlistToJsonArray(QStringList sl);
+QString strmapToJsonObject(QMap<QString,QString> m);
 
 /* @} */
 
