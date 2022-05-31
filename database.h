@@ -167,6 +167,7 @@ public:
     static HRestSqlDatabase& database(QString name);
 
     QString sendRequest(HSqlBuilder& request,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
+    QJsonDocument sendRequestJSON(HSqlBuilder& request,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
     bool sendFieldExistenceCheckRequest(QString tablename,QStringList fields,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
     QString sendCustomRequest(QString reqId,QString& request,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
 
@@ -256,6 +257,7 @@ protected:
     QList<QList<HValue> > processed_data;
 
     void parseAnswerTable(QString payload,QStringList fields);
+    void parseAnswerTable(QJsonDocument parsedJson,QStringList fields);
 };
 
 /** The Native Qt Sql implementation of HSqlConnector */

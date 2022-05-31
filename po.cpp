@@ -82,11 +82,16 @@ HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
     instruction_buffer.clear();
     pageboot_buffer.clear();
     inPageBoot = false;
+    unknownCommandWarning = false;
 }
 
 HPageTileRenderer::~HPageTileRenderer()
 {
 
+}
+void HPageTileRenderer::setUnknownCommandWarning(bool showWarnings)
+{
+    unknownCommandWarning = showWarnings;
 }
 
 void HPageTileRenderer::storePositionOfNextAddElement(QString withName)
@@ -867,7 +872,8 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
 
     if(parts.count() < 2)
     {
-        sdebug(QString("HPageTileRenderer warning, unknown or not complete command: %1").arg(parts.join("#")));
+        if(unknownCommandWarning)
+            sdebug(QString("HPageTileRenderer warning, unknown or not complete command: %1").arg(parts.join("#")));
         return;
     }
 
@@ -976,7 +982,8 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
 
     if(parts.count() < 3)
     {
-        sdebug(QString("HPageTileRenderer warning, unknown or not complete command: %1").arg(parts.join("#")));
+        if(unknownCommandWarning)
+            sdebug(QString("HPageTileRenderer warning, unknown or not complete command: %1").arg(parts.join("#")));
         return;
     }
 
@@ -1051,7 +1058,8 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
         return;
     }
 
-    sdebug(QString("HPageTileRenderer warning, unknown command: %1").arg(parts.join("#")));
+    if(unknownCommandWarning)
+        sdebug(QString("HPageTileRenderer warning, unknown command: %1").arg(parts.join("#")));
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //

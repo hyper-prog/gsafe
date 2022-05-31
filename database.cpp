@@ -180,6 +180,20 @@ QString HRestSqlDatabase::sendRequest(HSqlBuilder& request,QMap<QString,QString>
     return responsePayload;
 }
 
+QJsonDocument HRestSqlDatabase::sendRequestJSON(HSqlBuilder& request,QMap<QString,QString> toplevelExtraFields)
+{
+    QJsonParseError jpe;
+    QString data = buildDataReqMessageFromRequest(request,toplevelExtraFields);
+    QJsonDocument answerJson = QJsonDocument::fromJson(sendRawRequest(data).toUtf8(),&jpe);
+    QJsonObject jo = answerJson.object();
+    if(answerJson.object().contains("session"))
+    {
+        QJsonObject jso = answerJson.object().value("session").toObject();
+        processSessionJsonObject(jso);
+    }
+    return answerJson;
+}
+
 bool HRestSqlDatabase::sendFieldExistenceCheckRequest(QString tablename,QStringList fields,QMap<QString,QString> toplevelExtraFields)
 {
     QString data = buildDataReqMessageFromFlExChRequest(tablename,fields,toplevelExtraFields);
@@ -648,7 +662,7 @@ void HSqlConnector_HttpRest::exec(HSqlBuilder& request)
     errorStringValue = "";
 
     resetRecord();
-    parseAnswerTable(db.sendRequest(request),request.query_field_list());
+    parseAnswerTable(db.sendRequestJSON(request),request.query_field_list());
 }
 
 void HSqlConnector_HttpRest::parseAnswerTable(QString payload,QStringList fields)
@@ -664,8 +678,17 @@ void HSqlConnector_HttpRest::parseAnswerTable(QString payload,QStringList fields
     QJsonDocument answer;
     answer = QJsonDocument::fromJson(payload.toUtf8(),&jpe);
 
-    QJsonObject jo = answer.object();
-    if(!answer.isNull() && jo.value("status") == "Ok")
+    parseAnswerTable(answer,fields);
+}
+
+void HSqlConnector_HttpRest::parseAnswerTable(QJsonDocument parsedJson,QStringList fields)
+{
+    processed_rtype = 0;
+    processed_fields.clear();
+    processed_data.clear();
+
+    QJsonObject jo = parsedJson.object();
+    if(!parsedJson.isNull() && jo.value("status") == "Ok")
     {
         if(jo.value("rtype") == "none" )
         {

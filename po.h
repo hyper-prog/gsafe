@@ -108,6 +108,8 @@ public:
     void resetToDefaultFont(void);
     QColor getFontColor();
 
+    void setUnknownCommandWarning(bool showWarnings);
+
     /**
      * Line oriented renderer function.
      * Every line can holds one of the following instructions
@@ -340,6 +342,7 @@ protected:
     QList<QStringList> instruction_buffer;
     QList<QStringList> pageboot_buffer;
     bool inPageBoot;
+    bool unknownCommandWarning;
 };
 
 /** Text preprocessor for HPageTileRenderer's renderFromInstructions method */
