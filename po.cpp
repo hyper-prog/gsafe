@@ -28,7 +28,6 @@ HTextDocument::HTextDocument()
 
 HTextDocument::~HTextDocument()
 {
-
 }
 
 void HTextDocument::drawColorContents(QPainter *p,const QColor& color, const QRectF &rect)
@@ -70,6 +69,10 @@ HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
     defaultFont = QFont("Arial",18);
     font = QFont("Arial",18);
     fontColor = QColor(0,0,0);
+    marginTop    = 20;
+    marginRight  = 20;
+    marginBottom = 20;
+    marginLeft   = 20;
 
     p->setPen(QPen(QColor(0,0,0),5));
     p->setPen(Qt::SolidLine);
@@ -83,12 +86,16 @@ HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
     pageboot_buffer.clear();
     inPageBoot = false;
     unknownCommandWarning = false;
+
+    resolutionDpi = 200;
+    physicalWidthMillimeter = 210; //Default A4 width in portrait on 200dpi
+    physicalHeightMillimeter = 297; //Default A4 height in portrait on 200dpi
 }
 
 HPageTileRenderer::~HPageTileRenderer()
 {
-
 }
+
 void HPageTileRenderer::setUnknownCommandWarning(bool showWarnings)
 {
     unknownCommandWarning = showWarnings;
@@ -164,18 +171,23 @@ void HPageTileRenderer::resetToDefaultFont()
     font = defaultFont;
 }
 
+int HPageTileRenderer::millimeterToPixel(int mm)
+{
+     return (int)((double)(mm  * resolutionDpi) / 25.4);
+}
+
 int HPageTileRenderer::areaWidth()
 {
     if(!areastack.isEmpty())
-        return areastack.first().sizeW;
-    return p->window().width();
+        return areastack.first().sizeW - (marginLeft + marginRight);
+    return p->window().width() - (marginLeft + marginRight);
 }
 
 int HPageTileRenderer::areaHeight()
 {
     if(!areastack.isEmpty())
-        return areastack.first().sizeH;
-    return p->window().height();
+        return areastack.first().sizeH - (marginTop + marginBottom);
+    return p->window().height() - (marginTop + marginBottom);
 }
 
 int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
@@ -205,12 +217,14 @@ int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
     if(str.endsWith("px"))
         str = str.mid(0,str.length() - 2);
 
-    if(!str.endsWith("%") && !str.endsWith("em"))
+    if(!str.endsWith("%") && !str.endsWith("em") && !str.endsWith("mm") && !str.endsWith("cm"))
         iv = str.toInt();
 
     if(str.endsWith("%"))
     {
         double percent = str.mid(0,str.length()-1).toDouble();
+        if(percent > 100.0)
+            percent = 100.0;
         if(xy == "x")
             iv = (areaWidth() * percent) / 100.0;
         if(xy == "y")
@@ -225,6 +239,18 @@ int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
             iv = fm.averageCharWidth() * mul;
         if(xy == "y")
             iv = fm.height() * mul;
+    }
+
+    if(str.endsWith("cm"))
+    {
+        double mul = str.mid(0,str.length()-2).toDouble();
+        iv = millimeterToPixel(mul * 10);
+    }
+
+    if(str.endsWith("mm"))
+    {
+        int mul = str.mid(0,str.length()-2).toInt();
+        iv = millimeterToPixel(mul);
     }
 
     if(reverse)
@@ -246,13 +272,21 @@ int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
     return iv;
 }
 
+void HPageTileRenderer::setMargins(int top,int right,int bottom,int left)
+{
+    marginTop    = top;
+    marginRight  = right;
+    marginBottom = bottom;
+    marginLeft   = left;
+}
+
 void HPageTileRenderer::storePos(int w,int h)
 {
     HPageTileRendererPosition sp;
     sp.valid = true;
     sp.page = currentPage + 1;
-    sp.pixel_x = cursorX;
-    sp.pixel_y = cursorY;
+    sp.pixel_x = marginLeft + cursorX;
+    sp.pixel_y = marginRight + cursorY;
     sp.pixel_w = w;
     sp.pixel_h = h;
     sp.percent_x = ((double)sp.pixel_x * 100.0) / p->window().width();
@@ -306,7 +340,7 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
         newLine();
     }
 
-    QRect r(cursorX,cursorY,w_px,1000);
+    QRect r(marginLeft + cursorX,marginTop + cursorY,w_px,1000);
     HTextDocument td;
     if(type == HTextType_Plain)
         td.setPlainText(strSubstTokens(text));
@@ -326,7 +360,7 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
     if(h_eff + cursorY > areaHeight())
     {
         newPage();
-        r = QRect(cursorX,cursorY,w_px,1000);
+        r = QRect(marginLeft + cursorX,marginTop + cursorY,w_px,1000);
     }
 
     if(pageFilter == -1 || pageFilter == currentPage)
@@ -392,12 +426,12 @@ void HPageTileRenderer::addRect(QString width,QString height)
     if(cursorX + w_px > areaWidth())
         newLine();
 
-    QRect r(cursorX,cursorY,w_px,h_eff);
+    QRect r(marginLeft + cursorX,marginTop + cursorY,w_px,h_eff);
 
     if(h_eff + cursorY > areaHeight())
     {
         newPage();
-        r = QRect(cursorX,cursorY,w_px,h_eff);
+        r = QRect(marginLeft + cursorX,marginTop + cursorY,w_px,h_eff);
     }
 
     if(pageFilter == -1 || pageFilter == currentPage)
@@ -433,12 +467,12 @@ void HPageTileRenderer::addSpace(QString width,QString height)
     if(cursorX + w_px > areaWidth())
         newLine();
 
-    QRect r(cursorX,cursorY,w_px,h_eff);
+    QRect r(marginLeft + cursorX,marginTop + cursorY,w_px,h_eff);
 
     if(h_eff + cursorY > areaHeight())
     {
         newPage();
-        r = QRect(cursorX,cursorY,w_px,h_eff);
+        r = QRect(marginLeft + cursorX,marginTop + cursorY,w_px,h_eff);
     }
 
     if(currentLineHeight < minLineHeight)
@@ -470,12 +504,12 @@ void HPageTileRenderer::addImage(QString width,QImage image)
 
     int height = (int)(((double)w_px / (double)image.width()) * (double)image.height());
 
-    QRect r(cursorX,cursorY,w_px,height);
+    QRect r(marginLeft + cursorX,marginTop + cursorY,w_px,height);
 
     if(height + cursorY > areaHeight())
     {
         newPage();
-        r = QRect(cursorX,cursorY,w_px,height);
+        r = QRect(marginLeft + cursorX,marginTop + cursorY,w_px,height);
     }
 
     if(pageFilter == -1 || pageFilter == currentPage)
@@ -539,7 +573,7 @@ int  HPageTileRenderer::calcTextHeight(QString width,QString text,HPageTileRende
 {
     int w_px = sizeStrToInt(width,"x");
 
-    QRect r(cursorX,cursorY,w_px,1000);
+    QRect r(0,0,w_px,1000);
     QTextDocument td;
     if(type == HTextType_Plain)
         td.setPlainText(strSubstTokens(text));
@@ -631,12 +665,12 @@ void HPageTileRenderer::enterArea(QString width,QString height)
     if(cursorX + w_px > areaWidth())
         newLine();
 
-    QRect r(cursorX,cursorY,w_px,h_px);
+    QRect r(marginLeft + cursorX,marginTop + cursorY,w_px,h_px);
 
     if(h_px + cursorY > areaHeight())
     {
         newPage();
-        r = QRect(cursorX,cursorY,w_px,h_px);
+        r = QRect(marginLeft + cursorX,marginTop + cursorY,w_px,h_px);
     }
 
     if(currentLineHeight < minLineHeight)
@@ -654,11 +688,19 @@ void HPageTileRenderer::enterArea(QString width,QString height)
     area.currentLineHeight = currentLineHeight;
     area.currentPage = currentPage;
     area.pageFilter = pageFilter;
+    area.margint = marginTop;
+    area.marginr = marginRight;
+    area.marginb = marginBottom;
+    area.marginl = marginLeft;
 
     areastack.push_front(area);
     p->save();
     p->translate(r.topLeft());
 
+    marginTop    = 0;
+    marginRight  = 0;
+    marginBottom = 0;
+    marginLeft   = 0;
     cursorX = 0;
     cursorY = 0;
     currentLineHeight = 0;
@@ -681,11 +723,19 @@ void HPageTileRenderer::enterArea(QString xpos,QString ypos,QString width,QStrin
     area.currentLineHeight = currentLineHeight;
     area.currentPage = currentPage;
     area.pageFilter = pageFilter;
+    area.margint = marginTop;
+    area.marginr = marginRight;
+    area.marginb = marginBottom;
+    area.marginl = marginLeft;
 
     areastack.push_front(area);
     p->save();
     p->translate(r.topLeft());
 
+    marginTop    = 0;
+    marginRight  = 0;
+    marginBottom = 0;
+    marginLeft   = 0;
     cursorX = 0;
     cursorY = 0;
     currentLineHeight = 0;
@@ -697,6 +747,12 @@ void HPageTileRenderer::returnArea()
         return;
     cursorX = areastack.first().cursorX;
     cursorY = areastack.first().cursorY;
+
+    marginTop    = areastack.first().margint;
+    marginRight  = areastack.first().marginr;
+    marginBottom = areastack.first().marginb;
+    marginLeft   = areastack.first().marginl;
+
     currentLineHeight = areastack.first().currentLineHeight;
     currentPage = areastack.first().currentPage;
     pageFilter = areastack.first().pageFilter;
@@ -886,6 +942,8 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
             setTextAlignment(Qt::AlignRight);
         if(parts.at(1) == "center")
             setTextAlignment(Qt::AlignCenter);
+        if(parts.at(1) == "just")
+            setTextAlignment(Qt::AlignJustify);
         return;
     }
     if(cmd == "smhv")
@@ -977,6 +1035,12 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
             enterArea(fpp[0],fpp[1]);
         if(fpp.count() == 4)
             enterArea(fpp[0],fpp[1],fpp[2],fpp[3]);
+        return;
+    }
+    if(cmd == "marg")
+    {
+        if(fpp.count() == 4)
+            setMargins(fpp[0].toInt(),fpp[1].toInt(),fpp[2].toInt(),fpp[3].toInt());
         return;
     }
 
@@ -1334,6 +1398,8 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
  : QDialog(parent)
 {
     pdfWriter = NULL;
+    rawEditor = NULL;
+    enable_render_warnings = false;
     attachmentFiles.clear();
     lastRenderStoredPositions.clear();
     main_horizontal_layout = new QHBoxLayout(this);
@@ -1343,6 +1409,7 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
     QStringList btns = buttons.split(",",Qt::SkipEmptyParts); // "print,generate"
 
     ppf = new HPdfPreviewFrame(this);
+
     ppf->maxPage = 0;
     if(btns.contains("generate"))
     {
@@ -1360,6 +1427,13 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
         toplay->addWidget(printButton);
     }
 #endif
+
+    if(btns.contains("editor"))
+    {
+        rawEditor = new QTextEdit(this);
+        connect(rawEditor,SIGNAL(textChanged()),this,SLOT(editorTextChanged()));
+        main_horizontal_layout->addWidget(rawEditor);
+    }
 
     QPushButton *closeButton = new QPushButton(tr("Close"),this);
     QPushButton *prevpButton = new QPushButton("<",this);
@@ -1386,6 +1460,16 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
 void HPdfPreviewDialog::setRawContent(QString c)
 {
     ppf->rawContent = c;
+    if(rawEditor != NULL)
+        rawEditor->setPlainText(c);
+    update();
+}
+
+int HPdfPreviewDialog::editorTextChanged()
+{
+    ppf->rawContent = rawEditor->toPlainText();
+    update();
+    return 0;
 }
 
 void HPdfPreviewDialog::addAttachmentFile(QString name,QString content)
@@ -1395,10 +1479,11 @@ void HPdfPreviewDialog::addAttachmentFile(QString name,QString content)
 
 int HPdfPreviewDialog::generatePdfFile(QString filename)
 {
+    int dpi = 200;
     QPdfWriter pw(filename);
     pdfWriter = &pw;
 
-    pw.setResolution(200);
+    pw.setResolution(dpi);
     pw.setPageSize(QPageSize(QPageSize::A4));  /*8.26 x 11.69  -> *200 -> 1652 x 2338*/
     pw.setPageOrientation(QPageLayout::Portrait);
 
@@ -1409,6 +1494,9 @@ int HPdfPreviewDialog::generatePdfFile(QString filename)
     QPainter pp(pdfWriter);
     pp.setWindow(0,0,1652,2338); // PageSite A4 on 200 dpi (Set elsewhere...)
     HPageTileRenderer renderer(&pp);
+    renderer.resolutionDpi = dpi;
+    if(enable_render_warnings)
+        renderer.setUnknownCommandWarning(true);
     connect(&renderer,SIGNAL(startNewPage()),this,SLOT(startNewPage()));
     renderer.renderFromInstructions(ppf->rawContent);
     lastRenderStoredPositions = renderer.storedPositions();
@@ -1435,8 +1523,9 @@ int HPdfPreviewDialog::changePage(int p)
 int HPdfPreviewDialog::print()
 {
 #ifndef GSAFE_DISABLE_PRINTERMODULE
+    int dpi = 200;
     printer = new QPrinter();
-    printer->setResolution(200);
+    printer->setResolution(dpi);
     printer->setPageSize(QPageSize(QPageSize::A4));  /*8.26 x 11.69  -> *200 -> 1652 x 2338*/
     printer->setPageOrientation(QPageLayout::Portrait);
 
@@ -1446,6 +1535,9 @@ int HPdfPreviewDialog::print()
         QPainter pp(printer);
         pp.setWindow(0,0,1652,2338); // PageSite A4 on 200 dpi (Set elsewhere...)
         HPageTileRenderer *renderer = new HPageTileRenderer(&pp);
+        renderer->resolutionDpi = dpi;
+        if(enable_render_warnings)
+            renderer->setUnknownCommandWarning(true);
         connect(renderer,SIGNAL(startNewPage()),this,SLOT(startNewPage()));
         renderer->renderFromInstructions(ppf->rawContent);
         delete renderer;

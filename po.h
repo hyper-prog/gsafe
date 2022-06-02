@@ -106,6 +106,7 @@ public:
     void setFont(QFont f);
     void setDefaultFont(QFont f);
     void resetToDefaultFont(void);
+    void setMargins(int top,int right,int bottom,int left);
     QColor getFontColor();
 
     void setUnknownCommandWarning(bool showWarnings);
@@ -246,7 +247,7 @@ public:
      *            fram#none
      *
      *   alig - Set text alignment in the box
-     *          alig#<left|center|right>
+     *          alig#<left|center|right|just>
      *
      *   setf - Set current font family and size
      *          setf#<FontName>,<PointSize>
@@ -260,18 +261,24 @@ public:
      *   getp - Store the redered position of the next "Add element" and hold under the specified name
      *          getp#<Name>
      *
+     *   marg - Set margins in pixels (top,right,bottom,left)
+     *          marg#<px>,<px>,<px>,<px>
+     *          Sample: marg#40,40,40,40
+     *
      *   EVERYPAGE_START - Start a section which is re-played on every new page
      *          EVERYPAGE_START
      *
      *   EVERYPAGE_END - End the section which is re-played on every new page
      *          EVERYPAGE_END
-
-*
+     *
+     *
      *  The POSITION STRING can be:
      *   Type             String  Means
      *   Simple string    120     120 pixel
      *   Percent size     20%     20% of the page width or height depending of the position
      *   Letter size      2em     2letter width or height
+     *   Physical size    1cm     1 centimeter
+     *   Physical size    5mm     5 millimeter
      *   Reverse size     -10%    =90% which 10% back of the page width or height
      *                    -80     80pixels less then the page width or height
      *   Dinamic size     >50%    Calculate the width or height from the current position
@@ -301,6 +308,7 @@ protected:
     void drawBorders(int w,int h);
     void storePos(int w,int h);
     QString strSubstTokens(QString in);
+    int millimeterToPixel(int mm);
 
     int areaWidth();
     int areaHeight();
@@ -322,6 +330,7 @@ protected:
         int currentLineHeight;
         int currentPage;
         int pageFilter;
+        int margint,marginr,marginb,marginl;
     };
 
     QPainter *p;
@@ -332,6 +341,7 @@ protected:
     Qt::Alignment alignment;
     QFont fs_defaultFont,fs_font;
     Qt::Alignment fs_alignment;
+    int marginTop,marginRight,marginBottom,marginLeft;
     QColor fontColor;
     QPen pen;
     QBrush brush;
@@ -343,6 +353,11 @@ protected:
     QList<QStringList> pageboot_buffer;
     bool inPageBoot;
     bool unknownCommandWarning;
+
+public:
+    int resolutionDpi;
+    int physicalWidthMillimeter;
+    int physicalHeightMillimeter;
 };
 
 /** Text preprocessor for HPageTileRenderer's renderFromInstructions method */
@@ -406,6 +421,7 @@ public slots:
     int nextPage();
     int prevPage();
     int print();
+    int editorTextChanged();
 
 protected:
     void wheelEvent(QWheelEvent *e);
@@ -416,12 +432,14 @@ protected:
 #ifndef GSAFE_DISABLE_PRINTERMODULE
     QPrinter *printer;
 #endif
+    QTextEdit *rawEditor;
     HPdfPreviewFrame *ppf;
     QHBoxLayout *main_horizontal_layout;
     QVBoxLayout *main_vertical_layout;
     QHBoxLayout *toplay;
 
 public:
+    bool enable_render_warnings;
     QMap<QString,HPageTileRendererPosition> lastRenderStoredPositions;
 };
 
