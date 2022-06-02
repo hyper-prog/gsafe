@@ -106,7 +106,7 @@ public:
     void setFont(QFont f);
     void setDefaultFont(QFont f);
     void resetToDefaultFont(void);
-    void setMargins(int top,int right,int bottom,int left);
+    void setMargins(QString top,QString right,QString bottom,QString left);
     QColor getFontColor();
 
     void setUnknownCommandWarning(bool showWarnings);
@@ -262,8 +262,9 @@ public:
      *          getp#<Name>
      *
      *   marg - Set margins in pixels (top,right,bottom,left)
-     *          marg#<px>,<px>,<px>,<px>
-     *          Sample: marg#40,40,40,40
+     *          marg#<sT>,<sR>,<sB>,<sL>
+     *          <sX> is POSITION STRING specify the height
+     *          Sample: marg#25mm,25mm,25mm,25mm
      *
      *   EVERYPAGE_START - Start a section which is re-played on every new page
      *          EVERYPAGE_START

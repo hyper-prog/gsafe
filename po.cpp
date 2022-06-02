@@ -272,12 +272,12 @@ int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
     return iv;
 }
 
-void HPageTileRenderer::setMargins(int top,int right,int bottom,int left)
+void HPageTileRenderer::setMargins(QString top,QString right,QString bottom,QString left)
 {
-    marginTop    = top;
-    marginRight  = right;
-    marginBottom = bottom;
-    marginLeft   = left;
+    marginTop    = sizeStrToInt(top,"y");
+    marginRight  = sizeStrToInt(right,"x");
+    marginBottom = sizeStrToInt(bottom,"y");
+    marginLeft   = sizeStrToInt(left,"x");
 }
 
 void HPageTileRenderer::storePos(int w,int h)
@@ -390,7 +390,7 @@ void HPageTileRenderer::drawText(QString xpos,QString ypos,QString width,QString
     int x = sizeStrToInt(xpos,"x");
     int y = sizeStrToInt(ypos,"y");
     int w_px = sizeStrToInt(width,"x");
-    QRect r(x,y,w_px,1000);
+    QRect r(marginLeft + x,marginTop + y,w_px,1000);
     HTextDocument td;
     if(type == HTextType_Plain)
         td.setPlainText(strSubstTokens(text));
@@ -536,7 +536,7 @@ void HPageTileRenderer::drawImage(QString xpos,QString ypos,QString width,QImage
 
     int height = (int)(((double)w_px / (double)image.width()) * (double)image.height());
 
-    QRect r(x,y,w_px,height);
+    QRect r(marginLeft + x,marginTop + y,w_px,height);
 
     if(pageFilter == -1 || pageFilter == currentPage)
     {
@@ -557,7 +557,7 @@ void HPageTileRenderer::drawRect(QString xpos,QString ypos,QString width,QString
     int w_px = sizeStrToInt(width,"x");
     int h_px = sizeStrToInt(height,"y");
 
-    QRect r(x,y,w_px,h_px);
+    QRect r(marginLeft + x,marginTop + y,w_px,h_px);
     if(pageFilter == -1 || pageFilter == currentPage)
     {
         p->save();
@@ -713,7 +713,7 @@ void HPageTileRenderer::enterArea(QString xpos,QString ypos,QString width,QStrin
     int w_px = sizeStrToInt(width,"x");
     int h_px = sizeStrToInt(height,"y");
 
-    QRect r(x,y,w_px,h_px);
+    QRect r(marginLeft + x, marginTop + y,w_px,h_px);
 
     AreaData area;
     area.sizeW = w_px;
@@ -1040,7 +1040,7 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
     if(cmd == "marg")
     {
         if(fpp.count() == 4)
-            setMargins(fpp[0].toInt(),fpp[1].toInt(),fpp[2].toInt(),fpp[3].toInt());
+            setMargins(fpp[0],fpp[1],fpp[2],fpp[3]);
         return;
     }
 
