@@ -84,9 +84,8 @@ HRecordDisplay::HRecordDisplay(QWidget *parent,HRecord *data,HDispObjectFlags fl
         }
     }
 
-    if(!flagOn(startflags,HDispFlag_AddStretchAfterFields))
-        layout->addStretch();
-
+    if(flagOn(startflags,HDispFlag_AddStretchAfterFields))
+        layout->addStretch(1);
 }
 
 HRecordDisplay::~HRecordDisplay()
