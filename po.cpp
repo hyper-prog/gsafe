@@ -1329,9 +1329,9 @@ QString HTextProcessor::processLine(QString in)
                     if(cp.count() == 2 && rp.count() == 2)
                     {
                         if(processToken(cp[0]) == processToken(cp[1]))
-                            to = processToken(rp[0]);
+                            to = processLine(rp[0].replace("[[","{{").replace("]]","}}"));
                         else
-                            to = processToken(rp[1]);
+                            to = processLine(rp[1].replace("[[","{{").replace("]]","}}"));
                     }
                 }
             }
@@ -1354,6 +1354,16 @@ QString HTextProcessor::processLine(QString in)
 
 QString HTextProcessor::processToken(QString in)
 {
+    if(in.startsWith(".."))
+    {
+        if(in.mid(2) == "point")         return ".";
+        if(in.mid(2) == "colon")         return ":";
+        if(in.mid(2) == "semicolon")     return ";";
+        if(in.mid(2) == "question")      return "?";
+        if(in.mid(2) == "openbrackets")  return "{";
+        if(in.mid(2) == "closebrackets") return "}";
+        return "";
+    }
     if(in.startsWith("."))
     {
         QStringList tp = in.mid(1).split(".",Qt::SkipEmptyParts);
