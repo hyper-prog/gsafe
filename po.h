@@ -373,12 +373,14 @@ public:
     QString processToken(QString in);
 
     void addValueMap(QString name,const QMap<QString,QString>& m);
+    void addValueList(QString name,const QList<QString>& l);
     void addValueMapPtr(QString name,QMap<QString,QString>* m);
     void clearValueMaps();
 
 protected:
     QMap<QString, QMap<QString,QString> > smaps;
     QMap<QString, QMap<QString,QString> * > dmaps;
+    QMap<QString, QList<QString> > slist;
     QString definingFunctionName;
     QString definingFunctionBody;
     QMap<QString,QString> functions;

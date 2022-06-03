@@ -1149,10 +1149,16 @@ void HTextProcessor::addValueMapPtr(QString name,QMap<QString,QString>* m)
     dmaps[name] = m;
 }
 
+void HTextProcessor::addValueList(QString name,const QList<QString>& l)
+{
+    slist[name] = l;
+}
+
 void HTextProcessor::clearValueMaps()
 {
     smaps.clear();
     dmaps.clear();
+    slist.clear();
 }
 
 QString HTextProcessor::processDoc(QString in)
@@ -1373,6 +1379,13 @@ QString HTextProcessor::processToken(QString in)
                 return smaps[tp[0]].value(tp[1]);
             if(dmaps.contains(tp[0]) && dmaps[tp[0]] != NULL && dmaps[tp[0]]->contains(tp[1]))
                 return dmaps[tp[0]]->value(tp[1]);
+            if(slist.contains(tp[0]))
+            {
+                bool ok;
+                int idx = tp[1].toInt(&ok);
+                if(ok && idx >= 0 && idx < slist[tp[0]].count())
+                    return slist[tp[0]].at(idx);
+            }
         }
         return "";
     }
