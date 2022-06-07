@@ -642,6 +642,12 @@ void HPageTileRenderer::newPage()
     playPageBoot();
 }
 
+void HPageTileRenderer::newPageIfRequired(QString requiredHeight)
+{
+    if(sizeStrToInt(requiredHeight,"y") + cursorY > areaHeight())
+        newPage();
+}
+
 int HPageTileRenderer::currentPageIndex()
 {
     return currentPage;
@@ -969,6 +975,11 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
     if(cmd == "getp")
     {
         storePositionOfNextAddElement(parts.at(1));
+        return;
+    }
+    if(cmd == "npif")
+    {
+        newPageIfRequired(parts.at(1));
         return;
     }
 

@@ -77,6 +77,7 @@ public:
     void drawImage(QString xpos,QString ypos,QString width,QImage image);
     void newLine();
     void newPage();
+    void newPageIfRequired(QString requiredHeight);
 
     void enterArea(QString width,QString height);
     void enterArea(QString xpos,QString ypos,QString width,QString height);
@@ -251,6 +252,10 @@ public:
      *
      *   setf - Set current font family and size
      *          setf#<FontName>,<PointSize>
+     *
+     *   npif - New page if the required height is not enough
+     *          npif#<rH>
+     *          <rH> is POSITION STRING specify the height
      *
      *   setd - Set current and the default font family and size
      *          setd#<FontName>,<PointSize>
