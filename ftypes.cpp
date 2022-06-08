@@ -949,6 +949,7 @@ QString HTimestampField::convertToDisplay(QString fv)
 HSqlXChooseField::HSqlXChooseField(QString sqlname,QString description,QString title)
  : HField(sqlname,description,title)
 {
+    unkAllowed = false;
     read = false;
     setAttribute("popuplist_heads","");
 }

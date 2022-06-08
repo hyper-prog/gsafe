@@ -1318,7 +1318,7 @@ bool HSqlXChooseDisplay::uniField_unknownAllowed()
     if(dLink->className() == "HSqlSChooseField")
         return ((HSqlSChooseField *)dLink)->unknownAllowed();
     if(dLink->className() == "HSqlNChooseField")
-        return ((HSqlSChooseField *)dLink)->unknownAllowed();
+        return ((HSqlNChooseField *)dLink)->unknownAllowed();
     return false;
 }
 
