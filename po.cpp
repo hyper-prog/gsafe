@@ -795,7 +795,7 @@ void HPageTileRenderer::renderFromInstructions(QString txtintr)
             concatenated.chop(1);
             continue;
         }
-        QList<QString> parts = li->split("#",Qt::KeepEmptyParts);
+        QList<QString> parts = li->trimmed().split("#",Qt::KeepEmptyParts);
         renderFromInstructionLineHL(parts);
     }
 }
