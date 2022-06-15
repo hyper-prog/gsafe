@@ -280,6 +280,8 @@ public:
     const QList<HBaseValidator *> validators();
     void clearValidators();
     bool getLastValidatorCheckStatus();
+    void setLastValidatorCheckToFail();
+    void resetLastValidatorStatus();
 
     virtual QString validate();
 

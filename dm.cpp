@@ -778,6 +778,16 @@ bool HField::getLastValidatorCheckStatus()
     return lastValidatorCheckFailed;
 }
 
+void HField::setLastValidatorCheckToFail()
+{
+    lastValidatorCheckFailed = true;
+}
+
+void HField::resetLastValidatorStatus()
+{
+    lastValidatorCheckFailed = false;
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////// //
 // HKeyValueStore
 // //////////////////////////////////////////////////////////////////////////////////////// //
