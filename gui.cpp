@@ -640,7 +640,6 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
                 valueEditor2->setMinimumWidth(dLink->attribute("gui_minwidth").toInt());
             connect(valueEditor2,SIGNAL(textChanged(QString)),this,SLOT(valueUpdatedOnGui(QString)));
             layout->addWidget(valueEditor2);
-
         }
         else
         {
@@ -666,6 +665,31 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
 
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
+
+    if(!dLink->attribute("gui_extrabuttonspacebefore").isEmpty())
+        layout->addSpacing(dLink->attribute("gui_extrabuttonspacebefore").toInt());
+
+    if(!dLink->attribute("gui_incrementbutton").isEmpty() && dLink->attribute("gui_incrementbutton") == "yes")
+    {
+        QToolButton *tbUp = new QToolButton(this);
+        tbUp->setIcon(QIcon(":/GSAFEPIXMAPS/up45.png"));
+        connect(tbUp,SIGNAL(clicked()),this,SLOT(valueIncrement()));
+        layout->addWidget(tbUp);
+    }
+
+    if(!dLink->attribute("gui_extrabuttonspacemiddle").isEmpty())
+        layout->addSpacing(dLink->attribute("gui_extrabuttonspacemiddle").toInt());
+
+    if(!dLink->attribute("gui_decrementbutton").isEmpty() && dLink->attribute("gui_decrementbutton") == "yes")
+    {
+        QToolButton *tbDown = new QToolButton(this);
+        tbDown->setIcon(QIcon(":/GSAFEPIXMAPS/down45.png"));
+        connect(tbDown,SIGNAL(clicked()),this,SLOT(valueDecrement()));
+        layout->addWidget(tbDown);
+    }
+
+    if(!dLink->attribute("gui_extrabuttonspaceafter").isEmpty())
+        layout->addSpacing(dLink->attribute("gui_extrabuttonspaceafter").toInt());
 }
 
 void HNumberDisplay::visualiseValueCorrectness(bool correct)
@@ -681,7 +705,6 @@ void HNumberDisplay::visualiseValueCorrectness(bool correct)
     last_correct = correct;
 }
 
-
 int HNumberDisplay::valueUpdatedOnGui(const QString& t)
 {
     if(progressUpdatingData)
@@ -691,6 +714,18 @@ int HNumberDisplay::valueUpdatedOnGui(const QString& t)
     dLink->setStrValue_Gui(t);
     visualiseValueCorrectness(dLink->strValue() == t);
     progressUpdatingData = false;
+    return 0;
+}
+
+int HNumberDisplay::valueIncrement(void)
+{
+    dLink->setStrValue_Gui(QString("%1").arg(dLink->strValue().toInt() + 1));
+    return 0;
+}
+
+int HNumberDisplay::valueDecrement(void)
+{
+    dLink->setStrValue_Gui(QString("%1").arg(dLink->strValue().toInt() - 1));
     return 0;
 }
 

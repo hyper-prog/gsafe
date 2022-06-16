@@ -414,7 +414,7 @@ class HPdfPreviewDialog : public QDialog
     Q_OBJECT
 
 public:
-    HPdfPreviewDialog(QWidget *parent,QString buttons = "print,generate");
+    HPdfPreviewDialog(QWidget *parent,QString buttons = "print,generate,close");
     ~HPdfPreviewDialog();
 
     void setRawContent(QString c);

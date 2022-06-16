@@ -1469,12 +1469,9 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
         main_horizontal_layout->addWidget(rawEditor);
     }
 
-    QPushButton *closeButton = new QPushButton(tr("Close"),this);
     QPushButton *prevpButton = new QPushButton("<",this);
     QPushButton *nextpButton = new QPushButton(">",this);
     pageShow = new QLabel("",this);
-
-    connect(closeButton,SIGNAL(clicked()),this,SLOT(close()));
 
     connect(prevpButton,SIGNAL(clicked()),this,SLOT(prevPage()));
     connect(nextpButton,SIGNAL(clicked()),this,SLOT(nextPage()));
@@ -1484,7 +1481,25 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
     toplay->addWidget(pageShow);
     toplay->addWidget(nextpButton);
     toplay->addStretch();
-    toplay->addWidget(closeButton);
+
+    if(btns.contains("accept"))
+    {
+        QPushButton *acceptButton = new QPushButton(tr("Accept"),this);
+        connect(acceptButton,SIGNAL(clicked()),this,SLOT(accept()));
+        toplay->addWidget(acceptButton);
+    }
+    if(btns.contains("cancel"))
+    {
+        QPushButton *cancelButton = new QPushButton(tr("Cancel"),this);
+        connect(cancelButton,SIGNAL(clicked()),this,SLOT(reject()));
+        toplay->addWidget(cancelButton);
+    }
+    if(btns.contains("close"))
+    {
+        QPushButton *closeButton = new QPushButton(tr("Close"),this);
+        connect(closeButton,SIGNAL(clicked()),this,SLOT(accept()));
+    }
+
     main_vertical_layout->addLayout(toplay);
     main_vertical_layout->addWidget(ppf);
 

@@ -14,5 +14,7 @@
         <file>GSAFEPIXMAPS/image_f.png</file>
         <file>GSAFEPIXMAPS/image_y.png</file>
         <file>GSAFEPIXMAPS/image_e.png</file>
+        <file>GSAFEPIXMAPS/down45.png</file>
+        <file>GSAFEPIXMAPS/up45.png</file>
     </qresource>
 </RCC>

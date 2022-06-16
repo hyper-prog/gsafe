@@ -192,6 +192,8 @@ public:
 
 public slots:
     int valueUpdatedOnGui(const QString& t);
+    int valueIncrement(void);
+    int valueDecrement(void);
 
 protected:
     virtual void valueSetOnGui_internal();
