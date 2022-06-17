@@ -215,12 +215,10 @@ int HFieldDisplay::valueUpdatedInMemory()
 
 void HFieldDisplay::valueSetOnGui_internal()
 {
-
 }
 
 void HFieldDisplay::updateValueEditorRoStatus()
 {
-
 }
 
 int HFieldDisplay::timedUpdateSlot(void)
@@ -261,7 +259,6 @@ void HFieldDisplay::paintEvent(QPaintEvent *e)
 
 HFieldDisplay::~HFieldDisplay()
 {
-
 }
 
 // /////////////////////////////////////////////////////////////////////////////////// //
@@ -294,9 +291,7 @@ HStaticField *HStaticDisplay::myHStaticField()
 
 HStaticDisplay::~HStaticDisplay()
 {
-
 }
-
 
 HSKeyDisplay::HSKeyDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
  : HFieldDisplay(parent,data,flags)
@@ -326,7 +321,6 @@ HSKeyField *HSKeyDisplay::myHSKeyField()
 
 HSKeyDisplay::~HSKeyDisplay()
 {
-
 }
 
 HNKeyDisplay::HNKeyDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
@@ -357,7 +351,6 @@ HNKeyField *HNKeyDisplay::myHNKeyField()
 
 HNKeyDisplay::~HNKeyDisplay()
 {
-
 }
 
 HSmallTextDisplay::HSmallTextDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
@@ -424,9 +417,7 @@ HSmallTextField* HSmallTextDisplay::myHSmallTextField()
 
 HSmallTextDisplay::~HSmallTextDisplay()
 {
-
 }
-
 
 HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
 : HFieldDisplay(parent,data,flags)
@@ -509,7 +500,6 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
     }
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
-
 }
 
 int HLargeTextDisplay::valueUpdatedOnGui()
@@ -587,7 +577,6 @@ void HLargeTextDisplay::valueSetOnGui_internal()
 
             }
         }
-
     }
 }
 
@@ -606,7 +595,6 @@ HLargeTextField* HLargeTextDisplay::myHLargeTextField()
 
 HLargeTextDisplay::~HLargeTextDisplay()
 {
-
 }
 
 HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
@@ -654,7 +642,6 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
             connect(valueEditor,SIGNAL(textChanged(QString)),this,SLOT(valueUpdatedOnGui(QString)));
             layout->addWidget(valueEditor);
         }
-
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
     {
@@ -671,8 +658,11 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
 
     if(!dLink->attribute("gui_incrementbutton").isEmpty() && dLink->attribute("gui_incrementbutton") == "yes")
     {
+        QString rname = ":/GSAFEPIXMAPS/up45.png";
+        if(!dLink->attribute("gui_incrementbuttonicon").isEmpty())
+            rname = dLink->attribute("gui_incrementbuttonicon");
         QToolButton *tbUp = new QToolButton(this);
-        tbUp->setIcon(QIcon(":/GSAFEPIXMAPS/up45.png"));
+        tbUp->setIcon(QIcon(rname));
         connect(tbUp,SIGNAL(clicked()),this,SLOT(valueIncrement()));
         layout->addWidget(tbUp);
     }
@@ -682,8 +672,11 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
 
     if(!dLink->attribute("gui_decrementbutton").isEmpty() && dLink->attribute("gui_decrementbutton") == "yes")
     {
+        QString rname = ":/GSAFEPIXMAPS/down45.png";
+        if(!dLink->attribute("gui_decrementbuttonicon").isEmpty())
+            rname = dLink->attribute("gui_decrementbuttonicon");
         QToolButton *tbDown = new QToolButton(this);
-        tbDown->setIcon(QIcon(":/GSAFEPIXMAPS/down45.png"));
+        tbDown->setIcon(QIcon(rname));
         connect(tbDown,SIGNAL(clicked()),this,SLOT(valueDecrement()));
         layout->addWidget(tbDown);
     }
@@ -753,9 +746,7 @@ HNumberField* HNumberDisplay::myHNumberField()
 
 HNumberDisplay::~HNumberDisplay()
 {
-
 }
-
 
 HFloatingDisplay::HFloatingDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
 : HFieldDisplay(parent,data,flags)
@@ -837,7 +828,6 @@ HFloatingField* HFloatingDisplay::myHFloatingField()
 
 HFloatingDisplay::~HFloatingDisplay()
 {
-
 }
 
 HDateDisplay::HDateDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
@@ -885,7 +875,6 @@ HDateDisplay::HDateDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
     }
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
-
 }
 
 int HDateDisplay::valueUpdatedOnGui(const QDate d)
@@ -967,7 +956,6 @@ HDateField* HDateDisplay::myHDateField()
 
 HDateDisplay::~HDateDisplay()
 {
-
 }
 
 HTimestampDisplay::HTimestampDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
@@ -998,7 +986,6 @@ HTimestampField *HTimestampDisplay::myHTimestampField()
 
 HTimestampDisplay::~HTimestampDisplay()
 {
-
 }
 
 HCheckDisplay::HCheckDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
@@ -1058,7 +1045,6 @@ HCheckField* HCheckDisplay::myHCheckField()
 
 HCheckDisplay::~HCheckDisplay()
 {
-
 }
 
 HXSelectDisplay::HXSelectDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
@@ -1211,7 +1197,6 @@ void HXSelectDisplay::updateValueEditorRoStatus(void)
 
 HXSelectDisplay::~HXSelectDisplay()
 {
-
 }
 
 HSqlXChooseDisplay::HSqlXChooseDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
@@ -1342,7 +1327,6 @@ void HSqlXChooseDisplay::updateValueEditorRoStatus(void)
             valueEditor->setEnabled(dLink->fieldEditType() == HFieldEdit_DefaultEditable);
 }
 
-
 HSqlXChooseField* HSqlXChooseDisplay::myHSqlXChooseField()
 {
     return (HSqlXChooseField*)dLink;
@@ -1434,7 +1418,6 @@ int HSqlXChooseDisplay::popupSelect()
 
 HSqlXChooseDisplay::~HSqlXChooseDisplay()
 {
-
 }
 
 //End of gSAFE gui.cpp
