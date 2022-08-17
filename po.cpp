@@ -1063,28 +1063,31 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
     }
 
     //Commands with two arguments
+    QString writestr = parts.at(2);
+    if(parts.count() > 3)
+        writestr = parts.sliced(2).join("#");
     if(cmd == "text")
     {
         if(fpp.count() > 2)
-            drawText(fpp[0],fpp[1],fpp[2],parts.at(2),HTextType_Plain);
+            drawText(fpp[0],fpp[1],fpp[2],writestr,HTextType_Plain);
         else
-            addText(parts.at(1),parts.at(2),HTextType_Plain);
+            addText(parts.at(1),writestr,HTextType_Plain);
         return;
     }
     if(cmd == "html")
     {
         if(fpp.count() > 2)
-            drawText(fpp[0],fpp[1],fpp[2],parts.at(2),HTextType_Html);
+            drawText(fpp[0],fpp[1],fpp[2],writestr,HTextType_Html);
         else
-            addText(parts.at(1),parts.at(2),HTextType_Html);
+            addText(parts.at(1),writestr,HTextType_Html);
         return;
     }
     if(cmd == "mark")
     {
         if(fpp.count() > 2)
-            drawText(fpp[0],fpp[1],fpp[2],parts.at(2),HTextType_Markdown);
+            drawText(fpp[0],fpp[1],fpp[2],writestr,HTextType_Markdown);
         else
-            addText(parts.at(1),parts.at(2),HTextType_Markdown);
+            addText(parts.at(1),writestr,HTextType_Markdown);
         return;
     }
     if(cmd == "imgr")
@@ -1119,17 +1122,17 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
     }
     if(cmd == "smht")
     {
-        incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Plain);
+        incrementMinLineHeightToTextHeight(parts.at(1),writestr,HTextType_Plain);
         return;
     }
     if(cmd == "smhh")
     {
-        incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Html);
+        incrementMinLineHeightToTextHeight(parts.at(1),writestr,HTextType_Html);
         return;
     }
     if(cmd == "smhm")
     {
-        incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Markdown);
+        incrementMinLineHeightToTextHeight(parts.at(1),writestr,HTextType_Markdown);
         return;
     }
 
