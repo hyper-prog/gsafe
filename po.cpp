@@ -1498,6 +1498,7 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
     {
         QPushButton *closeButton = new QPushButton(tr("Close"),this);
         connect(closeButton,SIGNAL(clicked()),this,SLOT(accept()));
+        toplay->addWidget(closeButton);
     }
 
     main_vertical_layout->addLayout(toplay);
