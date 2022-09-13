@@ -62,6 +62,7 @@ HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
     p = configuredPainter;
     cursorX = 0;
     cursorY = 0;
+    virtualCursorXincr = 0;
     currentLineHeight = 0;
     minLineHeight = 0;
     currentPage = 0;
@@ -263,8 +264,8 @@ int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
 
     if(relative_to_pos)
     {
-        if(xy == "x" && iv > cursorX)
-            iv = iv - cursorX;
+        if(xy == "x" && iv > (cursorX + virtualCursorXincr))
+            iv = iv - (cursorX + virtualCursorXincr);
         if(xy == "y" && iv > cursorY)
             iv = iv - cursorY;
     }
@@ -614,6 +615,7 @@ void HPageTileRenderer::newLine()
     if(currentLineHeight > 0)
     {
         cursorX = 0;
+        virtualCursorXincr = 0;
         cursorY += currentLineHeight;
         currentLineHeight = 0;
     }
@@ -622,6 +624,7 @@ void HPageTileRenderer::newLine()
         QFontMetrics fm(font);
         cursorY += fm.height();
         cursorX = 0;
+        virtualCursorXincr = 0;
         currentLineHeight = 0;
     }
     emit startNewLine();
@@ -636,6 +639,7 @@ void HPageTileRenderer::newPage()
     }
     ++currentPage;
     cursorX = 0;
+    virtualCursorXincr = 0;
     cursorY = 0;
     currentLineHeight = 0;
     emit startNewPage();
@@ -832,6 +836,7 @@ void HPageTileRenderer::renderFromInstructionLineHL(const QStringList& parts)
         fs_font = font;
         fs_defaultFont = defaultFont;
         fs_alignment = alignment;
+        virtualCursorXincr = 0;
         return;
     }
 
@@ -839,6 +844,7 @@ void HPageTileRenderer::renderFromInstructionLineHL(const QStringList& parts)
     {
         if(cmd == "newl" || cmd == "newp")
         {
+            virtualCursorXincr = 0;
             instruction_buffer.push_back(QString("smhz").split("#",Qt::KeepEmptyParts));
             instruction_buffer.push_back(parts);
 
@@ -851,25 +857,38 @@ void HPageTileRenderer::renderFromInstructionLineHL(const QStringList& parts)
                 renderFromInstructionLineLL(instruction_buffer.first());
                 instruction_buffer.pop_front();
             }
+            virtualCursorXincr = 0;
             return;
         }
 
         if(cmd == "text" && parts.count() > 2)
             if(parts.at(1).split(",",Qt::KeepEmptyParts).count() < 3)
+            {
                 incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Plain);
+                virtualCursorXincr += sizeStrToInt(parts.at(1),"x");
+            }
         if(cmd == "html" && parts.count() > 2)
             if(parts.at(1).split(",",Qt::KeepEmptyParts).count() < 3)
+            {
                 incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Html);
+                virtualCursorXincr += sizeStrToInt(parts.at(1),"x");
+            }
         if(cmd == "mark" && parts.count() > 2)
             if(parts.at(1).split(",",Qt::KeepEmptyParts).count() < 3)
+            {
                 incrementMinLineHeightToTextHeight(parts.at(1),parts.at(2),HTextType_Markdown);
+                virtualCursorXincr += sizeStrToInt(parts.at(1),"x");
+            }
 
         if(cmd == "imgr" && parts.count() > 2)
             if(parts.at(1).split(",",Qt::KeepEmptyParts).count() < 3)
             {
                 QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
                 if(pp.count() < 3)
+                {
                     incrementMinLineHeightToImageHeight(parts.at(1),QImage(parts.at(2)));
+                    virtualCursorXincr += sizeStrToInt(parts.at(1),"x");
+                }
             }
         if(cmd == "imgb" && parts.count() > 2)
             if(parts.at(1).split(",",Qt::KeepEmptyParts).count() < 3)
@@ -877,14 +896,20 @@ void HPageTileRenderer::renderFromInstructionLineHL(const QStringList& parts)
                 QImage img = QImage::fromData(QByteArray::fromBase64(parts.at(2).toLocal8Bit()));
                 QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
                 if(pp.count() < 3)
+                {
                     incrementMinLineHeightToImageHeight(parts.at(1),img);
+                    virtualCursorXincr += sizeStrToInt(parts.at(1),"x");
+                }
             }
 
         if(cmd == "rect" || cmd == "spac")
         {
             QStringList pp = parts.at(1).split(",",Qt::KeepEmptyParts);
             if(pp.count() == 2)
+            {
                 incrementMinLineHeightToValue(pp[1]);
+                virtualCursorXincr += sizeStrToInt(pp[1],"x");
+            }
         }
 
         if(cmd == "alig" || cmd == "setf" || cmd == "setd" || cmd == "deff")

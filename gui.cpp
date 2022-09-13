@@ -72,13 +72,17 @@ HRecordDisplay::HRecordDisplay(QWidget *parent,HRecord *data,HDispObjectFlags fl
     {
         if(dLink->fieldByIndex(i)->isVisible())
         {
+            int stretch = 0;
+            if(!dLink->fieldByIndex(i)->attribute("gui_vert_stretch").isEmpty())
+                stretch = dLink->fieldByIndex(i)->attribute("gui_vert_stretch").toInt();
+
             HFieldDisplay *ndf = newDispObjForDataField(this,dLink->fieldByIndex(i),flagToPass);
             connect(dLink->fieldByIndex(i),SIGNAL(dataChanged()),ndf,SLOT(valueUpdatedInMemory()));
             connect(dLink->fieldByIndex(i),SIGNAL(featureChanged()),ndf,SLOT(guiElementsNeedUpdateSlot()));
             if(dLink->fieldByIndex(i)->attribute("gui_inline_attached") == "yes" && last != NULL)
                 last->addWidget(ndf);
             else
-                layout->addWidget(ndf);
+                layout->addWidget(ndf,stretch);
 
             last = ndf->layout;
         }
@@ -142,18 +146,26 @@ void HFieldDisplay::generateGuiElementsBefore()
 {
     if(dLink->attribute("gui_inline_attached") != "yes")
     {
+        int stretch = 0;
+        if(!dLink->attribute("gui_horiz_labelw_stretch").isEmpty())
+            stretch = dLink->attribute("gui_horiz_labelw_stretch").toInt();
+
         descriptionLabel = new QLabel(this);
         descriptionLabel->setText(dLink->description());
-        layout->addWidget(descriptionLabel);
+        layout->addWidget(descriptionLabel,stretch);
         if(!flagOn(startflags,HDispFlag_DisableStretchInMiddle))
             layout->addStretch();
     }
 
     if(!dLink->beforeText().isEmpty())
     {
+        int stretch = 0;
+        if(!dLink->attribute("gui_horiz_beforlw_stretch").isEmpty())
+            stretch = dLink->attribute("gui_horiz_beforlw_stretch").toInt();
+
         beforeLabel = new QLabel(this);
         beforeLabel->setText(dLink->beforeText());
-        layout->addWidget(beforeLabel);
+        layout->addWidget(beforeLabel,stretch);
     }
 }
 
@@ -161,9 +173,13 @@ void HFieldDisplay::generateGuiElementsAfter()
 {
     if(!dLink->afterText().isEmpty())
     {
+        int stretch = 0;
+        if(!dLink->attribute("gui_horiz_afterlw_stretch").isEmpty())
+            stretch = dLink->attribute("gui_horiz_afterlw_stretch").toInt();
+
         afterLabel = new QLabel(this);
         afterLabel->setText(dLink->afterText());
-        layout->addWidget(afterLabel);
+        layout->addWidget(afterLabel,stretch);
     }
 
     if(flagOn(startflags,HDispFlag_AddStretchToLineEnd))
@@ -268,11 +284,15 @@ HStaticDisplay::HStaticDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
 {
     valueShow = NULL;
 
+    int stretch = 0;
     generateGuiElementsBefore();
+
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
 
     valueShow = new QLabel(this);
     valueSetOnGui_internal();
-    layout->addWidget(valueShow);
+    layout->addWidget(valueShow,stretch);
 
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
@@ -298,11 +318,15 @@ HSKeyDisplay::HSKeyDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
 {
     valueShow = NULL;
 
+    int stretch = 0;
     generateGuiElementsBefore();
+
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
 
     valueShow = new QLabel(this);
     valueSetOnGui_internal();
-    layout->addWidget(valueShow);
+    layout->addWidget(valueShow,stretch);
 
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
@@ -328,11 +352,15 @@ HNKeyDisplay::HNKeyDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
 {
     valueShow = NULL;
 
+    int stretch = 0;
     generateGuiElementsBefore();
+
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
 
     valueShow = new QLabel(this);
     valueSetOnGui_internal();
-    layout->addWidget(valueShow);
+    layout->addWidget(valueShow,stretch);
 
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
@@ -359,7 +387,11 @@ HSmallTextDisplay::HSmallTextDisplay(QWidget *parent,HField *data,HDispObjectFla
     valueShow = NULL;
     valueEditor = NULL;
 
+    int stretch = 0;
     generateGuiElementsBefore();
+
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
 
     if(data->fieldEditType() == HFieldEdit_DefaultEditable || data->fieldEditType() == HFieldEdit_Readonly)
     {
@@ -372,13 +404,13 @@ HSmallTextDisplay::HSmallTextDisplay(QWidget *parent,HField *data,HDispObjectFla
             valueEditor->setMinimumWidth(dLink->attribute("gui_minwidth").toInt());
         valueSetOnGui_internal();
         connect(valueEditor,SIGNAL(textChanged(QString)),this,SLOT(valueUpdatedOnGui(QString)));
-        layout->addWidget(valueEditor);
+        layout->addWidget(valueEditor,stretch);
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
     {
         valueShow = new QLabel(this);
         valueSetOnGui_internal();
-        layout->addWidget(valueShow);
+        layout->addWidget(valueShow,stretch);
     }
 
     updateValueEditorRoStatus();
@@ -426,6 +458,7 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
     valueEditor = NULL;
     valueTableEditor = NULL;
 
+    int stretch = 0;
     generateGuiElementsBefore();
     int minw=100,minh=50,maxw = 0,maxh = 0;
 
@@ -438,11 +471,25 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
     if(!dLink->attribute("gui_maxheight").isEmpty())
         maxh = dLink->attribute("gui_maxheight").toInt();
 
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
+
     if(dLink->attribute("csvtable") == "yes")
     {
         valueTableEditor = new QTableWidget(this);
-        QStringList cols = dLink->attribute("csvtable_columns").split(";");
-        QStringList rows = dLink->attribute("csvtable_rows").split(";");
+        QStringList cols = dLink->attribute("csvtable_columns").split(";",Qt::KeepEmptyParts);
+        QStringList rows = dLink->attribute("csvtable_rows").split(";",Qt::KeepEmptyParts);
+
+        QStringList colcolors;
+        QStringList rowcolors;
+        colcolors.clear();
+        rowcolors.clear();
+
+        if(!dLink->attribute("csvtable_column_colors").isEmpty())
+            colcolors = dLink->attribute("csvtable_column_colors").split(";",Qt::KeepEmptyParts);
+        if(!dLink->attribute("csvtable_row_colors").isEmpty())
+            rowcolors = dLink->attribute("csvtable_row_colors").split(";",Qt::KeepEmptyParts);
+
         valueTableEditor->setColumnCount(cols.count());
         valueTableEditor->setRowCount(rows.count());
         valueTableEditor->setHorizontalHeaderLabels(cols);
@@ -456,7 +503,13 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
         QString csv = "";
         for(ri = 0 ; ri < rc ; ++ri)
             for(ci = 0 ; ci < cc ; ++ci)
+            {
                 valueTableEditor->setItem(ri,ci,new QTableWidgetItem(""));
+                if(!rowcolors.isEmpty() && !rowcolors.at(ri).isEmpty())
+                    valueTableEditor->item(ri,ci)->setBackground(QBrush(html6HexColor(rowcolors.at(ri)),Qt::SolidPattern));
+                if(!colcolors.isEmpty() && !colcolors.at(ci).isEmpty())
+                    valueTableEditor->item(ri,ci)->setBackground(QBrush(html6HexColor(colcolors.at(ci)),Qt::SolidPattern));
+            }
 
         valueSetOnGui_internal();
         connect(valueTableEditor,SIGNAL(itemChanged(QTableWidgetItem *)),this,SLOT(valueUpdatedOnGuiTbl(QTableWidgetItem *)));
@@ -465,7 +518,7 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
         if(maxw > 0 && maxh > 0)
             valueTableEditor->setMaximumSize(maxw,maxh);
 
-        layout->addWidget(valueTableEditor);
+        layout->addWidget(valueTableEditor,stretch);
     }
     else
     {
@@ -479,7 +532,7 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
             if(maxw > 0 && maxh > 0)
                 valueEditor->setMaximumSize(maxw,maxh);
             connect(valueEditor,SIGNAL(textChanged()),this,SLOT(valueUpdatedOnGui()));
-            layout->addWidget(valueEditor);
+            layout->addWidget(valueEditor,stretch);
         }
         if(data->fieldEditType() == HFieldEdit_ShowReadonly)
         {
@@ -495,7 +548,7 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
             QPalette palette;
             palette.setColor(QPalette::Base,winColor);
             valueShow->setPalette(palette);
-            layout->addWidget(valueShow);
+            layout->addWidget(valueShow,stretch);
         }
     }
     updateValueEditorRoStatus();
@@ -573,8 +626,9 @@ void HLargeTextDisplay::valueSetOnGui_internal()
             {
                 if(c > valueTableEditor->columnCount())
                     break;
-                valueTableEditor->item(r,c)->setText(cells[c]);
-
+                QTableWidgetItem *item = valueTableEditor->item(r,c);
+                if(item != nullptr)
+                    item->setText(cells[c]);
             }
         }
     }
@@ -585,7 +639,17 @@ void HLargeTextDisplay::updateValueEditorRoStatus(void)
     if(valueEditor != NULL)
         valueEditor->setEnabled(dLink->fieldEditType() == HFieldEdit_DefaultEditable);
     if(valueTableEditor != NULL)
-        valueTableEditor->setEnabled(dLink->fieldEditType() == HFieldEdit_DefaultEditable);
+    {
+        int r,c;
+        for(r = 0 ; r < valueTableEditor->rowCount() ; r++)
+            for(c = 0 ; c < valueTableEditor->columnCount() ; c++)
+            {
+                if(dLink->fieldEditType() == HFieldEdit_DefaultEditable)
+                    valueTableEditor->item(r,c)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled|Qt::ItemIsEditable);
+                else
+                    valueTableEditor->item(r,c)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+            }
+    }
 }
 
 HLargeTextField* HLargeTextDisplay::myHLargeTextField()
@@ -605,7 +669,11 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
     valueEditor2 = NULL;
     last_correct = true;
 
+    int stretch = 0;
     generateGuiElementsBefore();
+
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
 
     if(data->fieldEditType() == HFieldEdit_DefaultEditable || data->fieldEditType() == HFieldEdit_Readonly)
     {
@@ -627,7 +695,7 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
             if(!dLink->attribute("gui_minwidth").isEmpty())
                 valueEditor2->setMinimumWidth(dLink->attribute("gui_minwidth").toInt());
             connect(valueEditor2,SIGNAL(textChanged(QString)),this,SLOT(valueUpdatedOnGui(QString)));
-            layout->addWidget(valueEditor2);
+            layout->addWidget(valueEditor2,stretch);
         }
         else
         {
@@ -640,14 +708,14 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
 
             valueSetOnGui_internal();
             connect(valueEditor,SIGNAL(textChanged(QString)),this,SLOT(valueUpdatedOnGui(QString)));
-            layout->addWidget(valueEditor);
+            layout->addWidget(valueEditor,stretch);
         }
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
     {
         valueShow = new QLabel(this);
         valueSetOnGui_internal();
-        layout->addWidget(valueShow);
+        layout->addWidget(valueShow,stretch);
     }
 
     updateValueEditorRoStatus();
@@ -755,7 +823,11 @@ HFloatingDisplay::HFloatingDisplay(QWidget *parent,HField *data,HDispObjectFlags
     valueEditor = NULL;
     last_correct = true;
 
+    int stretch = 0;
     generateGuiElementsBefore();
+
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
 
     if(data->fieldEditType() == HFieldEdit_DefaultEditable || data->fieldEditType() == HFieldEdit_Readonly)
     {
@@ -768,13 +840,13 @@ HFloatingDisplay::HFloatingDisplay(QWidget *parent,HField *data,HDispObjectFlags
 
         valueSetOnGui_internal();
         connect(valueEditor,SIGNAL(textChanged(QString)),this,SLOT(valueUpdatedOnGui(QString)));
-        layout->addWidget(valueEditor);
+        layout->addWidget(valueEditor,stretch);
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
     {
         valueShow = new QLabel(this);
         valueSetOnGui_internal();
-        layout->addWidget(valueShow);
+        layout->addWidget(valueShow,stretch);
     }
 
     updateValueEditorRoStatus();
@@ -837,7 +909,11 @@ HDateDisplay::HDateDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
     valueEditor = NULL;
     unknownEditor = NULL;
 
+    int stretch = 0;
     generateGuiElementsBefore();
+
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
 
     if(data->fieldEditType() == HFieldEdit_DefaultEditable || data->fieldEditType() == HFieldEdit_Readonly)
     {
@@ -865,13 +941,13 @@ HDateDisplay::HDateDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
         }
 
         connect(valueEditor,SIGNAL(dateChanged(const QDate)),this,SLOT(valueUpdatedOnGui(const QDate)));
-        layout->addWidget(valueEditor);
+        layout->addWidget(valueEditor,stretch);
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
     {
         valueShow = new QLabel(this);
         valueShow->setText(dLink->displayValue());
-        layout->addWidget(valueShow);
+        layout->addWidget(valueShow,stretch);
     }
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
@@ -963,11 +1039,15 @@ HTimestampDisplay::HTimestampDisplay(QWidget *parent,HField *data,HDispObjectFla
 {
     valueShow = NULL;
 
+    int stretch = 0;
     generateGuiElementsBefore();
+
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
 
     valueShow = new QLabel(this);
     valueSetOnGui_internal();
-    layout->addWidget(valueShow);
+    layout->addWidget(valueShow,stretch);
 
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
@@ -994,19 +1074,24 @@ HCheckDisplay::HCheckDisplay(QWidget *parent,HField *data,HDispObjectFlags flags
     valueShow = NULL;
     valueEditor = NULL;
 
+    int stretch = 0;
     generateGuiElementsBefore();
+
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
+
     if(data->fieldEditType() == HFieldEdit_DefaultEditable || data->fieldEditType() == HFieldEdit_Readonly)
     {
         valueEditor = new QCheckBox(this);
         valueSetOnGui_internal();
         connect(valueEditor,SIGNAL(clicked()),this,SLOT(valueUpdatedOnGui()));
-        layout->addWidget(valueEditor);
+        layout->addWidget(valueEditor,stretch);
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
     {
         valueShow = new QLabel(this);
         valueSetOnGui_internal();
-        layout->addWidget(valueShow);
+        layout->addWidget(valueShow,stretch);
     }
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
@@ -1054,7 +1139,11 @@ HXSelectDisplay::HXSelectDisplay(QWidget *parent,HField *data,HDispObjectFlags f
     valueEditor = NULL;
     radioButtons = NULL;
 
+    int stretch = 0;
     generateGuiElementsBefore();
+
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
 
     if(data->fieldEditType() == HFieldEdit_DefaultEditable || data->fieldEditType() == HFieldEdit_Readonly)
     {
@@ -1065,7 +1154,7 @@ HXSelectDisplay::HXSelectDisplay(QWidget *parent,HField *data,HDispObjectFlags f
             valueEditor->addItems( uniField_selectableValues() );
             valueSetOnGui_internal();
             connect(valueEditor,SIGNAL(activated(int)),this,SLOT(valueUpdatedOnGui(int)));
-            layout->addWidget(valueEditor);
+            layout->addWidget(valueEditor,stretch);
         }
         else
         {
@@ -1080,7 +1169,7 @@ HXSelectDisplay::HXSelectDisplay(QWidget *parent,HField *data,HDispObjectFlags f
             {
                 QRadioButton *rin = new QRadioButton(vals[i],this);
                 radioButtons->addButton(rin,i);
-                layout->addWidget(rin);
+                layout->addWidget(rin,stretch);
                 if(sp > 0)
                     layout->addSpacing(sp);
             }
@@ -1092,7 +1181,7 @@ HXSelectDisplay::HXSelectDisplay(QWidget *parent,HField *data,HDispObjectFlags f
     {
         valueShow = new QLabel(this);
         valueSetOnGui_internal();
-        layout->addWidget(valueShow);
+        layout->addWidget(valueShow,stretch);
     }
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
@@ -1207,7 +1296,11 @@ HSqlXChooseDisplay::HSqlXChooseDisplay(QWidget *parent,HField *data,HDispObjectF
     valueEditorMod = NULL;
     popup_dlg = NULL;
 
+    int stretch = 0;
     generateGuiElementsBefore();
+
+    if(!dLink->attribute("gui_horiz_mainvalw_stretch").isEmpty())
+        stretch = dLink->attribute("gui_horiz_mainvalw_stretch").toInt();
 
     if(data->fieldEditType() == HFieldEdit_DefaultEditable || data->fieldEditType() == HFieldEdit_Readonly)
     {
@@ -1223,7 +1316,7 @@ HSqlXChooseDisplay::HSqlXChooseDisplay(QWidget *parent,HField *data,HDispObjectF
             connect(valueEditor,SIGNAL(activated(int)),this,SLOT(valueUpdatedOnGui(int)));
             connect(refreshButton,SIGNAL(clicked()),this,SLOT(refreshSelectableValues()));
 
-            layout->addWidget(valueEditor);
+            layout->addWidget(valueEditor,stretch);
             layout->addWidget(refreshButton);
         }
         else
@@ -1232,14 +1325,14 @@ HSqlXChooseDisplay::HSqlXChooseDisplay(QWidget *parent,HField *data,HDispObjectF
             guiElementsNeedUpdate();
 
             connect(valueEditorMod,SIGNAL(clicked()),this,SLOT(popupSelect()));
-            layout->addWidget(valueEditorMod);
+            layout->addWidget(valueEditorMod,stretch);
         }
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
     {
         valueShow = new QLabel(this);
         valueShow->setText(dLink->displayValue());
-        layout->addWidget(valueShow);
+        layout->addWidget(valueShow,stretch);
     }
     updateValueEditorRoStatus();
     generateGuiElementsAfter();

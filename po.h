@@ -342,7 +342,7 @@ protected:
     QPainter *p;
 
     int currentPage,pageFilter;
-    int cursorX,cursorY,currentLineHeight,minLineHeight;
+    int cursorX,cursorY,virtualCursorXincr,currentLineHeight,minLineHeight;
     QFont defaultFont,font;
     Qt::Alignment alignment;
     QFont fs_defaultFont,fs_font;
