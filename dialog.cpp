@@ -153,6 +153,22 @@ void HDialogData::makeGui(QWidget *base)
 
     makeGui_called = true;
     base->setWindowTitle(!attribute("window_title").isEmpty() ? attribute("window_title") : "Dialog...");
+
+    if(!attribute("window_resizebuttons").isEmpty())
+    {
+        if(attribute("window_resizebuttons") == "all")
+        {
+            base->setWindowFlag(Qt::WindowMaximizeButtonHint,true);
+            base->setWindowFlag(Qt::WindowMinimizeButtonHint,true);
+            base->setWindowFlag(Qt::WindowMinMaxButtonsHint,true);
+        }
+        if(attribute("window_resizebuttons") == "none")
+        {
+            base->setWindowFlag(Qt::WindowMaximizeButtonHint,false);
+            base->setWindowFlag(Qt::WindowMinimizeButtonHint,false);
+            base->setWindowFlag(Qt::WindowMinMaxButtonsHint,false);
+        }
+    }
     QVBoxLayout *mlay = new QVBoxLayout(base);
     if(!attribute("title").isEmpty())
     {
