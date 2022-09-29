@@ -111,6 +111,9 @@ public:
 
     /** Adds a new row to the end of the table. */
     void addRow(QList<HValue> listdata,QString ctrl="");
+    /** Adds a new empty row to the end of the table. */
+    void addRowEmpty(QString ctrl="");
+
     /** Adds a new row to the end of the table. */
     void addRowStr(QList<QString> strlistdata,QString ctrl="");
 
@@ -132,9 +135,9 @@ public:
     /** Returns the control string of the specified row */
     QString getRowControl(int row);
     /** Sets the content of the specified cell */
-    void setCell(int row,int col,HValue vdata);
+    void setCell(int row,int col,HValue vdata,bool autoCreateRows = false);
     /** Sets the content of the specified cell */
-    void setCellStr(int row,int col,QString strdata);
+    void setCellStr(int row,int col,QString strdata,bool autoCreateRows = false);
 
     /** Returns the content of the cell, the column is specified by the header text.
         If the headers are not set or not found this function returns empty value. */
@@ -144,10 +147,10 @@ public:
     QString getCellByHeadStr(int row,QString colheader);
     /** Sets the content of the cell, the column is specified by the header text.
         If the headers are not set or not found this function does nothing. */
-    void setCellByHead(int row,QString colheader,HValue vdata);
+    void setCellByHead(int row,QString colheader,HValue vdata,bool autoCreateRows = false);
     /** Sets the content of the cell the column is specified by the header text.
         If the headers are not set or not found this function does nothing.  */
-    void setCellByHeadStr(int row,QString colheader,QString strdata);
+    void setCellByHeadStr(int row,QString colheader,QString strdata,bool autoCreateRows = false);
 
     /** Sets the control string of the specified row */
     void setRowControl(int row,QString ctrl);

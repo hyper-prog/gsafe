@@ -16,6 +16,12 @@
 
 /*  @{  */
 
+enum HDMtrxAdd_TypeHint {
+    HDMtrxAdd_Auto      = 0,
+    HDMtrxAdd_String    = 1,
+    HDMtrxAdd_Numeric   = 2,
+};
+
 class HDataMatrix;
 /**
  * Class ExcelXmlDocument generate an Excel XML Spreadsheet
@@ -69,7 +75,7 @@ public:
     HExcelXmlDocument* opts(QString options = "");
     HExcelXmlDocument* nrow(QString options = "");
     HExcelXmlDocument* nrows(int count = 1,QString options = "");
-    void addDataMatrix(HDataMatrix *dm,bool controlRowAsOptions = false,QString options = "");
+    void addDataMatrix(HDataMatrix *dm,HDMtrxAdd_TypeHint typeHint = HDMtrxAdd_Auto,bool controlRowAsOptions = false,QString options = "");
 
     HExcelXmlDocument* cell(QString c,QString options = "");
     HExcelXmlDocument* cells(QList<QString> cs,QString options = "");

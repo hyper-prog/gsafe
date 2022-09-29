@@ -531,7 +531,7 @@ bool HExcelXmlDocument::writeFile(QString filename)
     return false;
 }
 
-void HExcelXmlDocument::addDataMatrix(HDataMatrix *dm,bool controlRowAsOptions,QString options)
+void HExcelXmlDocument::addDataMatrix(HDataMatrix *dm,HDMtrxAdd_TypeHint typeHint,bool controlRowAsOptions,QString options)
 {
     int ri,rc = dm->rowCount();
     for(ri = 0 ; ri < rc ; ++ri)
@@ -543,7 +543,22 @@ void HExcelXmlDocument::addDataMatrix(HDataMatrix *dm,bool controlRowAsOptions,Q
                 o.append(";");
             o.append(dm->getRowControl(ri));
         }
-        cells(dm->getRowStr(ri),o);
+        QList<HValue> rvals = dm->getRow(ri);
+        int ci,cc = rvals.count();
+        for(ci = 0 ; ci < cc ; ++ci)
+        {
+            if(typeHint == HDMtrxAdd_Auto)
+            {
+                if(rvals[ci].type() == HValue::Number)
+                    cell(rvals[ci],QString("t=num%1%2").arg(o.isEmpty() ? "" : ";").arg(o));
+                if(rvals[ci].type() == HValue::String)
+                    cell(rvals[ci],QString("t=str%1%2").arg(o.isEmpty() ? "" : ";").arg(o));
+            }
+            if(typeHint == HDMtrxAdd_String)
+                cell(rvals[ci],QString("t=str%1%2").arg(o.isEmpty() ? "" : ";").arg(o));
+            if(typeHint == HDMtrxAdd_Numeric)
+                cell(rvals[ci],QString("t=num%1%2").arg(o.isEmpty() ? "" : ";").arg(o));
+        }
         nrow();
     }
 }

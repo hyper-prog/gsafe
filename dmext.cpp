@@ -174,6 +174,18 @@ void HDataMatrix::addRow(QList<HValue> listdata,QString ctrl)
     control.push_back(ctrl);
 }
 
+void HDataMatrix::addRowEmpty(QString ctrl)
+{
+    int i;
+    HValue *row;
+    row = new HValue[col_count];
+    for(i = 0; i < col_count;++i)
+        row[i] = HValue("");
+
+    data.push_back(row);
+    control.push_back(ctrl);
+}
+
 void HDataMatrix::appendHPainDataMatrix(HDataMatrix *tail)
 {
     checkAndGrow(tail->columnCount());
@@ -249,26 +261,36 @@ QString HDataMatrix::getColumnConcatenated(int col,QString separator)
 }
 
 
-void HDataMatrix::setCell(int row,int col,HValue vdata)
+void HDataMatrix::setCell(int row,int col,HValue vdata,bool autoCreateRows)
 {
     checkAndGrow(col+1);
 
     if(row < 0 || col < 0)
         return;
-    if(row > data.count())
-        return;
+    if((row + 1) > data.count())
+    {
+        if(!autoCreateRows)
+            return;
+        while((row + 1) > data.count())
+            addRowEmpty("");
+    }
 
     (data.at(row))[col] = vdata;
 }
 
-void HDataMatrix::setCellStr(int row,int col,QString strdata)
+void HDataMatrix::setCellStr(int row,int col,QString strdata,bool autoCreateRows)
 {
     checkAndGrow(col+1);
 
     if(row < 0 || col < 0)
         return;
-    if(row > data.count())
-        return;
+    if((row + 1) > data.count())
+    {
+        if(!autoCreateRows)
+            return;
+        while((row + 1) > data.count())
+            addRowEmpty("");
+    }
 
     (data.at(row))[col] = HValue(strdata);
 }
@@ -289,18 +311,18 @@ QString HDataMatrix::getCellByHeadStr(int row,QString colheader)
     return getCellStr(row,colIdx);
 }
 
-void HDataMatrix::setCellByHead(int row,QString colheader,HValue vdata)
+void HDataMatrix::setCellByHead(int row,QString colheader,HValue vdata,bool autoCreateRows)
 {
     int colIdx = getHeaderColIndex(colheader);
     if(colIdx >= 0)
-        setCell(row,colIdx,vdata);
+        setCell(row,colIdx,vdata,autoCreateRows);
 }
 
-void HDataMatrix::setCellByHeadStr(int row,QString colheader,QString strdata)
+void HDataMatrix::setCellByHeadStr(int row,QString colheader,QString strdata,bool autoCreateRows)
 {
     int colIdx = getHeaderColIndex(colheader);
     if(colIdx >= 0)
-        setCellStr(row,colIdx,strdata);
+        setCellStr(row,colIdx,strdata,autoCreateRows);
 }
 
 void HDataMatrix::setRowControl(int row,QString ctrl)
