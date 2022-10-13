@@ -1,3 +1,6 @@
+1.4.11 
+        - Adds a (gSafe 2) yaml definition generator to HFactory
+
 1.4.10 
         - HSqlBuilder codes (In separate file)
 

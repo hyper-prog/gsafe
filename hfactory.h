@@ -149,6 +149,9 @@ class HFactory : public  QObject , QXmlDefaultHandler //, QXmlErrorHandler
          *  @see HTableBase::sqlCreateString() */
         QString sqlCreateString(QString part);
 
+        /** Returns the gSafe 2 yaml string of the part. */
+        QString yamlString(QString part);
+
     private:
         int ttype; //HTable || HList = TABLE || LIST
         int level; //deep in XML

@@ -36,7 +36,7 @@
 #include "gstexts.h"
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "1.4.10"
+#define GSAFE_VERSION   "1.4.11"
 
 // ///////////////////////////////////
 // BEGIN - CONFIG/MODIFIERS/MODULES //
@@ -3160,6 +3160,10 @@ class HFloating : public HDataField
          *  @param groupDf the displayed digits will be groupped by three digit.
          *      (if groupDf=1 means "2334455.34" displayed "2 334 455.45" )      */
         void setDisplayMode(int minDf,int maxDf,int groupDf) {dMminDf=minDf; dMmaxDf=maxDf; dMgroup=groupDf; }
+
+        int getDisplayModeMinDf() { return dMminDf; }
+        int getDisplayModeMaxDf() { return dMmaxDf; }
+        int getDisplayModeGroup() { return dMgroup; }
 
         /** Returns the current value as QString according to the values set with setDisplayMode()
          *  function. This function returns the value only

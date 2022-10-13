@@ -1289,4 +1289,125 @@ bool HFactory::endElement( const QString& ls, const QString&ln, const QString& n
     return false;
 }
 
+QString HFactory::yamlString(QString part)
+{
+    QString cs="";
+    HTable *t=NULL;
+
+    t = genHTable(part);
+    if(t != NULL)
+    {
+        cs.append(QString("name: %1\n").arg(t->sqlTableName()));
+        cs.append(QString("title: %1\n").arg(t->tableTitle()));
+        cs.append(QString("fields:\n"));
+        HDataField *f;
+        t->firstField();
+        while((f = t->nextField()) != NULL)
+        {
+            cs.append(QString("- sqlname: %1\n").arg(f->sqlSelectHead()));
+
+            if(f->getWhoami() == "HKey"           ) cs.append("  type: SKey\n");
+            //else if(f->getWhoami() == "SKey"    ) cs.append("  type: NKey\n");
+            else if(f->getWhoami() == "HSmallText") cs.append("  type: SmallText\n");
+            else if(f->getWhoami() == "HLargeText") cs.append("  type: LargeText\n");
+            else if(f->getWhoami() == "HNumber"   ) cs.append("  type: Number\n");
+            else if(f->getWhoami() == "HFloating" ) cs.append("  type: Floating\n");
+            else if(f->getWhoami() == "HDate"     ) cs.append("  type: Date\n");
+            else if(f->getWhoami() == "HTimestamp") cs.append("  type: Timestamp\n");
+            else if(f->getWhoami() == "HCheck"    ) cs.append("  type: Check\n");
+            else if(f->getWhoami() == "HNumHash"  ) cs.append("  type: NumSelect\n");
+            else if(f->getWhoami() == "HCharHash" ) cs.append("  type: TxtSelect\n");
+            //else if(f->getWhoami() == "SKey"    ) cs.append("  type: SqlNChoose\n");
+            else if(f->getWhoami() == "HSqlChoose") cs.append("  type: SqlSChoose\n");
+            else if(f->getWhoami() == "HStatic"   ) cs.append("  type: Static\n");
+            else                                    cs.append("  type: WARNING_NOT_CONVERTED_TYPE\n");
+
+            cs.append(QString("  description: \"%1\"\n").arg(f->getExplainText()));
+            cs.append(QString("  title: \"%1\"\n").arg(f->getTitleText()));
+            cs.append(QString("  default: \"%1\"\n").arg(f->getDefaultValue()));
+
+            if(f->getWhoami() == "HNumHash")
+            {
+                HNumHash *sf = (HNumHash *)f;
+                int i,c = sf->keys.count();
+                if(c > 0)
+                {
+                    cs.append("  selectables:\n");
+                    for(i = 0 ; i < c ; ++i)
+                        cs.append(QString("  - %1: \"%2\"\n").arg(sf->keys[i]).arg(sf->values[i]));
+                }
+            }
+            if(f->getWhoami() == "HCharHash" )
+            {
+                HCharHash *sf = (HCharHash *)f;
+                int i,c = sf->keys.count();
+                if(c > 0)
+                {
+                    cs.append("  selectables:\n");
+                    for(i = 0 ; i < c ; ++i)
+                        cs.append(QString("  - %1: \"%2\"\n").arg(sf->keys[i]).arg(sf->values[i]));
+                }
+            }
+
+
+            bool hasAtt = false;
+            QString extraAttributes = "";
+
+            if(f->getRColor() != 180 || f->getGColor() != 180 || f->getBColor() != 180)
+            {
+                hasAtt = true;
+                QString hexcolor;
+                hexcolor = QString("%1%2%3")
+                            .arg(QString::asprintf("%2x",f->getRColor()))
+                            .arg(QString::asprintf("%2x",f->getGColor()))
+                            .arg(QString::asprintf("%2x",f->getBColor()));
+                extraAttributes.append(QString("  - color: %1\n").arg(hexcolor));
+            }
+
+            if(!f->getTailText().isEmpty())
+            {
+                hasAtt = true;
+                extraAttributes.append(QString("  - txt_after: %1\n").arg(f->getTailText()));
+            }
+
+            QStringList displayflags;
+
+            if(!f->isShow())
+                displayflags.push_back("Invisible");
+            if(!f->isEditable())
+                displayflags.push_back("Readonly");
+
+            if(displayflags.count() > 0)
+                cs.append(QString("  displayflags: \"%1\"\n").arg(displayflags.join("|")));
+
+            if(f->getWhoami() == "HDate")
+            {
+                HDate *sf = (HDate *)f;
+                if(sf->is_unknown_alive())
+                    cs.append("  unknownallowed: yes\n");
+            }
+            if(f->getWhoami() == "HFloating")
+            {
+                HFloating *sf = (HFloating *)f;
+                if(sf->getDisplayModeMinDf() != 0 || sf->getDisplayModeMaxDf() != 4 || sf->getDisplayModeGroup() != 0)
+                {
+                    hasAtt = true;
+                    extraAttributes.append(QString("  - display_min_decimals: %1\n").arg(sf->getDisplayModeMinDf()));
+                    extraAttributes.append(QString("  - display_max_decimals: %1\n").arg(sf->getDisplayModeMaxDf()));
+                    extraAttributes.append(QString("  - display_group_thousands: %1\n").arg(sf->getDisplayModeGroup()));
+                }
+            }
+
+            if(hasAtt)
+            {
+                cs.append("  attributes:\n");
+                cs.append(extraAttributes);
+            }
+        }
+    }
+    delete t;
+    return cs;
+}
+
+
 //end code
