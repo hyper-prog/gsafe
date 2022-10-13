@@ -883,7 +883,7 @@ void HFloatingDisplay::valueSetOnGui_internal()
     if(valueEditor != NULL)
         valueEditor->setText(dLink->strValue());
     if(valueShow != NULL)
-        valueShow->setText(dLink->strValue());
+        valueShow->setText(dLink->displayValue());
     visualiseValueCorrectness(true);
 }
 

@@ -284,6 +284,9 @@ public:
 
 /** A floating number field type
  *  Attributes:
+ *   "display_min_decimals"
+ *   "display_max_decimals"
+ *   "display_group_thousands"
  *   "minimum"
  *   "maximum"
  *   "gui_maxwidth"

@@ -696,7 +696,14 @@ void HFloatingField::setValue_Gui(double dv)
 
 QString HFloatingField::convertToDisplay(QString fv)
 {
-    return fv;
+    int dMminDf = 0,dMmaxDf = 4,dMgroup = 0;
+    if(!attribute("display_min_decimals").isEmpty())
+        dMminDf = attribute("display_min_decimals").toInt();
+    if(!attribute("display_max_decimals").isEmpty())
+        dMmaxDf = attribute("display_max_decimals").toInt();
+    if(!attribute("display_group_thousands").isEmpty())
+        dMgroup = attribute("display_group_thousands").toInt();
+    return doubleToQString(str2val(fv),dMminDf,dMmaxDf,dMgroup);
 }
 
 // /////////////////////////////////////////////////////////////////////////// //
