@@ -513,6 +513,7 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
 
         valueSetOnGui_internal();
         connect(valueTableEditor,SIGNAL(itemChanged(QTableWidgetItem *)),this,SLOT(valueUpdatedOnGuiTbl(QTableWidgetItem *)));
+        connect(valueTableEditor,SIGNAL(itemDoubleClicked(QTableWidgetItem *)), this,SLOT(handleDoubleClick(QTableWidgetItem *)));
 
         valueTableEditor->setMinimumSize(minw,minh);
         if(maxw > 0 && maxh > 0)
@@ -553,6 +554,19 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
     }
     updateValueEditorRoStatus();
     generateGuiElementsAfter();
+}
+
+int HLargeTextDisplay::handleDoubleClick(QTableWidgetItem *item)
+{
+    if(valueTableEditor != NULL)
+    {
+        if(!item->text().isEmpty())
+        {
+            QClipboard *clipboard = QGuiApplication::clipboard();
+            clipboard->setText(item->text());
+        }
+    }
+    return 0;
 }
 
 int HLargeTextDisplay::valueUpdatedOnGui()

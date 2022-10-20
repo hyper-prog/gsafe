@@ -171,6 +171,7 @@ public:
 public slots:
     int valueUpdatedOnGui();
     int valueUpdatedOnGuiTbl(QTableWidgetItem *twi);
+    int handleDoubleClick(QTableWidgetItem *item);
 
 protected:
     virtual void valueSetOnGui_internal();
