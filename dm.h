@@ -545,7 +545,7 @@ public:
 
     virtual QString className();
 
-    virtual bool readLines();
+    virtual bool readLines(bool tdisabled = false);
 
     void setConditions(HSqlBuilderCondition c);
     void setJoins(HSqlBuilderJoin j);
@@ -553,11 +553,12 @@ public:
 
     void addOnItemAction(QString actionName,QString displayText);
     const QMap<QString,QString> allOnItemActions();
-    QStringList& readedFields();
+    const QStringList& readedFields();
 
     virtual void putsOnGetter(HSqlBuilder *b);
 
     HDataMatrix *dataMatrix();
+    const QStringList& keyValueArray();
 
     static HRecordLines* fromJson(QString jsonData);
     static HRecordLines* fromJsonFile(QString jsonFileName);
@@ -568,11 +569,11 @@ protected:
     static HRecordLines* fromJson_inWork(QJsonObject jsonObject);
     virtual void subspec_toJson_inWork(QJsonObject *top);
     virtual void subspec_applyJson_inWork(QJsonObject *top);
-    void postProcessAfterRead(QStringList fields);
-    void setMatrixFeatures(QStringList fields);
+    void setMatrixHeaders(QStringList fields);
 
 protected:
     HDataMatrix *matrix;
+    QStringList keyValues;
 
     HSqlBuilder sQuery;
     HSqlBuilderJoin bJoins;

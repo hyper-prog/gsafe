@@ -470,6 +470,32 @@ void HRecordLinesDisplay::updateFromDataMatrix_Common(void)
     updateQTableFeaturesFromRecordLines();
 }
 
+void HRecordLinesDisplay::updateFromDataMatrixDataCells(void)
+{
+    if(data == NULL)
+        return;
+
+    int i = 0;
+    QStringList *sl = new QStringList();
+    QString k;
+    qtable->clear();
+    if(data->rowCount() > 0)
+    {
+        data->firstRow();
+        do
+        {
+            *sl = data->currentRowStr();
+            k = rldata->keyValueArray().at(i);
+            qtable->addElement(new HQuickTableElement(k,sl));
+            ++i;
+        }
+        while(data->nextRow());
+    }
+    qtable->setHeadTexts(data->getHeader());
+    delete sl;
+    qtable->update();
+}
+
 void HRecordLinesDisplay::updateQTableFeaturesFromRecordLines(void)
 {
     int c,fi,fc = rldata->readedFields().count();

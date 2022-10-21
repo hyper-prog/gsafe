@@ -92,7 +92,8 @@ class HSql : public QObject
         QSharedPointer<HSqlConnector> execMulti(HSqlBuilder& request,QString err = "Sql error",bool tdisabled=false);
         HDataMatrix *execDataMtrxUnsafe(HSqlBuilder& request,QString err = "Sql error",bool tdisabled=false);
         HDataMatrix *execDataMtrxNoeUnsafe(HSqlBuilder& request,QString err = "Sql error",bool tdisabled=false);
-        void execFillDataMtrxUnsafe(HSqlBuilder& request,HDataMatrix* dm,QString err = "Sql error",bool tdisabled = false);
+
+        void execFillDataMtrx(HSqlBuilder& request,HDataMatrix* dm,QString err = "Sql error",bool tdisabled = false);
 
         /** Submits an SQL command which have a table result
          *  @param request The SQL request object

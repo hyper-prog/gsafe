@@ -999,7 +999,7 @@ QSharedPointer<HSqlConnector> HSql::execMulti(HSqlBuilder& request,QString err,b
     return QSharedPointer<HSqlConnector>(execMultiUnsafe(request,err,tdisabled));
 }
 
-void HSql::execFillDataMtrxUnsafe(HSqlBuilder& request,HDataMatrix* dm,QString err,bool tdisabled)
+void HSql::execFillDataMtrx(HSqlBuilder& request,HDataMatrix* dm,QString err,bool tdisabled)
 {
     if(dm == NULL)
         return;
@@ -1019,10 +1019,9 @@ void HSql::execFillDataMtrxUnsafe(HSqlBuilder& request,HDataMatrix* dm,QString e
         dm->addRow(recordData);
         ++r;
     }
-
+    dm->sendDataChanged();
     delete result;
 }
-
 
 HDataMatrix* HSql::execDataMtrxCommonUnsafe(HSqlBuilder& request,bool noe,QString err,bool tdisabled)
 {

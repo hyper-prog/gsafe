@@ -1325,6 +1325,7 @@ HRecordLines::HRecordLines(QString tableName,QString title)
     matrix = new HDataMatrix();
     soft_current_key = "";
     readed_fields.clear();
+    keyValues.clear();
 
     if(HRefreshAgent::getNotifyAgent() != NULL)
         connect(HRefreshAgent::getNotifyAgent(),SIGNAL(getnotify(QString)),this,SLOT(captureNotify(QString)));
@@ -1354,12 +1355,12 @@ void HRecordLines::putsOnGetter(HSqlBuilder *b)
     int i,fc = fieldCount();
     for(i = 0 ; i < fc ; ++i )
     {
-        if(!flagOn(fields[i]->displayFlags(),HDispFlag_Invisible))
+        if(!flagOn(fields[i]->displayFlags(),HDispFlag_Invisible) || fields[i]->isKey())
             fields[i]->putsOnGetter(b,tblName);
     }
 }
 
-bool HRecordLines::readLines()
+bool HRecordLines::readLines(bool tdisabled)
 {
     HSql sql = getSql();
     HSqlBuilder b(Select,tblName);
@@ -1371,39 +1372,57 @@ bool HRecordLines::readLines()
 
     sQuery = b;
     matrix->clear();
-    sql.execFillDataMtrxUnsafe(sQuery,matrix,QString("Error in HRecordLines::readLines (%1/%2)")
-                                                .arg(tblName)
-                                                .arg(tblTitle),false);
+    readed_fields.clear();
+    keyValues.clear();
 
+    QStringList visibleFieldNames;
+    QStringList visibleFieldDerivedSqlNames;
+    int i,fc = fieldCount();
+    for(i = 0 ; i < fc ; ++i )
+    {
+        if(!flagOn(fields[i]->displayFlags(),HDispFlag_Invisible))
+        {
+            visibleFieldNames.push_back(fields[i]->sqlName());
+            visibleFieldDerivedSqlNames.push_back(fields[i]->derivedAlias());
+        }
+    }
+    QString keyDerivedAlias = fieldByName(keySqlName())->derivedAlias();
+
+    HSqlConnector* result = sql.execMultiUnsafe(
+                                sQuery,QString("Error in HRecordLines::readLines (%1/%2)")
+                                            .arg(tblName)
+                                            .arg(tblTitle),
+                                        tdisabled);
     if(!sql.errorStatus())
     {
-        readed_fields = sQuery.query_field_list();
-        setMatrixFeatures(readed_fields);
-        postProcessAfterRead(readed_fields);
+        QList<HValue> recordData;
+        int vfc = visibleFieldDerivedSqlNames.count();
+        while(result->nextRecord())
+        {
+            keyValues.push_back( result->value(keyDerivedAlias).toString() );
+            recordData.clear();
+            for(int i = 0 ; i < vfc; ++i)
+            {
+                HField *f = fieldByName(visibleFieldNames[i]);
+                recordData.push_back( f->convertToDisplay( result->value(visibleFieldDerivedSqlNames[i]) ) );
+            }
+            matrix->addRow(recordData);
+        }
+
+        readed_fields = visibleFieldNames;
+        setMatrixHeaders(visibleFieldNames);
+        matrix->sendDataChanged();
     }
-    matrix->sendDataChanged();
+    delete result;
     return sql.errorStatus();
 }
 
-void HRecordLines::postProcessAfterRead(QStringList fields)
+const QStringList& HRecordLines::keyValueArray()
 {
-    int fi,fc = fields.count(),rc = matrix->rowCount();
-    for(fi = 0 ; fi < fc ; ++fi )
-    {
-        HField *f = fieldByName(fields[fi]);
-
-        int ri;
-        for(ri = 0 ; ri < rc ; ++ri)
-        {
-            QString rawValue = matrix->getCellStr(ri,fi);
-            QString dispValue = f->convertToDisplay(rawValue);
-            if(rawValue != dispValue)
-                matrix->setCellStr(ri,fi,dispValue);
-        }
-    }
+    return keyValues;
 }
 
-void HRecordLines::setMatrixFeatures(QStringList fields)
+void HRecordLines::setMatrixHeaders(QStringList fields)
 {
     matrix->setTitle(tableTitle());
     int fi,fc = fields.count();
@@ -1412,15 +1431,9 @@ void HRecordLines::setMatrixFeatures(QStringList fields)
         HField *f = fieldByName(fields[fi]);
         matrix->setHeaderCell(fi,f->title());
     }
-
-    int key_idx;
-    key_idx = fields.indexOf(keySqlName());
-    if(key_idx < 0)
-        key_idx = -1;
-    matrix->keyfield = key_idx;
 }
 
-QStringList& HRecordLines::readedFields()
+const QStringList& HRecordLines::readedFields()
 {
     return readed_fields;
 }

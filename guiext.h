@@ -127,7 +127,7 @@ class HDataMatrixDisplay : public QFrame
         HQuickTable *quickTable(void) { return qtable; }
 
         virtual void updateFromDataMatrix_Common(void);
-        void updateFromDataMatrixDataCells(void);
+        virtual void updateFromDataMatrixDataCells(void);
 
     protected slots:
         int listItemChanged(const QString key);
@@ -156,6 +156,7 @@ public:
     ~HRecordLinesDisplay();
 
     virtual void updateFromDataMatrix_Common(void);
+    virtual void updateFromDataMatrixDataCells(void);
     void updateQTableFeaturesFromRecordLines(void);
 
 protected slots:
@@ -173,7 +174,6 @@ protected slots:
     int altact_catch_3(void);
     int altact_catch_4(void);
     int popUpMenuActivated(const QString& key);
-
 };
 
 
@@ -214,7 +214,6 @@ signals:
     /** Emitted when the user changed the data in the gui.
      *  When thi signal is emitted the data was already changed in the HDynTable. */
     void dataChangedByGui(void);
-
 };
 
 #endif
