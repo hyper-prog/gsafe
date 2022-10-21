@@ -91,6 +91,7 @@ class HSql : public QObject
         HSqlConnector* execMultiUnsafe(HSqlBuilder& request,QString err = "Sql error",bool tdisabled=false);
         QSharedPointer<HSqlConnector> execMulti(HSqlBuilder& request,QString err = "Sql error",bool tdisabled=false);
         HDataMatrix *execDataMtrxUnsafe(HSqlBuilder& request,QString err = "Sql error",bool tdisabled=false);
+        HDataMatrix *execDataMtrxNoeUnsafe(HSqlBuilder& request,QString err = "Sql error",bool tdisabled=false);
         void execFillDataMtrxUnsafe(HSqlBuilder& request,HDataMatrix* dm,QString err = "Sql error",bool tdisabled = false);
 
         /** Submits an SQL command which have a table result
@@ -100,6 +101,13 @@ class HSql : public QObject
          *  @see HPlainDataMatrix
          *  @return The result table in a HPlainDataMatrix instance */
         QSharedPointer<HDataMatrix> execDataMtrx(HSqlBuilder& request,QString err = "Sql error",bool tdisabled=false);
+        /** Submits an SQL command which have a table result, it returns null on empty result (istead of empty table)
+         *  @param request The SQL request object
+         *  @param err In case of error the emitted error signal will be contains this message
+         *  @param tdisabled FALSE:It is submitted in a new separate transaction, TRUE:Don's start a new transaction
+         *  @see HPlainDataMatrix
+         *  @return The result table in a HPlainDataMatrix instance */
+        QSharedPointer<HDataMatrix> execDataMtrxNoe(HSqlBuilder& request,QString err = "Sql error",bool tdisabled=false);
 
         /** Queryes if the last SQL query is successfully executed or any error occured
          *  @return TRUE:error occured, FALSE:no error occured */
@@ -109,6 +117,7 @@ class HSql : public QObject
         static QString dialectForDatabaseName(QString dbname);
 
     protected:
+        HDataMatrix *execDataMtrxCommonUnsafe(HSqlBuilder& request,bool noe,QString err = "Sql error",bool tdisabled=false);
         bool query_error_occured;
 
         /** Currently active transaction number */

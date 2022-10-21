@@ -553,6 +553,9 @@ public:
 
     void addOnItemAction(QString actionName,QString displayText);
     const QMap<QString,QString> allOnItemActions();
+    QStringList& readedFields();
+
+    virtual void putsOnGetter(HSqlBuilder *b);
 
     HDataMatrix *dataMatrix();
 
@@ -565,7 +568,8 @@ protected:
     static HRecordLines* fromJson_inWork(QJsonObject jsonObject);
     virtual void subspec_toJson_inWork(QJsonObject *top);
     virtual void subspec_applyJson_inWork(QJsonObject *top);
-    void setMatrixFeatures();
+    void postProcessAfterRead(QStringList fields);
+    void setMatrixFeatures(QStringList fields);
 
 protected:
     HDataMatrix *matrix;
@@ -576,6 +580,7 @@ protected:
     HSqlBuilderSort bSort;
 
     QMap<QString,QString> onItemActions;
+    QStringList readed_fields;
 
 protected slots:
     int actionOnRecordSlot(QString key);

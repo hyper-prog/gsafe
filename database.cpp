@@ -1019,11 +1019,12 @@ void HSql::execFillDataMtrxUnsafe(HSqlBuilder& request,HDataMatrix* dm,QString e
         dm->addRow(recordData);
         ++r;
     }
-    dm->sendDataChanged();
+
     delete result;
 }
 
-HDataMatrix* HSql::execDataMtrxUnsafe(HSqlBuilder& request,QString err,bool tdisabled)
+
+HDataMatrix* HSql::execDataMtrxCommonUnsafe(HSqlBuilder& request,bool noe,QString err,bool tdisabled)
 {
     HDataMatrix* dm = NULL;
     HSqlConnector* result = execMultiUnsafe(request,err,tdisabled);
@@ -1031,13 +1032,16 @@ HDataMatrix* HSql::execDataMtrxUnsafe(HSqlBuilder& request,QString err,bool tdis
 
     int r = 0;
     int cc = 0;
+    if(!noe)
+        dm = new HDataMatrix();
     while(result->nextRecord())
     {
         recordData.clear();
         cc = result->columnCount();
         if(r == 0)
         {
-            dm = new HDataMatrix();
+            if(noe)
+                dm = new HDataMatrix();
             dm->setHeader(result->fieldNames());
         }
         for(int i=0 ; i < cc; ++i)
@@ -1050,9 +1054,24 @@ HDataMatrix* HSql::execDataMtrxUnsafe(HSqlBuilder& request,QString err,bool tdis
     return dm;
 }
 
+HDataMatrix* HSql::execDataMtrxUnsafe(HSqlBuilder& request,QString err,bool tdisabled)
+{
+    return execDataMtrxCommonUnsafe(request,false,err,tdisabled);
+}
+
+HDataMatrix* HSql::execDataMtrxNoeUnsafe(HSqlBuilder& request,QString err,bool tdisabled)
+{
+    return execDataMtrxCommonUnsafe(request,true,err,tdisabled);
+}
+
 QSharedPointer<HDataMatrix> HSql::execDataMtrx(HSqlBuilder& request,QString err,bool tdisabled)
 {
     return QSharedPointer<HDataMatrix>(execDataMtrxUnsafe(request,err,tdisabled));
+}
+
+QSharedPointer<HDataMatrix> HSql::execDataMtrxNoe(HSqlBuilder& request,QString err,bool tdisabled)
+{
+    return QSharedPointer<HDataMatrix>(execDataMtrxNoeUnsafe(request,err,tdisabled));
 }
 
 // //////////////////////////////////////////////////////////////////////////////// //

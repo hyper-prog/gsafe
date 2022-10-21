@@ -1324,6 +1324,7 @@ HRecordLines::HRecordLines(QString tableName,QString title)
 {
     matrix = new HDataMatrix();
     soft_current_key = "";
+    readed_fields.clear();
 
     if(HRefreshAgent::getNotifyAgent() != NULL)
         connect(HRefreshAgent::getNotifyAgent(),SIGNAL(getnotify(QString)),this,SLOT(captureNotify(QString)));
@@ -1348,6 +1349,16 @@ int HRecordLines::captureNotify(QString tblname)
     return 0;
 }
 
+void HRecordLines::putsOnGetter(HSqlBuilder *b)
+{
+    int i,fc = fieldCount();
+    for(i = 0 ; i < fc ; ++i )
+    {
+        if(!flagOn(fields[i]->displayFlags(),HDispFlag_Invisible))
+            fields[i]->putsOnGetter(b,tblName);
+    }
+}
+
 bool HRecordLines::readLines()
 {
     HSql sql = getSql();
@@ -1363,22 +1374,55 @@ bool HRecordLines::readLines()
     sql.execFillDataMtrxUnsafe(sQuery,matrix,QString("Error in HRecordLines::readLines (%1/%2)")
                                                 .arg(tblName)
                                                 .arg(tblTitle),false);
+
     if(!sql.errorStatus())
-        setMatrixFeatures();
+    {
+        readed_fields = sQuery.query_field_list();
+        setMatrixFeatures(readed_fields);
+        postProcessAfterRead(readed_fields);
+    }
+    matrix->sendDataChanged();
     return sql.errorStatus();
 }
 
-void HRecordLines::setMatrixFeatures()
+void HRecordLines::postProcessAfterRead(QStringList fields)
+{
+    int fi,fc = fields.count(),rc = matrix->rowCount();
+    for(fi = 0 ; fi < fc ; ++fi )
+    {
+        HField *f = fieldByName(fields[fi]);
+
+        int ri;
+        for(ri = 0 ; ri < rc ; ++ri)
+        {
+            QString rawValue = matrix->getCellStr(ri,fi);
+            QString dispValue = f->convertToDisplay(rawValue);
+            if(rawValue != dispValue)
+                matrix->setCellStr(ri,fi,dispValue);
+        }
+    }
+}
+
+void HRecordLines::setMatrixFeatures(QStringList fields)
 {
     matrix->setTitle(tableTitle());
-    int c,i,fc = fieldCount();
-    for(i = 0,c = 0 ; i < fc ; ++i )
-        if(!fields[i]->noSql())
-        {
-            matrix->setHeaderCell(c,fields[i]->title());
-            c++;
-        }
-    matrix->keyfield = keyIndex();
+    int fi,fc = fields.count();
+    for(fi = 0 ; fi < fc ; ++fi )
+    {
+        HField *f = fieldByName(fields[fi]);
+        matrix->setHeaderCell(fi,f->title());
+    }
+
+    int key_idx;
+    key_idx = fields.indexOf(keySqlName());
+    if(key_idx < 0)
+        key_idx = -1;
+    matrix->keyfield = key_idx;
+}
+
+QStringList& HRecordLines::readedFields()
+{
+    return readed_fields;
 }
 
 int HRecordLines::actionOnRecordSlot(QString key)

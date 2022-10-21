@@ -182,13 +182,17 @@ void HRecordSkel::subspec_applyJson_inWork(QJsonObject *top)
 
 HRecord* HRecord::fromJson(QString jsonData,QString inDatabase)
 {
+    if(jsonData.trimmed().isEmpty())
+        return NULL;
     QJsonDocument jdoc;
     QJsonParseError jpe;
     jdoc = QJsonDocument::fromJson(jsonData.toUtf8(),&jpe);
     if(jdoc.isNull())
     {
-        sdebug(QString(QObject::tr("Error: Not valid JSON.\n Message: %1"))
-                        .arg(jpe.errorString()));
+        QString err = QString(QObject::tr("Error: Not valid JSON.\n Message: %1\n Offset: %2"))
+                                .arg(jpe.errorString())
+                                .arg(jpe.offset);
+        sdebug(err);
         return NULL;
     }
     return fromJson_inWork(jdoc.object(),inDatabase);
@@ -240,6 +244,8 @@ void HRecord::subspec_applyJson_inWork(QJsonObject *top)
 
 HRecordLines* HRecordLines::fromJson(QString jsonData)
 {
+    if(jsonData.trimmed().isEmpty())
+        return NULL;
     QJsonDocument jdoc;
     QJsonParseError jpe;
     jdoc = QJsonDocument::fromJson(jsonData.toUtf8(),&jpe);
@@ -321,6 +327,8 @@ void HRecordLines::subspec_applyJson_inWork(QJsonObject *top)
 
 HField* HField::fromJson(QString jsonData)
 {
+    if(jsonData.trimmed().isEmpty())
+        return NULL;
     QJsonDocument jdoc;
     QJsonParseError jpe;
     jdoc = QJsonDocument::fromJson(jsonData.toUtf8(),&jpe);
@@ -784,6 +792,8 @@ void HSqlXChooseField::applyJson_inWork_spec(QJsonObject& fo)
 
 HDialogData* HDialogData::fromJson(QString jsonData)
 {
+    if(jsonData.trimmed().isEmpty())
+        return NULL;
     QJsonDocument jdoc;
     QJsonParseError jpe;
     jdoc = QJsonDocument::fromJson(jsonData.toUtf8(),&jpe);

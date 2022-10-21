@@ -406,7 +406,6 @@ HRecordLinesDisplay::HRecordLinesDisplay(QWidget *parent,HRecordLines *rl,HDispO
 {
     rldata = rl;
 
-    updateDataMatrixFeaturesFromRecordLines();
     updateQTableFeaturesFromRecordLines();
 
     connect(qtable,SIGNAL(activateItem(const QString&)),rldata,SLOT(actionOnRecordSlot(const QString&)));
@@ -467,64 +466,49 @@ int HRecordLinesDisplay::listItemChanged(const QString key)
 
 void HRecordLinesDisplay::updateFromDataMatrix_Common(void)
 {
-    updateDataMatrixFeaturesFromRecordLines();
     updateFromDataMatrixDataCells();
     updateQTableFeaturesFromRecordLines();
 }
 
-void  HRecordLinesDisplay::updateDataMatrixFeaturesFromRecordLines(void)
-{
-    int c,i,fc = rldata->fieldCount();
-    for(i = 0,c = 0 ; i < fc ; ++i )
-        if(!rldata->fieldByIndex(i)->noSql())
-        {
-            HField *f = rldata->fieldByIndex(i);
-            data->setHeaderCell(c,f->title());
-            c++;
-        }
-}
-
 void HRecordLinesDisplay::updateQTableFeaturesFromRecordLines(void)
 {
-    int c,i,fc = rldata->fieldCount();
-    for(i = 0,c = 0 ; i < fc ; ++i )
-        if(!rldata->fieldByIndex(i)->noSql())
+    int c,fi,fc = rldata->readedFields().count();
+    for(fi = 0,c = 0 ; fi < fc ; ++fi,++c )
+    {
+        HField *f = rldata->fieldByName(rldata->readedFields().at(fi));
+        if(!f->attribute("color").isEmpty())
         {
-            HField *f = rldata->fieldByIndex(i);
-            if(!f->attribute("color").isEmpty())
-            {
-                QString chex = f->attribute("color");
-                bool ok;
-                int r,g,b;
+            QString chex = f->attribute("color");
+            bool ok;
+            int r,g,b;
 
-                r = chex.mid(0,2).toInt(&ok,16);
-                if(!ok)
-                    r = 0;
-                g = chex.mid(2,2).toInt(&ok,16);
-                if(!ok)
-                    g = 0;
-                b = chex.mid(4,2).toInt(&ok,16);
-                if(!ok)
-                    b = 0;
-                qtable->setColumnColor(c,QColor(r,g,b));
-            }
-            if(!f->attribute("sortmode").isEmpty())
-            {
-                qtable->setSpecSort(c,f->attribute("sortmode"));
-            }
-            else
-            {
-                if(f->className() == "HNKeyField")
-                    qtable->setSpecSort(c,"number");
-                if(f->className() == "HSKeyField")
-                    qtable->setSpecSort(c,"dropchar");
-                if(f->className() == "HNumberField")
-                    qtable->setSpecSort(c,"number");
-                if(f->className() == "HFloatingField")
-                    qtable->setSpecSort(c,"float");
-            }
-            c++;
+            r = chex.mid(0,2).toInt(&ok,16);
+            if(!ok)
+                r = 0;
+            g = chex.mid(2,2).toInt(&ok,16);
+            if(!ok)
+                g = 0;
+            b = chex.mid(4,2).toInt(&ok,16);
+            if(!ok)
+                b = 0;
+            qtable->setColumnColor(c,QColor(r,g,b));
         }
+        if(!f->attribute("sortmode").isEmpty())
+        {
+            qtable->setSpecSort(c,f->attribute("sortmode"));
+        }
+        else
+        {
+            if(f->className() == "HNKeyField")
+                qtable->setSpecSort(c,"number");
+            if(f->className() == "HSKeyField")
+                qtable->setSpecSort(c,"dropchar");
+            if(f->className() == "HNumberField")
+                qtable->setSpecSort(c,"number");
+            if(f->className() == "HFloatingField")
+                qtable->setSpecSort(c,"float");
+        }
+    }
 }
 
 HRecordLinesDisplay::~HRecordLinesDisplay()

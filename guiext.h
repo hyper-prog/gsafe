@@ -156,7 +156,6 @@ public:
     ~HRecordLinesDisplay();
 
     virtual void updateFromDataMatrix_Common(void);
-    void updateDataMatrixFeaturesFromRecordLines(void);
     void updateQTableFeaturesFromRecordLines(void);
 
 protected slots:
