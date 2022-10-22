@@ -1386,7 +1386,9 @@ bool HRecordLines::readLines(bool tdisabled)
             visibleFieldDerivedSqlNames.push_back(fields[i]->derivedAlias());
         }
     }
+
     QString keyDerivedAlias = fieldByName(keySqlName())->derivedAlias();
+    int vfc = visibleFieldNames.count();
 
     HSqlConnector* result = sql.execMultiUnsafe(
                                 sQuery,QString("Error in HRecordLines::readLines (%1/%2)")
@@ -1396,22 +1398,24 @@ bool HRecordLines::readLines(bool tdisabled)
     if(!sql.errorStatus())
     {
         QList<HValue> recordData;
-        int vfc = visibleFieldDerivedSqlNames.count();
+
+        HField **visibleFieldPointers = new HField * [ vfc ];
+        for(i = 0 ; i < visibleFieldNames.count() ; ++i)
+            visibleFieldPointers[i] = fieldByName(visibleFieldNames[i]);
+
         while(result->nextRecord())
         {
             keyValues.push_back( result->value(keyDerivedAlias).toString() );
             recordData.clear();
-            for(int i = 0 ; i < vfc; ++i)
-            {
-                HField *f = fieldByName(visibleFieldNames[i]);
-                recordData.push_back( f->convertToDisplay( result->value(visibleFieldDerivedSqlNames[i]) ) );
-            }
+            for(i = 0 ; i < vfc; ++i)
+                recordData.push_back( visibleFieldPointers[i]->convertToDisplay( result->value(visibleFieldDerivedSqlNames[i]) ) );
             matrix->addRow(recordData);
         }
 
         readed_fields = visibleFieldNames;
         setMatrixHeaders(visibleFieldNames);
         matrix->sendDataChanged();
+        delete[] visibleFieldPointers;
     }
     delete result;
     return sql.errorStatus();
