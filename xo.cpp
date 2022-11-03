@@ -206,6 +206,8 @@ HExcelXmlDocument* HExcelXmlDocument::cell(QString c,QString options)
                         c = c.replace(",",".");
                     if(c.indexOf(",") >= 0 && c.indexOf(",") < c.lastIndexOf(",")) //more than one found
                         c = c.replace(",","");
+                    if(c.simplified().isEmpty())
+                        c = "0";
                 }
                 if(opts["t"] == "dat")
                     type = "DateTime";
