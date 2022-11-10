@@ -381,6 +381,10 @@ public:
     /** Dump out all elements name and value in one concatenated string */
     QString dumpElements(bool newline = false);
 
+    /** Retrun the element names in a list */
+    QStringList elementNames(QString limitTo = "");
+    QStringList elementSqlNames(QString limitTo = "");
+
     /** Sets the given named element's value */
     void setElementValue(QString name,double value);
     /** Sets the given named element's value */

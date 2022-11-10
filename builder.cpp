@@ -172,11 +172,15 @@ QString HSqlBuilderField::local_cmd_Get(void)
     if(!opts.value("function","").isEmpty())
     {
         QString modstr;
-        modstr = opts.value("function","") + QString("(") +
-                    str +
-                        (opts.value("more_args","").isEmpty() ? QString("") : QString(",")) +
-                        opts.value("more_args","") +
-                    QString(")");
+        modstr = opts.value("function","") + QString("(");
+        if(!opts.value("more_args_before","").isEmpty())
+            modstr.append(opts.value("more_args_before","") + ",");
+        modstr.append(str);
+        if(!opts.value("more_args","").isEmpty())
+            modstr.append(QString(",") + opts.value("more_args","") + ",");
+        if(!opts.value("more_args_after","").isEmpty())
+            modstr.append(QString(",") + opts.value("more_args_after","") + ",");
+        modstr.append(")");
         str = modstr;
     }
     if(!alias.isEmpty())
@@ -225,11 +229,17 @@ QString HSqlBuilderField::local_cmd_Val(HSqlBuilder *builder,bool vmm,QString di
     if(!opts.value("function","").isEmpty())
     {
         QString modfsql;
-        modfsql = opts.value("function","") + QString("(") +
-                    v +
-                        (opts.value("more_args","").isEmpty() ? QString("") : QString(",")) +
-                        opts.value("more_args","") +
-                    QString(")");
+
+        modfsql = opts.value("function","") + QString("(");
+        if(!opts.value("more_args_before","").isEmpty())
+            modfsql.append(opts.value("more_args_before","") + ",");
+        modfsql.append(v);
+        if(!opts.value("more_args","").isEmpty())
+            modfsql.append(QString(",") + opts.value("more_args","") + ",");
+        if(!opts.value("more_args_after","").isEmpty())
+            modfsql.append(QString(",") + opts.value("more_args_after","") + ",");
+        modfsql.append(")");
+
         v = modfsql;
     }
     return v;
@@ -833,11 +843,15 @@ QString HSqlBuilderSort::local_cmd(QString dialect)
     if(opts.value("function","").isEmpty())
         str = f;
     else
-        str = QString("%1(%2%3%4)")
+        str = QString("%1(%2%3%4%5%6%7%8)")
                 .arg(opts.value("function"))
+                .arg(opts.value("more_args_before",""))
+                .arg(opts.value("more_args_before","").isEmpty() ? "":",")
                 .arg(f)
                 .arg(opts.value("more_args","").isEmpty() ? "":",")
-                .arg(opts.value("more_args",""));
+                .arg(opts.value("more_args",""))
+                .arg(opts.value("more_args_after","").isEmpty() ? "":",")
+                .arg(opts.value("more_args_after",""));
 
     if(opts.value("direction","") == "REVERSE")
         str.append(" DESC");

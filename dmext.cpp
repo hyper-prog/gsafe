@@ -869,6 +869,32 @@ QString HDynTable::dumpElements(bool newline)
     return s;
 }
 
+QStringList HDynTable::elementNames(QString limitTo)
+{
+    QStringList rlst;
+    QList<HDynTableElement>::iterator i = elements.begin();
+    while(i != elements.end())
+    {
+        if(limitTo.isEmpty() || i->hasLabel(limitTo))
+            rlst.push_back(i->name);
+        ++i;
+    }
+    return rlst;
+}
+
+QStringList HDynTable::elementSqlNames(QString limitTo)
+{
+    QStringList rlst;
+    QList<HDynTableElement>::iterator i = elements.begin();
+    while(i != elements.end())
+    {
+        if(limitTo.isEmpty() || i->hasLabel(limitTo))
+            rlst.push_back(i->sqlname);
+        ++i;
+    }
+    return rlst;
+}
+
 QString HDynTable::getElementSqlName(QString name)
 {
     QList<HDynTableElement>::iterator i = elements.begin();
