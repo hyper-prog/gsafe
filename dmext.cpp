@@ -186,7 +186,7 @@ void HDataMatrix::addRowEmpty(QString ctrl)
     control.push_back(ctrl);
 }
 
-void HDataMatrix::appendHPainDataMatrix(HDataMatrix *tail)
+void HDataMatrix::appendHPlainDataMatrix(HDataMatrix *tail)
 {
     checkAndGrow(tail->columnCount());
 

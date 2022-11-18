@@ -118,7 +118,7 @@ public:
     void addRowStr(QList<QString> strlistdata,QString ctrl="");
 
     /** Appends an external HDataMatrix to this table. */
-    void appendHPainDataMatrix(HDataMatrix *tail);
+    void appendHPlainDataMatrix(HDataMatrix *tail);
 
     /** Returns the specified row */
     QList<HValue> getRow(int row);
