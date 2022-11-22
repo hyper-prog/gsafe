@@ -12,6 +12,7 @@
 #ifndef GSAFE__DATA_HEADER_FILE_X_
 #define GSAFE__DATA_HEADER_FILE_X_
 
+#include <exception>
 #include <QtCore>
 
 /** \mainpage
@@ -34,7 +35,7 @@
 /*  @{  */
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "2.0.55"
+#define GSAFE_VERSION   "2.0.56"
 
 /** Converts a double value to char * string
  *  @param v the double value to convert
@@ -71,6 +72,16 @@ public:
     /** This methos returns the typename of the object.
      *  It soubld redefine in every gSAFE class. */
     virtual QString className();
+};
+
+/** Textual exception for gSAFE exceptions */
+class GSafeException : public std::exception
+{
+public:
+    GSafeException(const char* err);
+    virtual const char *what() const noexcept;
+private:
+    char *errMsg;
 };
 
 /** This class represents a single Sql value */

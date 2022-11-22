@@ -622,11 +622,15 @@ QList<QString> HSqlConnector_QtNativeSql::fieldNames(void)
 
 HValue HSqlConnector_QtNativeSql::value(int index)
 {
+    if(query.record().count() < index + 1 )
+        throw GSafeException("Called HSqlConnector_QtNativeSql::value with an index greater than record value count");
     return HValue(query.record().value(index));
 }
 
 HValue HSqlConnector_QtNativeSql::value(QString name)
 {
+    if(!query.record().contains(name))
+        throw GSafeException("Called HSqlConnector_QtNativeSql::value with a not existing item name");
     return HValue(query.record().value(name));
 }
 

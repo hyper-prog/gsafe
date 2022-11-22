@@ -1440,7 +1440,7 @@ QString HSqlBuilder::local_cmd_Delete(bool vmm,bool nice,QString dialect)
 {
     QString sql = "";
     forBind.clear();
-    if(type != Update)
+    if(type != Delete)
         return "";
 
     sql = QString("DELETE FROM ") + base_table;

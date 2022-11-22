@@ -21,9 +21,24 @@
 #include "builder.h"
 #include "database.h"
 
+using namespace std;
+
 QString HNamed::className()
 {
     return "HNamed";
+}
+
+// ///////////////////////////////////////////////////////////////////// //
+
+GSafeException::GSafeException(const char* err)
+ : std::exception()
+{
+    errMsg = strdup(err);
+}
+
+const char *GSafeException::what() const noexcept
+{
+    return errMsg;
 }
 
 // ///////////////////////////////////////////////////////////////////// //
@@ -165,12 +180,12 @@ int HValue::toInt()
 {
     bool ok;
     if(ot != Number && ot != String)
-        throw "Called HValue::toInt on a not mathing value type";
+        throw GSafeException("Called HValue::toInt on a not mathing value type");
     if(v.isEmpty())
         return 0;
     int iv = v.toInt(&ok);
     if(!ok)
-        throw "Called HValue::toInt on a not integer value";
+        throw GSafeException("Called HValue::toInt on a not integer value");
     return iv;
 }
 
@@ -178,12 +193,12 @@ double HValue::toDouble()
 {
     bool ok;
     if(ot != Number && ot != String)
-        throw "Called HValue::toDouble on a not mathing value type";
+        throw GSafeException("Called HValue::toDouble on a not mathing value type");
     if(v.isEmpty())
         return 0;
     double dv = v.toDouble(&ok);
     if(!ok)
-        throw "Called HValue::toDouble on a not integer value";
+        throw GSafeException("Called HValue::toDouble on a not numeric value");
     return dv;
 }
 
@@ -195,7 +210,7 @@ bool HValue::toBool()
         return false;
     if(v == "1" || v.toLower() == "t" || v.toLower() == "true")
         return true;
-    throw "Called HValue::toBool on a corrupt value";
+    throw GSafeException("Called HValue::toBool on a corrupt value");
 }
 
 HValue::HValueType HValue::type()
