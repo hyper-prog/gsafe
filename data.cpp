@@ -189,6 +189,19 @@ int HValue::toInt()
     return iv;
 }
 
+int HValue::toIntForced(int fallbackValue)
+{
+    bool ok;
+    if(ot != Number && ot != String)
+        return fallbackValue;
+    if(v.isEmpty())
+        return fallbackValue;
+    int iv = v.toInt(&ok);
+    if(!ok)
+        return fallbackValue;
+    return iv;
+}
+
 double HValue::toDouble()
 {
     bool ok;
@@ -202,6 +215,19 @@ double HValue::toDouble()
     return dv;
 }
 
+double HValue::toDoubleForced(double fallbackValue)
+{
+    bool ok;
+    if(ot != Number && ot != String)
+        return fallbackValue;
+    if(v.isEmpty())
+        return fallbackValue;
+    double dv = v.toDouble(&ok);
+    if(!ok)
+        return fallbackValue;
+    return dv;
+}
+
 bool HValue::toBool()
 {
     if(ot == Null)
@@ -212,6 +238,18 @@ bool HValue::toBool()
         return true;
     throw GSafeException("Called HValue::toBool on a corrupt value");
 }
+
+bool HValue::toBoolForced(bool fallbackValue)
+{
+    if(ot == Null)
+        return false;
+    if(v.isEmpty() || v == "0" || v.toLower() == "f" || v.toLower() == "false")
+        return false;
+    if(v == "1" || v.toLower() == "t" || v.toLower() == "true")
+        return true;
+    return fallbackValue;
+}
+
 
 HValue::HValueType HValue::type()
 {

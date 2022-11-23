@@ -35,7 +35,7 @@
 /*  @{  */
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "2.0.56"
+#define GSAFE_VERSION   "2.0.57"
 
 /** Converts a double value to char * string
  *  @param v the double value to convert
@@ -115,8 +115,11 @@ public:
 
     QString toString();
     int toInt();
+    int toIntForced(int fallbackValue = 0);
     double toDouble();
+    double toDoubleForced(double fallbackValue = 0.0);
     bool toBool();
+    bool toBoolForced(bool fallbackValue = false);
     HValueType type();
 
     operator const QString();
