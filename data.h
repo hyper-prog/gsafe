@@ -35,7 +35,7 @@
 /*  @{  */
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "2.0.57"
+#define GSAFE_VERSION   "2.0.58"
 
 /** Converts a double value to char * string
  *  @param v the double value to convert
@@ -131,6 +131,11 @@ public:
     HValue& operator=(int         iv);
     HValue& operator=(bool        bv);
     HValue& operator=(double      dv);
+
+protected:
+    int toIntDefExc(int fallbackValue = 0, bool throwException = true);
+    double toDoubleDefExc(double fallbackValue = 0.0, bool throwException = true);
+    bool toBoolDefExc(bool fallbackValue = false, bool throwException = true);
 
 protected:
     QString v;

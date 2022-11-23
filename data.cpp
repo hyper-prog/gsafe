@@ -178,68 +178,78 @@ QString HValue::toString()
 
 int HValue::toInt()
 {
-    bool ok;
-    if(ot != Number && ot != String)
-        throw GSafeException("Called HValue::toInt on a not mathing value type");
-    if(v.isEmpty())
-        return 0;
-    int iv = v.toInt(&ok);
-    if(!ok)
-        throw GSafeException("Called HValue::toInt on a not integer value");
-    return iv;
+    return toIntDefExc(0,true);
 }
 
 int HValue::toIntForced(int fallbackValue)
 {
+    return toIntDefExc(fallbackValue,false);
+}
+
+int HValue::toIntDefExc(int fallbackValue, bool throwException)
+{
     bool ok;
     if(ot != Number && ot != String)
+    {
+        if(throwException)
+            throw GSafeException("Called HValue::toInt on a not mathing value type");
         return fallbackValue;
+    }
     if(v.isEmpty())
         return fallbackValue;
+
     int iv = v.toInt(&ok);
     if(!ok)
+    {
+        if(throwException)
+            throw GSafeException("Called HValue::toInt on a not integer value");
         return fallbackValue;
+    }
     return iv;
 }
 
 double HValue::toDouble()
 {
-    bool ok;
-    if(ot != Number && ot != String)
-        throw GSafeException("Called HValue::toDouble on a not mathing value type");
-    if(v.isEmpty())
-        return 0;
-    double dv = v.toDouble(&ok);
-    if(!ok)
-        throw GSafeException("Called HValue::toDouble on a not numeric value");
-    return dv;
+    return toDoubleDefExc(0.0,true);
 }
 
 double HValue::toDoubleForced(double fallbackValue)
 {
+    return toDoubleDefExc(fallbackValue,false);
+}
+
+double HValue::toDoubleDefExc(double fallbackValue, bool throwException)
+{
     bool ok;
     if(ot != Number && ot != String)
+    {
+        if(throwException)
+            throw GSafeException("Called HValue::toDouble on a not mathing value type");
         return fallbackValue;
+    }
     if(v.isEmpty())
         return fallbackValue;
     double dv = v.toDouble(&ok);
     if(!ok)
+    {
+        if(throwException)
+            throw GSafeException("Called HValue::toDouble on a not numeric value");
         return fallbackValue;
+    }
     return dv;
 }
 
 bool HValue::toBool()
 {
-    if(ot == Null)
-        return false;
-    if(v.isEmpty() || v == "0" || v.toLower() == "f" || v.toLower() == "false")
-        return false;
-    if(v == "1" || v.toLower() == "t" || v.toLower() == "true")
-        return true;
-    throw GSafeException("Called HValue::toBool on a corrupt value");
+    return toBoolDefExc(false,true);
 }
 
 bool HValue::toBoolForced(bool fallbackValue)
+{
+    return toBoolDefExc(fallbackValue,false);
+}
+
+bool HValue::toBoolDefExc(bool fallbackValue, bool throwException)
 {
     if(ot == Null)
         return false;
@@ -247,9 +257,10 @@ bool HValue::toBoolForced(bool fallbackValue)
         return false;
     if(v == "1" || v.toLower() == "t" || v.toLower() == "true")
         return true;
+    if(throwException)
+        throw GSafeException("Called HValue::toBool on a corrupt value");
     return fallbackValue;
 }
-
 
 HValue::HValueType HValue::type()
 {
