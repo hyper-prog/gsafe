@@ -1439,13 +1439,19 @@ HDynTableSqlConnector::~HDynTableSqlConnector()
     this->tablename  = "";
 }
 
-bool HDynTableSqlConnector::insertSql()
+int HDynTableSqlConnector::insertSql(QList<HSqlBuilderField> additional_fields)
 {
     if(dynt == NULL)
-        return true;
+        return 1;
     HSql sql = getSql();
 
     HSqlBuilder b(Insert,tablename);
+    if(!additional_fields.isEmpty())
+    {
+        int i,c = additional_fields.count();
+        for( i = 0 ; i < c ; ++i )
+            b.set(additional_fields[i]);
+    }
     dynt->firstElement();
     while(!dynt->isEnded())
     {
@@ -1455,14 +1461,14 @@ bool HDynTableSqlConnector::insertSql()
 
     sql.exec(b,"Error in HDynTableSqlConnector::insertSql",tdisabled);
     if(sql.errorStatus())
-        return true;
-    return false;
+        return 1;
+    return 0;
 }
 
-bool HDynTableSqlConnector::readSql(void)
+int HDynTableSqlConnector::readSql()
 {
     if(dynt == NULL)
-        return true;
+        return 2;
 
     HSql sql = getSql();
     HSqlBuilder b(Select,tablename);
@@ -1480,28 +1486,27 @@ bool HDynTableSqlConnector::readSql(void)
     auto r = sql.execMulti(b,"Error in HDynTableSqlConnector::readSql",tdisabled);
 
     if(sql.errorStatus())
-        return true;
+        return 2;
 
-    int idx;
-    if(r->nextRecord())
+    if(!r->nextRecord())
+        return 1;
+
+    int idx = 0;
+    dynt->firstElement();
+    while(!dynt->isEnded())
     {
-        idx = 0;
-        dynt->firstElement();
-        while(!dynt->isEnded())
-        {
-            dynt->setCurrentElementValue(r->value(idx));
-            dynt->nextElement();
-            ++idx;
-        }
-        emit justReaded();
+        dynt->setCurrentElementValue(r->value(idx));
+        dynt->nextElement();
+        ++idx;
     }
-    return false;
+    emit justReaded();
+    return 0;
 }
 
-bool HDynTableSqlConnector::updateSql(void)
+int HDynTableSqlConnector::updateSql(void)
 {
     if(dynt == NULL)
-        return true;
+        return 1;
 
     HSql sql = getSql();
     HSqlBuilder b(Update,tablename);
@@ -1517,8 +1522,8 @@ bool HDynTableSqlConnector::updateSql(void)
 
     sql.exec(b,"Error in HDynTableSqlConnector::updateSql",tdisabled);
     if(sql.errorStatus())
-        return true;
-    return false;
+        return 1;
+    return 0;
 }
 
 QString HDynTableSqlConnector::sqlCreateString(QString options)

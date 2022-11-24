@@ -589,8 +589,6 @@ public:
     HDynTableSqlConnector(HDynTable *dynt,QString tablename,HSqlBuilderCondition filter);
     ~HDynTableSqlConnector();
 
-    /** Inserts the content of table to the database according the parameters given to the constructor  */
-    bool insertSql();
 
     /** Generates the sql create (DDL) string of the meta table. (CREATE TABLE ...)
      *  @return The sql create command
@@ -598,10 +596,15 @@ public:
     QString sqlCreateString(QString options = "");
 
 public slots:
-    /** Reads the data from sql */
-    bool readSql();
-    /** Updates the data to the sql */
-    bool updateSql();
+    /** Inserts the content of table to the database according the parameters given to the constructor.
+     *  Retrun value: 0: success read, 1: error occured */
+    int insertSql(QList<HSqlBuilderField> additional_fields = QList<HSqlBuilderField>());
+    /** Reads the data from sql.
+     *  Retrun value: 0: success read, 1: no data read, 2: error occured */
+    int readSql();
+    /** Updates the data to the sql.
+     *  Retrun value: 0: success read, 1: error occured */
+    int updateSql();
 signals:
     /** Emitted when the data just readed from the sql database */
     void justReaded();

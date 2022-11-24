@@ -1049,7 +1049,7 @@ HSqlBuilder& HSqlBuilder::set_fv_a(QMap<QString,QVariant> toSet,HSqlBuilder_Fiel
 
 HSqlBuilder& HSqlBuilder::set(HSqlBuilderField f)
 {
-    if(!f.isGetType())
+    if(!f.isSetType())
         return *this;
     field_list.push_back(f);
     return *this;
