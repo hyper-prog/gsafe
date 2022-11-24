@@ -938,7 +938,7 @@ HSqlBuilder& HSqlBuilder::set_fv_a(QMap<QString,QVariant> toSet,HSqlBuilder_Fiel
 
 HSqlBuilder& HSqlBuilder::set(HSqlBuilderField f)
 {
-    if(!f.isGetType())
+    if(!f.isSetType())
         return *this;
     field_list.push_back(f);
     return *this;
@@ -1325,7 +1325,7 @@ QString HSqlBuilder::local_cmd_Delete(bool vmm,bool nice)
 {
     QString sql = "";
     forBind.clear();
-    if(type != Update)
+    if(type != Delete)
         return "";
 
     sql = QString("DELETE FROM ") + base_table;
