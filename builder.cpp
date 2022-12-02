@@ -33,6 +33,11 @@ HSqlBuilderCondition cond(HSqlBuilder_ConditionRelation r)
     return HSqlBuilderCondition(r);
 }
 
+HSqlBuilderCondition not_cond(HSqlBuilder_ConditionRelation r)
+{
+    return HSqlBuilderCondition(r,"opposite=true");
+}
+
 HSqlBuilder db_query(QString tablename,QString alias)
 {
     return HSqlBuilder(Select,tablename,alias);
@@ -280,7 +285,8 @@ QString HSqlBuilderField::json_string(void)
 
 // HSqlBuilderCondition ////////////////////////////////////////////////////////////
 
-HSqlBuilderCondition::HSqlBuilderCondition(HSqlBuilder_ConditionRelation r) {
+HSqlBuilderCondition::HSqlBuilderCondition(HSqlBuilder_ConditionRelation r,QString options)
+{
     ct = COND_GRP;
     relation = r;
     vt = Unquoted;
@@ -291,7 +297,7 @@ HSqlBuilderCondition::HSqlBuilderCondition(HSqlBuilder_ConditionRelation r) {
     field2 = "";
     table1 = "";
     table2 = "";
-    options = "";
+    options = options;
     sub_conds.clear();
 }
 
@@ -629,9 +635,19 @@ QString HSqlBuilderCondition::json_string(void)
 
     if(ct == COND_GRP)
     {
+        QMap<QString,QString> opts = HSqlBuilder::genOptions(options);
+
         cstr += "{";
-        if(relation == And) cstr += QString("\"relation\": \"and\",");
-        if(relation == Or)  cstr += QString("\"relation\": \"or\",");
+        if(opts.value("opposite","") == "true")
+        {
+            if(relation == And) cstr += QString("\"relation\": \"nand\",");
+            if(relation == Or)  cstr += QString("\"relation\": \"nor\",");
+        }
+        else
+        {
+            if(relation == And) cstr += QString("\"relation\": \"and\",");
+            if(relation == Or)  cstr += QString("\"relation\": \"or\",");
+        }
         cstr += QString("\"type\": \"sub\",");
         cstr += QString("\"subcond\": [");
         QList<HSqlBuilderCondition>::iterator ci = sub_conds.begin();

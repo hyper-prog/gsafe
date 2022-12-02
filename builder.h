@@ -90,7 +90,7 @@ private:
 class HSqlBuilderCondition
 {
 public:
-    HSqlBuilderCondition(HSqlBuilder_ConditionRelation r = And);
+    HSqlBuilderCondition(HSqlBuilder_ConditionRelation r = And,QString options = "");
     ~HSqlBuilderCondition();
 
     /** Set a field to field condition with a specified operation */
@@ -288,6 +288,7 @@ private:
 };
 
 HSqlBuilderCondition cond(HSqlBuilder_ConditionRelation r = And);
+HSqlBuilderCondition not_cond(HSqlBuilder_ConditionRelation r = And);
 HSqlBuilder db_query (QString tablename,QString alias = "");
 HSqlBuilder db_insert(QString tablename,QString alias = "");
 HSqlBuilder db_update(QString tablename,QString alias = "");
