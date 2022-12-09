@@ -285,7 +285,7 @@ QString HSqlBuilderField::json_string(void)
 
 // HSqlBuilderCondition ////////////////////////////////////////////////////////////
 
-HSqlBuilderCondition::HSqlBuilderCondition(HSqlBuilder_ConditionRelation r,QString options)
+HSqlBuilderCondition::HSqlBuilderCondition(HSqlBuilder_ConditionRelation r,QString opts)
 {
     ct = COND_GRP;
     relation = r;
@@ -297,7 +297,7 @@ HSqlBuilderCondition::HSqlBuilderCondition(HSqlBuilder_ConditionRelation r,QStri
     field2 = "";
     table1 = "";
     table2 = "";
-    options = options;
+    options = opts;
     sub_conds.clear();
 }
 

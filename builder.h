@@ -90,7 +90,7 @@ private:
 class HSqlBuilderCondition
 {
 public:
-    HSqlBuilderCondition(HSqlBuilder_ConditionRelation r = And,QString options = "");
+    HSqlBuilderCondition(HSqlBuilder_ConditionRelation r = And,QString opts = "");
     ~HSqlBuilderCondition();
 
     /** Set a field to field condition with a specified operation */
