@@ -47,7 +47,7 @@ void HXBaseRecordSync::clearAssigns(void)
     fieldconn.clear();
 }
 
-int HXBaseRecordSync::syncHTableToXBase(HRecord *record,HXBaseFileWriter *dbf)
+int HXBaseRecordSync::syncHRecordToXBase(HRecord *record,HXBaseFileWriter *dbf)
 {
     QList<HFieldPairs>::iterator i;
     for(i=fieldconn.begin();i!=fieldconn.end();++i)
@@ -83,7 +83,7 @@ int HXBaseRecordSync::syncHTableToXBase(HRecord *record,HXBaseFileWriter *dbf)
     return 0;
 }
 
-int HXBaseRecordSync::syncXBaseToHTable(HXBaseFileReader *dbf, HRecord *record)
+int HXBaseRecordSync::syncXBaseToHRecord(HXBaseFileReader *dbf, HRecord *record)
 {
     QList<HFieldPairs>::iterator i;
     for(i=fieldconn.begin();i!=fieldconn.end();++i)

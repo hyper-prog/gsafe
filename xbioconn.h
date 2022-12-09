@@ -127,10 +127,10 @@ public:
     /** Clears all gSAFE - XBase field assign */
     void clearAssigns(void);
 
-    /** Sync the assugned data from gSAFE Htable to XBase */
-    int syncHTableToXBase(HRecord *record,HXBaseFileWriter *dbf);
-    /** Sync the assugned data from XBase to gSAFE Htable */
-    int syncXBaseToHTable(HXBaseFileReader *dbf,HRecord *record);
+    /** Sync the assugned data from gSAFE HRecord to XBase */
+    int syncHRecordToXBase(HRecord *record,HXBaseFileWriter *dbf);
+    /** Sync the assugned data from XBase to gSAFE HRecord */
+    int syncXBaseToHRecord(HXBaseFileReader *dbf,HRecord *record);
 
 private:
     QList<HFieldPairs> fieldconn;
