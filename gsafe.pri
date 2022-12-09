@@ -33,7 +33,9 @@ SOURCES += \
     $${GSAFE_PATH}dialog.cpp \
     $${GSAFE_PATH}xo.cpp \
     $${GSAFE_PATH}po.cpp \
-    $${GSAFE_PATH}dconsole.cpp
+    $${GSAFE_PATH}dconsole.cpp \
+    $${GSAFE_PATH}xbio.cpp \
+    $${GSAFE_PATH}xbioconn.cpp
 
 HEADERS  += \
     $${GSAFE_PATH}/gSafe \
@@ -50,7 +52,9 @@ HEADERS  += \
     $${GSAFE_PATH}dialog.h \
     $${GSAFE_PATH}xo.h \
     $${GSAFE_PATH}po.h \
-    $${GSAFE_PATH}dconsole.h
+    $${GSAFE_PATH}dconsole.h \
+    $${GSAFE_PATH}xbio.h \
+    $${GSAFE_PATH}xbioconn.h
 
 RESOURCES += $${GSAFE_PATH}gsafe.qrc
 

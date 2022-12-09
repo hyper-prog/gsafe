@@ -24,7 +24,9 @@ SOURCES += \
     dialog.cpp \
     xo.cpp \
     po.cpp \
-    dconsole.cpp
+    dconsole.cpp \
+    xbio.cpp \
+    xbioconn.cpp
 
 HEADERS  += \
     data.h \
@@ -40,7 +42,9 @@ HEADERS  += \
     dialog.h \
     xo.h \
     po.h \
-    dconsole.h
+    dconsole.h \
+    xbio.h \
+    xbioconn.h
 
 RESOURCES += gsafe.qrc
 INCLUDEPATH += .

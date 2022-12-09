@@ -17,4 +17,9 @@
 #include <xo.h>
 #include <po.h>
 
+#ifdef ENABLE_XBASE_SUPPORT
+#include <xbio.h>
+#include <xbioconn.h>
+#endif
+
 #endif // GSAFE_ALL_HEADER_FILE_H
