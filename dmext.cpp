@@ -731,6 +731,7 @@ bool HDynTableElement::isNumeric(void)
         return true;
     return false;
 }
+
 bool HDynTableElement::isTextual(void)
 {
     return !isNumeric();
@@ -911,6 +912,55 @@ QString HDynTable::getElementSqlName(QString name)
         ++i;
     }
     return "";
+}
+
+
+HDynTableCellType HDynTable::getElementType(QString name)
+{
+    QList<HDynTableElement>::iterator i = elements.begin();
+    while(i != elements.end())
+    {
+        if(i->name == name)
+            return i->type;
+        ++i;
+    }
+    return HDynCellType_Undefined;
+}
+
+QString HDynTable::getElementRowString(QString name)
+{
+    QList<HDynTableElement>::iterator i = elements.begin();
+    while(i != elements.end())
+    {
+        if(i->name == name)
+            return i->rowName;
+        ++i;
+    }
+    return "";
+}
+
+QString HDynTable::getElementColString(QString name)
+{
+    QList<HDynTableElement>::iterator i = elements.begin();
+    while(i != elements.end())
+    {
+        if(i->name == name)
+            return i->colName;
+        ++i;
+    }
+    return "";
+}
+
+const QList<QString> HDynTable::getElementLabels(QString name)
+{
+    QList<HDynTableElement>::iterator i = elements.begin();
+    while(i != elements.end())
+    {
+        if(i->name == name)
+            return i->labels;
+        ++i;
+    }
+    return QList<QString>();
 }
 
 void HDynTable::setElementValue(QString name,double value)

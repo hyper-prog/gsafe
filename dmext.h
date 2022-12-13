@@ -15,6 +15,7 @@
 #include <QtCore>
 
 #include <data.h>
+#include <dm.h>
 #include <builder.h>
 #include <database.h>
 
@@ -232,6 +233,7 @@ signals:
 enum HDynTableCellType {
     HDynCellType_String  = 0,
     HDynCellType_Double  = 1,
+    HDynCellType_Undefined  = 9,
 };
 
 /** An element (An individual cell) of the dynamically builded HDynTable.
@@ -252,7 +254,6 @@ private:
     double  double_value;
 
 private:
-
     /** Creates a HDynTableElement. Use HDynTable's defN or defS methods instead.  */
     HDynTableElement(HDynTableCellType t,QString name,QString sqlname,QString rowName,QString colName,QString labels="");
 
@@ -268,7 +269,6 @@ private:
     void addLabel(QString l);
     bool hasLabel(QString l);
 };
-
 
 /** The HDynTable contains the collection of numeric or textual typed fileds referenced by names.\n
  *  After you define the elements, you can easely set/get elements value referenced by it's name.
@@ -407,7 +407,14 @@ public:
 
     /** Queries the given named element's sql name */
     QString getElementSqlName(QString name);
-
+    /** Queries the given named element's type */
+    HDynTableCellType getElementType(QString name);
+    /** Queries the given named element's row string */
+    QString getElementRowString(QString name);
+    /** Queries the given named element's column string */
+    QString getElementColString(QString name);
+    /** Queries the given named element's labels */
+    const QList<QString> getElementLabels(QString name);
 
     /** Set the internal intetator to the first element.
      *  You can walk throught the elements with this functions
@@ -523,8 +530,18 @@ public:
      *  @param If you give this bool pointer the pointer will be set to true any cases the element has been found */
     bool elementHasLabel(QString name,QString label,bool *found=NULL);
 
+    static HDynTable* fromJson(QString jsonData,HDynTableCellType forceType = HDynCellType_Undefined);
+    static HDynTable* fromJsonFile(QString jsonFileName,HDynTableCellType forceType = HDynCellType_Undefined);
+    virtual bool applyJson(QString jsonData,HDynTableCellType forceType = HDynCellType_Undefined);
+    virtual bool applyJsonFile(QString jsonFileName,HDynTableCellType forceType = HDynCellType_Undefined);
+    virtual QString toJson(HJsonFlag flags = HJsonFlag_Default);
+
+    static HDynTable* fromJson_inWork(QJsonArray jsonArray,HDynTableCellType forceType = HDynCellType_Undefined);
+    virtual bool applyJson_inWork(QJsonArray jsonArray,HDynTableCellType forceType = HDynCellType_Undefined);
+    virtual bool applyJson_inWork_valueOnly(QJsonArray jsonArray);
+    virtual QJsonValue toJson_inWork(HJsonFlag flags);
+
 private:
-    HDynTableElement& getElementByName(QString name);
 
     class HDynTableElementNameReferencer
     {

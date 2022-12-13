@@ -13,6 +13,7 @@
 
 #include "data.h"
 #include "dm.h"
+#include "dmext.h"
 #include "dialog.h"
 #include "ftypes.h"
 #include "dconsole.h"
@@ -786,6 +787,207 @@ void HSqlXChooseField::applyJson_inWork_spec(QJsonObject& fo)
     if(fo.contains("connfilter")) connFilter = fo.value("connfilter").toString();
 
     setKVSource_X(connTable,connKey,connShow,connFilter,connSort);
+}
+
+// //////// HDynTable /////////////////////////////////////////////////
+
+HDynTable* HDynTable::fromJson(QString jsonData,HDynTableCellType forceType)
+{
+    if(jsonData.trimmed().isEmpty())
+        return NULL;
+    QJsonDocument jdoc;
+    QJsonParseError jpe;
+    jdoc = QJsonDocument::fromJson(jsonData.toUtf8(),&jpe);
+    if(jdoc.isNull())
+    {
+        sdebug(QString(QObject::tr("Error: Not valid JSON.\n Message: %1"))
+                        .arg(jpe.errorString()));
+        return NULL;
+    }
+    return fromJson_inWork(jdoc.array(),forceType);
+}
+
+HDynTable* HDynTable::fromJsonFile(QString jsonFileName,HDynTableCellType forceType)
+{
+    QFile f(jsonFileName);
+    if(!f.exists())
+    {
+        sdebug("HDynTable::fromJsonFile - File does not exists!");
+        return NULL;
+    }
+    if(!f.open(QIODeviceBase::ReadOnly))
+    {
+        sdebug("HDynTable::fromJsonFile - Cannot open file for read!");
+        return NULL;
+    }
+
+    HDynTable *dyntable = HDynTable::fromJson(QString::fromUtf8(f.readAll()),forceType);
+    f.close();
+    return dyntable;
+}
+
+bool HDynTable::applyJson(QString jsonData,HDynTableCellType forceType)
+{
+    QJsonDocument jdoc;
+    QJsonParseError jpe;
+    jdoc = QJsonDocument::fromJson(jsonData.toUtf8(),&jpe);
+    if(jdoc.isNull())
+    {
+        sdebug(QString(QObject::tr("Error: Not valid JSON.\n Message: %1"))
+                        .arg(jpe.errorString()));
+        return true;
+    }
+    return applyJson_inWork(jdoc.array(),forceType);
+}
+
+bool HDynTable::applyJsonFile(QString jsonFileName,HDynTableCellType forceType)
+{
+    QFile f(jsonFileName);
+    if(!f.exists())
+    {
+        sdebug("HDynTable::applyJsonFile - File does not exists!");
+        return true;
+    }
+    if(!f.open(QIODeviceBase::ReadOnly))
+    {
+        sdebug("HDynTable::applyJsonFile - Cannot open file for read!");
+        return true;
+    }
+
+    applyJson(QString::fromUtf8(f.readAll()),forceType);
+    f.close();
+    return false;
+}
+
+QString HDynTable::toJson(HJsonFlag flags)
+{
+    QJsonDocument jd;
+    jd.setArray(toJson_inWork(flags).toArray());
+    return jd.toJson(flagOn(flags,HJsonFlag_Compacted) ? QJsonDocument::Compact : QJsonDocument::Indented );
+}
+
+HDynTable* HDynTable::fromJson_inWork(QJsonArray jsonArray,HDynTableCellType forceType)
+{
+    HDynTable *dt = new HDynTable();
+    dt->applyJson_inWork(jsonArray,forceType);
+    return dt;
+}
+
+bool HDynTable::applyJson_inWork(QJsonArray jsonArray,HDynTableCellType forceType)
+{
+    int i,c = jsonArray.count();
+    for( i = 0 ; i < c ; ++i )
+    {
+        QJsonObject ao = jsonArray.at(i).toObject();
+        if(forceType == HDynCellType_Undefined && !ao.contains("type"))
+            continue;
+        if(!ao.contains("name"))
+            continue;
+        if(!ao.contains("sql"))
+            continue;
+        if(!ao.contains("row"))
+            continue;
+        if(!ao.contains("col"))
+            continue;
+
+        HDynTableCellType t;
+        if(forceType == HDynCellType_Undefined)
+        {
+            if(ao.value("type") == "double")
+                t = HDynCellType_Double;
+            else if(ao.value("type") == "string")
+                t = HDynCellType_String;
+            else
+                continue;
+        }
+        else
+        {
+            t = forceType;
+        }
+
+        QString name = ao.value("name").toString();
+        if(name.isEmpty())
+            continue;
+        QString sql = ao.value("sql").toString();
+        if(sql.isEmpty())
+            continue;
+        QString row = ao.value("row").toString();
+        if(row.isEmpty())
+            continue;
+        QString col = ao.value("col").toString();
+        if(col.isEmpty())
+            continue;
+        QString labels = "";
+        if(ao.contains("labels"))
+            labels = ao.value("labels").toString();
+
+        defT(t,name,sql,row,col,labels);
+
+        if(ao.contains("value"))
+        {
+            if(t == HDynCellType_Double)
+                setElementValue(name,ao.value("value").toDouble(0.0));
+            if(t == HDynCellType_String)
+                setElementValue(name,ao.value("value").toString());
+        }
+    }
+    return false;
+}
+
+bool HDynTable::applyJson_inWork_valueOnly(QJsonArray jsonArray)
+{
+    int i,c = jsonArray.count();
+    for( i = 0 ; i < c ; ++i )
+    {
+        QJsonObject ao = jsonArray.at(i).toObject();
+
+        if(!ao.contains("name"))
+            continue;
+        QString name = ao.value("name").toString();
+        if(name.isEmpty())
+            continue;
+        if(ao.contains("value"))
+        {
+            if(getElementType(name) == HDynCellType_Double)
+                setElementValue(name,ao.value("value").toDouble(0.0));
+            if(getElementType(name) == HDynCellType_String)
+                setElementValue(name,ao.value("value").toString());
+        }
+    }
+    return false;
+}
+
+QJsonValue HDynTable::toJson_inWork(HJsonFlag flags)
+{
+    QJsonArray arr;
+    QStringList names = elementNames();
+    int i,c = names.count();
+    for( i = 0 ; i < c ; ++i )
+    {
+        QJsonObject eo;
+        eo["name"] = names[i];
+        if(!flagOn(flags,HJsonFlag_NoStructure))
+        {
+            if(getElementType(names[i]) == HDynCellType_Double)
+                eo["type"] = "double";
+            if(getElementType(names[i]) == HDynCellType_String)
+                eo["type"] = "string";
+
+            eo["sql"] = getElementSqlName(names[i]);
+            eo["row"] = getElementRowString(names[i]);
+            eo["col"] = getElementColString(names[i]);
+            eo["lables"] = getElementLabels(names[i]).join("|");
+        }
+        if(!flagOn(flags,HJsonFlag_NoValues))
+        {
+            if(getElementType(names[i]) == HDynCellType_Double)
+                eo["value"] = getElementValueDouble(names[i]);
+            if(getElementType(names[i]) == HDynCellType_String)
+                eo["value"] = getElementValueString(names[i]);
+        }
+        arr.append(eo);
+    }
+    return arr;
 }
 
 // //////// HDialogData & HDialog /////////////////////////////////////////////////
