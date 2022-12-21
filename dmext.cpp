@@ -35,6 +35,7 @@ HDataMatrix::HDataMatrix()
 
     keyfield = -2; //default: The HDispPlainDataMatrix can set the key
     soft_current_key = "";
+    embedded = false;
 }
 
 QString HDataMatrix::className()
@@ -73,6 +74,16 @@ void HDataMatrix::checkAndGrow(int to)
 HDataMatrix::~HDataMatrix(void)
 {
     clear();
+}
+
+void HDataMatrix::setEmbedded()
+{
+    embedded = true;
+}
+
+bool HDataMatrix::isEmbedded()
+{
+    return embedded;
 }
 
 void HDataMatrix::clear()

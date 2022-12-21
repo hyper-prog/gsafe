@@ -1323,6 +1323,7 @@ HRecordLines::HRecordLines(QString tableName,QString title)
  : HRecordSkel(tableName,title), sQuery(Select,tableName)
 {
     matrix = new HDataMatrix();
+    matrix->setEmbedded();
     soft_current_key = "";
     readed_fields.clear();
     keyValues.clear();

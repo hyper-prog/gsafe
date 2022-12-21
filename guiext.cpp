@@ -338,6 +338,11 @@ void HDataMatrixDisplay::updateFromDataMatrixDataCells(void)
     if(data == NULL)
         return;
 
+    //If the HDataMatrix is embedded we exit here.
+    //The data will read on higher level, this read is unnecessary here.
+    if(data->isEmbedded())
+        return;
+
     int i = 0;
     QStringList *sl = new QStringList();
     QString k;
@@ -405,6 +410,8 @@ HRecordLinesDisplay::HRecordLinesDisplay(QWidget *parent,HRecordLines *rl,HDispO
     : HDataMatrixDisplay(parent,rl->dataMatrix(),flags)
 {
     rldata = rl;
+
+    updateFromDataMatrixDataCells();
 
     updateQTableFeaturesFromRecordLines();
 
