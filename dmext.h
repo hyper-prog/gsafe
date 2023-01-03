@@ -176,11 +176,13 @@ public:
     /** Returns a string which contains the concatenated values of the specified column with the specified separator */
     QString getColumnConcatenated(int col,QString separator);
 
-    /** Set embedded property to true. It does not affect the behavior of HDataMatrix. Its only a sign for outer callers.
+    /** Set embedded property to an arbitrary object name. It does not affect the behavior of HDataMatrix. Its only a sign for outer callers.
      *  This only set if the HDataMatrix is embedded to a HRecordLines. It works autmatically so don't use the function! */
-    void setEmbedded();
+    void setEmbedded(QString to);
     /** Retruns true if this HDataMatrix is embedded to another data structure like HRecordLines. */
     bool isEmbedded();
+    /** Retruns the object name which the this HDataMatrix is embedded to. */
+    QString embeddedInto();
 
 protected:
     int col_count;
@@ -195,7 +197,7 @@ protected:
 
     QList<bool> printCellWraps;
     QList<int> printMaxCellWidths;
-    bool embedded;
+    QString embedded;
 
     void checkAndGrow(int to);
 
