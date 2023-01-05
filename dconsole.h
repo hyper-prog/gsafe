@@ -1,10 +1,10 @@
-﻿/*  gSAFE - LIB
-    general Sql dAtabase FrontEnd
-    http://hyperprog.com/gsafe/
+﻿/* gSAFE - LIB
+   general Sql dAtabase FrontEnd
+   http://hyperprog.com/gsafe/
 
-   (C) 2006-2021 Peter Deak  (hyper80@gmail.com)
+   (C) 2005-2023 Peter Deak  (hyper80@gmail.com)
 
-    License: LGPLv2.1
+   License: Apache 2.0
 
     dconsole.h
 */

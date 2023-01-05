@@ -1,9 +1,10 @@
-/*
-   SAFE - LIB - C++ Sql Builder
+/* gSAFE - LIB
    general Sql dAtabase FrontEnd
    http://hyperprog.com/gsafe/
 
-   (C) 2021 Peter Deak (hyper80@gmail.com)
+   (C) 2005-2023 Peter Deak  (hyper80@gmail.com)
+
+   License: Apache 2.0
 */
 
 #ifndef QUERY_BUILDER_H

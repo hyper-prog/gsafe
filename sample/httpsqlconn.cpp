@@ -3,7 +3,7 @@
 
    (C) 2021 Peter Deak  (hyper80@gmail.com)
 
-        License: GPL
+        License: Apache 2.0
 */
 #include <QtCore>
 #include <QtSql>

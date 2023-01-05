@@ -3,7 +3,7 @@
 
   (C) 2021 Péter Deák  (hyper80@gmail.com)
 
-     License: GPL
+     License: Apache 2.0
 */
 #ifndef HTTPSQLCONN_HEADER
 #define HTTPSQLCONN_HEADER
