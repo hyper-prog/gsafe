@@ -1,12 +1,12 @@
-﻿/*  gSAFE - LIB
-    general Sql dAtabase FrontEnd
-    http://hyperprog.com/gsafe/
+﻿/* gSAFE - LIB
+   general Sql dAtabase FrontEnd
+   http://hyperprog.com/gsafe/
 
-   (C) 2005-2022 Péter Deák (hyper80@gmail.com)
+   (C) 2005-2023 Péter Deák (hyper80@gmail.com)
 
-    License: LGPLv2.1
+   License: Apache 2.0
 
-    quicktable.h
+   quicktable.h
 */
 
 #ifndef GSAFE__QUICKTABLE_HEADER_FILE_X_

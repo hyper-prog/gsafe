@@ -20,7 +20,7 @@ work on all platform where the Qt runs.
 - Webpage:            http://hyperprog.com/gsafe
 - Documentation:      http://hyperprog.com/gsafe/doc/html/index.html
 - Sample program:     http://hyperprog.com/prepo/index.html
-- Written by Peter Deak (C) hyper80@gmail.com , License is Lesser GPLv2.1
+- Written by Peter Deak (C) hyper80@gmail.com , License is Apache 2.0
 
 
 Git branches

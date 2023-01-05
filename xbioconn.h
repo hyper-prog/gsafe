@@ -1,13 +1,13 @@
-﻿/*
-    gSAFE - LIB
-    general Sql dAtabase FrontEnd
+﻿/* gSAFE - LIB
+   general Sql dAtabase FrontEnd
+   http://hyperprog.com/gsafe/
 
-   (C) 2011-2022 Peter Deak  (hyper80@gmail.com)
+   (C) 2005-2023 Péter Deák (hyper80@gmail.com)
 
-    License: LGPLv2.1
+   License: Apache 2.0
 
         XBase Connection to gDAFE datelib (based on XBase Import/Export lib)
-    xbioconn.h
+   xbioconn.h
 */
 
 /*

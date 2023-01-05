@@ -1,12 +1,12 @@
-﻿/*  gSAFE - LIB
-    general Sql dAtabase FrontEnd
-    http://hyperprog.com/gsafe/
+﻿/* gSAFE - LIB
+   general Sql dAtabase FrontEnd
+   http://hyperprog.com/gsafe/
 
-   (C) 2005-2021 Péter Deák (hyper80@gmail.com)
+   (C) 2005-2023 Péter Deák (hyper80@gmail.com)
 
-    License: LGPLv2.1
+   License: Apache 2.0
 
-    dialog.h
+   dialog.h
 */
 
 #ifndef GSAFE__DIALOG_HEADER_FILE_X_
