@@ -874,6 +874,29 @@ void HDynTable::add(HDynTableElement e)
     elements.push_back(e);
 }
 
+void HDynTable::deleteElement(QString name)
+{
+    for(QList<HDynTableElement>::iterator i = elements.begin(); i != elements.end() ; ++i )
+        if(i->name == name)
+        {
+            elements.erase(i);
+            firstElement();
+            return;
+        }
+}
+
+void HDynTable::deleteAllElementWithLabel(QString label)
+{
+    for(QList<HDynTableElement>::iterator i = elements.begin(); i != elements.end() ; )
+    {
+        if(i->hasLabel(label))
+            i = elements.erase(i);
+        else
+            ++i;
+    }
+    firstElement();
+}
+
 QString HDynTable::dumpElements(bool newline)
 {
     QString s="";

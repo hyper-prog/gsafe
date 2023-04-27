@@ -387,6 +387,11 @@ public:
     /** Clears all element from the HDynTable */
     void clear() { elements.clear(); }
 
+    /** Deletes the specified element */
+    void deleteElement(QString name);
+    /** Deletes all elements which has the the specified label */
+    void deleteAllElementWithLabel(QString label);
+
     /** Dump out all elements name and value in one concatenated string */
     QString dumpElements(bool newline = false);
 
