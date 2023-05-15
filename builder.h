@@ -50,6 +50,8 @@ class HSqlBuilderCondition;
 class HSqlBuilderJoin;
 class HSqlBuilderSort;
 
+QString strToJsonStr(QString str);
+
 /** This class represents an Sql query/set field in HSqlBuilder */
 class HSqlBuilderField
 {

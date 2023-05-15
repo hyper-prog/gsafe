@@ -277,7 +277,7 @@ QString HSqlBuilderField::json_string(void)
             jstr += QString("\"valtype\": \"unquoted\",");
 
         jstr += QString("\"name\": \"%1\",").arg(name);
-        jstr += QString("\"value\": \"%1\",").arg(value_expression.toString());
+        jstr += QString("\"value\": \"%1\",").arg(strToJsonStr(value_expression.toString()));
         jstr += QString("\"options\": \"%1\"").arg(options);
         jstr += "}";
     }
@@ -685,7 +685,7 @@ QString HSqlBuilderCondition::json_string(void)
     else
         cstr += QString("\"op\": \"%1\",").arg(op);
 
-    cstr += QString("\"value\": \"%1\",").arg(value_expression);
+    cstr += QString("\"value\": \"%1\",").arg(strToJsonStr(value_expression));
     cstr += QString("\"field1\": \"%1\",").arg(field1);
     cstr += QString("\"table1\": \"%1\",").arg(table1);
     cstr += QString("\"field2\": \"%1\",").arg(field2);
@@ -1647,6 +1647,13 @@ QString HSqlBuilder::json_string_SortingPart(void)
         ++si;
     }
     return sstr;
+}
+
+QString strToJsonStr(QString s)
+{
+    return s.replace("\\","\\\\")
+            .replace("\n","\\n")
+            .replace("\"","\\\"");
 }
 
 //end code.
