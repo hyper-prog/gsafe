@@ -756,7 +756,7 @@ bool HDynTableElement::isTextual(void)
 void HDynTableElement::setDoubleValue(double d)
 {
     if(type == HDynCellType_String)
-        textual_value = QString("%1").arg(d);
+        textual_value = QString("%1").arg(d,0,'f',QLocale::FloatingPointShortest);
 
     if(type == HDynCellType_Double)
         double_value = d;
@@ -800,7 +800,7 @@ QString HDynTableElement::getTextualValue(void)
         return textual_value;
 
     if(type == HDynCellType_Double)
-        return QString("%1").arg(double_value);
+        return QString("%1").arg(double_value,0,'f',QLocale::FloatingPointShortest);
 
     return "";
 }
