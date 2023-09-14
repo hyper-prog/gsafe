@@ -210,7 +210,51 @@ HExcelXmlDocument* HExcelXmlDocument::cell(QString c,QString options)
                         c = "0";
                 }
                 if(opts["t"] == "dat")
+                {
+                    QDate c_as_date;
+                    c_as_date = QDate::fromString(c);
+                    if(c_as_date.isValid())
+                        c = c_as_date.toString(Qt::ISODate);
+
+                    if(!c_as_date.isValid())
+                    {
+                        c_as_date = QDate::fromString(c,"yyyy-MM-dd");
+                        if(c_as_date.isValid())
+                            c = c_as_date.toString(Qt::ISODate);
+                    }
+
+                    if(!c_as_date.isValid())
+                    {
+                        c_as_date = QDate::fromString(c,"yyyy.MM.dd");
+                        if(c_as_date.isValid())
+                            c = c_as_date.toString(Qt::ISODate);
+                    }
+
+                    if(!c_as_date.isValid())
+                    {
+                        c_as_date = QDate::fromString(c,"yy-MM-dd");
+                        if(c_as_date.isValid())
+                            c = c_as_date.toString(Qt::ISODate);
+                    }
+
+                    if(!c_as_date.isValid())
+                    {
+                        c_as_date = QDate::fromString(c,"yy.MM.dd");
+                        if(c_as_date.isValid())
+                            c = c_as_date.toString(Qt::ISODate);
+                    }
+
+                    if(!c_as_date.isValid())
+                    {
+                        c_as_date = QDate::fromString(c,Qt::ISODate);
+                        if(c_as_date.isValid())
+                            c = c_as_date.toString(Qt::ISODate);
+                    }
+
+                    if(!c_as_date.isValid())
+                        c = "";
                     type = "DateTime";
+                }
             }
             QString value = c;
             if(opts.contains("prefix") && !opts["prefix"].isEmpty())
@@ -405,6 +449,11 @@ QString HExcelXmlDocument::styleId(const QMap<QString,QString>& opts)
     {
         sStr.append(QString("    <NumberFormat ss:Format=\"%1\"/>\n")
                             .arg(opts["numberformat"]));
+    }
+
+    if(opts.contains("t") && opts["t"] == "dat" && !opts.contains("numberformat"))
+    {
+        sStr.append(QString("    <NumberFormat ss:Format=\"Short Date\"/>\n"));
     }
 
     // - End of building style -
