@@ -2,7 +2,7 @@
    general Sql dAtabase FrontEnd
    http://hyperprog.com/gsafe/
 
-   (C) 2005-2023 Péter Deák (hyper80@gmail.com)
+   (C) 2005-2024 Péter Deák (hyper80@gmail.com)
 
    License: Apache 2.0
 */
