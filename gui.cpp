@@ -745,6 +745,12 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
             rname = dLink->attribute("gui_incrementbuttonicon");
         QToolButton *tbUp = new QToolButton(this);
         tbUp->setIcon(QIcon(rname));
+
+        int ih = QFontMetrics(QApplication::font()).height();
+        if(!dLink->attribute("gui_incrementbutton_sizescale").isEmpty() && dLink->attribute("gui_incrementbutton_sizescale").toDouble() > 0.2)
+            ih *= dLink->attribute("gui_incrementbutton_sizescale").toDouble();
+        tbUp->setIconSize(QSize(ih,ih));
+
         connect(tbUp,SIGNAL(clicked()),this,SLOT(valueIncrement()));
         layout->addWidget(tbUp);
     }
@@ -759,6 +765,12 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
             rname = dLink->attribute("gui_decrementbuttonicon");
         QToolButton *tbDown = new QToolButton(this);
         tbDown->setIcon(QIcon(rname));
+
+        int ih = QFontMetrics(QApplication::font()).height();
+        if(!dLink->attribute("gui_decrementbutton_sizescale").isEmpty() && dLink->attribute("gui_decrementbutton_sizescale").toDouble() > 0.2)
+            ih *= dLink->attribute("gui_decrementbutton_sizescale").toDouble();
+        tbDown->setIconSize(QSize(ih,ih));
+
         connect(tbDown,SIGNAL(clicked()),this,SLOT(valueDecrement()));
         layout->addWidget(tbDown);
     }
