@@ -21,7 +21,7 @@
 #include "dm.h"
 #include "dmext.h"
 
-#define REQUEST_TIMEOUT 20
+#define REQUEST_TIMEOUT 45
 
 QString HSql::overwrittenDefaultDbName = "";
 int     HSql::trans = 0;
