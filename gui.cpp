@@ -708,6 +708,7 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
                 valueEditor2->setMaximumWidth(dLink->attribute("gui_maxwidth").toInt());
             if(!dLink->attribute("gui_minwidth").isEmpty())
                 valueEditor2->setMinimumWidth(dLink->attribute("gui_minwidth").toInt());
+            valueSetOnGui_internal();
             connect(valueEditor2,SIGNAL(textChanged(QString)),this,SLOT(valueUpdatedOnGui(QString)));
             layout->addWidget(valueEditor2,stretch);
         }
