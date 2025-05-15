@@ -448,6 +448,10 @@ public:
     void tagSetAttribute(QString t,QString name,int ivalue);
     void tagSetAttribute(QString t,QString name,double dvalue);
     void tagSetColor(QString t,int r,int g,int b);
+    void tagSetVisibleEditable(QString t);
+    void tagSetHidden(QString t);
+    void tagSetVisibleReadonly(QString t);
+    void tagSetShowOnlyReadonly(QString t);
 
     virtual void putsOnGetter(HSqlBuilder *b);
 

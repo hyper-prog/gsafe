@@ -284,6 +284,38 @@ void HRecordSkel::tagSetColor(QString t,int r,int g,int b)
             fields[i]->setColor(r,g,b);
 }
 
+void HRecordSkel::tagSetVisibleEditable(QString t)
+{
+    int i,fc = fieldCount();
+    for(i = 0 ; i < fc ; ++i )
+        if(fields[i]->hasTag(t))
+            fields[i]->setVisibleEditable();
+}
+
+void HRecordSkel::tagSetHidden(QString t)
+{
+    int i,fc = fieldCount();
+    for(i = 0 ; i < fc ; ++i )
+        if(fields[i]->hasTag(t))
+            fields[i]->setHidden();
+}
+
+void HRecordSkel::tagSetVisibleReadonly(QString t)
+{
+    int i,fc = fieldCount();
+    for(i = 0 ; i < fc ; ++i )
+        if(fields[i]->hasTag(t))
+            fields[i]->setVisibleReadonly();
+}
+
+void HRecordSkel::tagSetShowOnlyReadonly(QString t)
+{
+    int i,fc = fieldCount();
+    for(i = 0 ; i < fc ; ++i )
+        if(fields[i]->hasTag(t))
+            fields[i]->setShowOnlyReadonly();
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////// //
 // HField
 // //////////////////////////////////////////////////////////////////////////////////////// //
