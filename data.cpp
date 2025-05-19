@@ -383,7 +383,14 @@ int my_dtoa(double v,char *buffer,int bufflen,int min,int max,int group)
     //split the number to integer and fractional part.
     fp = fabs(modf(v,&ip));
     ip = fabs(ip);
-    if(fp != 0.0)
+
+    //if we don't display fractional part do rounding
+    if(max == 0 && fp >= 0.5)
+    {
+        ip += 1.0;
+    }
+
+    if(fp != 0.0 && max > 0)
     {
         fp *= pow(10.0,max);
         fp = floor(fp + 0.5);
@@ -442,7 +449,7 @@ int my_dtoa(double v,char *buffer,int bufflen,int min,int max,int group)
 
     //Generate fractional part (from i_fp)
     digitnum=0;
-    if( i_fp > 0 )
+    if( i_fp > 0 && max > 0)
     {
         *(str++) = '.';
         ++length;
