@@ -608,6 +608,10 @@ QStringList displayFlagsToStringList(HDispObjectFlags f);
 HDispObjectFlags stringListToDisplayFlags(QStringList l);
 
 
+#include "tmpl_hkvs.tpp"
+#include "tmpl_hfwvs.tpp"
+
+
 /* @} */
 #endif
 

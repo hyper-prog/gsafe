@@ -35,7 +35,8 @@ SOURCES += \
     $${GSAFE_PATH}po.cpp \
     $${GSAFE_PATH}dconsole.cpp \
     $${GSAFE_PATH}xbio.cpp \
-    $${GSAFE_PATH}xbioconn.cpp
+    $${GSAFE_PATH}xbioconn.cpp \
+    $${GSAFE_PATH}template_inits.cpp
 
 HEADERS  += \
     $${GSAFE_PATH}/gSafe \
@@ -54,7 +55,9 @@ HEADERS  += \
     $${GSAFE_PATH}po.h \
     $${GSAFE_PATH}dconsole.h \
     $${GSAFE_PATH}xbio.h \
-    $${GSAFE_PATH}xbioconn.h
+    $${GSAFE_PATH}xbioconn.h \
+    $${GSAFE_PATH}tmpl_hfwvs.tpp \
+    $${GSAFE_PATH}tmpl_hkvs.tpp
 
 RESOURCES += $${GSAFE_PATH}gsafe.qrc
 
