@@ -307,7 +307,7 @@ protected:
 
     static QString str2str(QString s,QString mins,QString maxs);
     static double str2val(QString s);
-    static QString val2str(double d,QString mins,QString maxs);
+    static QString val2str(double d,QString mins,QString maxs,QString prec = "");
 
 public:
     double value();

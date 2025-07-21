@@ -659,7 +659,7 @@ double HFloatingField::str2val(QString s)
     return d;
 }
 
-QString HFloatingField::val2str(double d,QString mins,QString maxs)
+QString HFloatingField::val2str(double d,QString mins,QString maxs,QString prec)
 {
     bool ok;
     double m;
@@ -675,7 +675,17 @@ QString HFloatingField::val2str(double d,QString mins,QString maxs)
         if(ok && m < d)
             d = m;
     }
-    return QString::asprintf("%f",d);
+
+    QString format = "%f";
+    if(!prec.isEmpty())
+    {
+        bool ok = false;
+        int precision = prec.toInt(&ok);
+        if (ok && precision >= 0)
+            format = QString("%.%1f").arg(precision);
+    }
+
+    return QString::asprintf(format.toUtf8().constData(), d);
 }
 
 double HFloatingField::value()
@@ -685,13 +695,13 @@ double HFloatingField::value()
 
 HFloatingField* HFloatingField::setValue(double dv)
 {
-    setStrValue(val2str(dv,attribute("minimum"),attribute("maximum")));
+    setStrValue(val2str(dv,attribute("minimum"),attribute("maximum"),attribute("strconv_precision")));
     return this;
 }
 
 void HFloatingField::setValue_Gui(double dv)
 {
-    setStrValue_Gui(val2str(dv,attribute("minimum"),attribute("maximum")));
+    setStrValue_Gui(val2str(dv,attribute("minimum"),attribute("maximum"),attribute("strconv_precision")));
 }
 
 QString HFloatingField::convertToDisplay(QString fv)
