@@ -2,7 +2,7 @@
    general Sql dAtabase FrontEnd
    http://hyperprog.com/gsafe/
 
-   (C) 2005-2025 Péter Deák (hyper80@gmail.com)
+    (C) 2005-2026 Péter Deák (hyper80@gmail.com)
 
    License: Apache 2.0
 
@@ -215,9 +215,12 @@ public:
      *          the value is updated the this calculated value
      *
      *   area - Restrict the drawing to a specified area
-     *          area#<sX>
-     *          area#<pX>,<pY>,<sX>
-     *          <pX>,<pY> and <sX> is POSITION STRING's
+     *          area#<sX>,<sY>
+     *          area#<pX>,<pY>,<sX>,<sY>
+     *          <sX>,<sY> is the size of the restricted drawing area
+     *                    (If only the size is specified the start pont will be the cursor position)
+     *          <pX>,<pY> is the absolute start point (left upper corner) of the
+     *                    restricted drawing area
      *
      *   reta - Return from the restricted drawing area which entered by "area" command
      *          reta

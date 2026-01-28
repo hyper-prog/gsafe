@@ -2,7 +2,7 @@
    general Sql dAtabase FrontEnd
    http://hyperprog.com/gsafe/
 
-   (C) 2005-2025 Péter Deák (hyper80@gmail.com)
+    (C) 2005-2026 Péter Deák (hyper80@gmail.com)
 
    License: Apache 2.0
 
@@ -35,7 +35,7 @@
 /*  @{  */
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "2.0.81"
+#define GSAFE_VERSION   "2.0.82"
 
 /** Converts a double value to char * string
  *  @param v the double value to convert
