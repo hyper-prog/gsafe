@@ -496,7 +496,9 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
         valueTableEditor->setVerticalHeaderLabels(rows);
         valueTableEditor->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
         valueTableEditor->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-        valueTableEditor->setStyleSheet("QTableWidget::item { padding: 1px; }");
+        valueTableEditor->setStyleSheet("QTableWidget::item { padding: 1px; } "
+                                        "QTableWidget::item:focus { border: 1px solid #5555ff; background-color: #ccccff; } "
+                                        "QLineEdit:focus { border: 1px solid #5555ff; background-color: #ccccff;}");
 
         int ri,ci;
         int rc = valueTableEditor->rowCount(), cc = valueTableEditor->columnCount();
