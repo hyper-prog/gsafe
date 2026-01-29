@@ -173,9 +173,9 @@ void HPageTileRenderer::resetToDefaultFont()
     font = defaultFont;
 }
 
-int HPageTileRenderer::millimeterToPixel(int mm)
+int HPageTileRenderer::millimeterToPixel(double mm)
 {
-     return (int)(((double)(mm  * resolutionDpi) / 25.4) * sizeCorrectionValue);
+     return (int)(((mm  * (double)resolutionDpi) / 25.4) * sizeCorrectionValue);
 }
 
 int HPageTileRenderer::areaWidth()
@@ -246,12 +246,12 @@ int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
     if(str.endsWith("cm"))
     {
         double mul = str.mid(0,str.length()-2).toDouble();
-        iv = millimeterToPixel(mul * 10);
+        iv = millimeterToPixel(mul * 10.0);
     }
 
     if(str.endsWith("mm"))
     {
-        int mul = str.mid(0,str.length()-2).toInt();
+        double mul = str.mid(0,str.length()-2).toDouble();
         iv = millimeterToPixel(mul);
     }
 

@@ -322,7 +322,7 @@ protected:
     void drawBorders(int w,int h);
     void storePos(int w,int h);
     QString strSubstTokens(QString in);
-    int millimeterToPixel(int mm);
+    int millimeterToPixel(double mm);
 
     int areaWidth();
     int areaHeight();
