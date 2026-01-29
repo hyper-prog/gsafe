@@ -274,6 +274,11 @@ public:
      *          <sX> is POSITION STRING specify the height
      *          Sample: marg#25mm,25mm,25mm,25mm
      *
+     *   sizc - Size correction value, change ratio between the experinced and calculated phisical size
+     *          (only affects "mm" and "cm" size classes)
+     *          sizc#1.075
+     *          Default is 1.000
+     *
      *   EVERYPAGE_START - Start a section which is re-played on every new page
      *          EVERYPAGE_START
      *
@@ -362,6 +367,7 @@ protected:
     QList<QStringList> pageboot_buffer;
     bool inPageBoot;
     bool unknownCommandWarning;
+    double sizeCorrectionValue;
 
 public:
     int resolutionDpi;

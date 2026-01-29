@@ -74,6 +74,7 @@ HPageTileRenderer::HPageTileRenderer(QPainter *configuredPainter)
     marginRight  = 20;
     marginBottom = 20;
     marginLeft   = 20;
+    sizeCorrectionValue = 1.0;
 
     p->setPen(QPen(QColor(0,0,0),5));
     p->setPen(Qt::SolidLine);
@@ -174,7 +175,7 @@ void HPageTileRenderer::resetToDefaultFont()
 
 int HPageTileRenderer::millimeterToPixel(int mm)
 {
-     return (int)((double)(mm  * resolutionDpi) / 25.4);
+     return (int)(((double)(mm  * resolutionDpi) / 25.4) * sizeCorrectionValue);
 }
 
 int HPageTileRenderer::areaWidth()
@@ -1077,6 +1078,18 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
     {
         if(fpp.count() == 4)
             setMargins(fpp[0],fpp[1],fpp[2],fpp[3]);
+        return;
+    }
+    if(cmd == "sizc")
+    {
+        if(fpp.count() == 1)
+        {
+            bool ok;
+            double sizc;
+            sizc = fpp[0].toDouble(&ok);
+            if(ok)
+                sizeCorrectionValue = sizc;
+        }
         return;
     }
 
