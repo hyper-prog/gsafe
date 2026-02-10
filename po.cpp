@@ -1213,6 +1213,11 @@ void HTextProcessor::clearValueMaps()
     slist.clear();
 }
 
+QMap<QString,QString> HTextProcessor::annotations()
+{
+    return annot;
+}
+
 QString HTextProcessor::processDoc(QString in)
 {
     QString out = "";
@@ -1220,13 +1225,23 @@ QString HTextProcessor::processDoc(QString in)
     QList<QString>::Iterator li;
     QList<bool> conds;
     conds.clear();
+    annot.clear();
     for(li = lines.begin() ; li != lines.end() ; ++li)
     {
         QList<QString> parts = li->split("#",Qt::KeepEmptyParts);
         QString cmd = parts.at(0).trimmed();
 
         if(cmd.startsWith("//"))
+        {
+            QString commentsubline = cmd.mid(2).trimmed();
+            if(commentsubline.startsWith("@"))
+            {
+                QStringList parts = commentsubline.mid(1).split(":");
+                if(parts.count() == 2)
+                    annot[parts[0].trimmed()] = parts[1].trimmed();
+            }
             continue;
+        }
 
         if(cmd == "ENDF")
         {
@@ -1384,6 +1399,7 @@ QString HTextProcessor::processLine(QString in)
                 {
                     cp = t[0].split("=",Qt::KeepEmptyParts);
                     rp = t[1].split(":",Qt::KeepEmptyParts);
+
                     if(cp.count() == 2 && rp.count() == 2)
                     {
                         if(processToken(cp[0]) == processToken(cp[1]))

@@ -375,14 +375,70 @@ public:
     int physicalHeightMillimeter;
 };
 
-/** Text preprocessor for HPageTileRenderer's renderFromInstructions method */
+/** Text preprocessor for HPageTileRenderer's renderFromInstructions method
+ *  The following tokens are supported in the text:
+ *
+ *    // The lines started with // are comments and ignored and does not passed
+ *          to the renderer.
+ *
+ *    You can place named annotations in comments.
+ *    These annotations starts with @ and followed by the annotation name
+ *    and colon and the annotation content.
+ *    // @TITLE:This is the TITLE annotation
+ *
+ *    {{TOKEN}} : Replaced by the value of the token.
+ *
+ *      TOKEN can be the following:
+ *          .container.name
+ *              The token value is searched in the value maps and lists which
+ *              are added by addValueMap, addValueList and addValueMapPtr methods.
+ *              Sample: {{.values.text}}
+ *
+ *          ..point  the value is .
+ *          ..colon  the value is :
+ *          ..semicolon  the value is ;
+ *          ..question  the value is ?
+ *          ..openbrackets  the value is {
+ *          ..closebrackets  the value is }
+ *
+ *          .container1.name1|.container2.name2
+ *              Rerurns the first token value which is not empty.
+ *              Sample: {{.values.text|.defaults.text}}
+ *              Sample2: {{.values.one|.values.two|Nothing found}}
+ *
+ *          string1=string2?value1:value2
+ *             If string1 and string2 are equals then value1 is returned otherwise value2 is returned.
+ *             If the string1 or string2 are starts with . they are interpreted as tokens
+ *             so the value is replaced according to the maps or lists.
+ *             The value1 and value2 can be string or token but instead the {{ and }} you shoud use
+ *             the [[ and ]] to avoid the too early processing.
+ *             Sample: {{.values.check=ok?[[.values.text]]:Not ok}}
+ *
+ *    COND#<value1>#<operator>#<value2>
+ *        Conditional instructions
+ *    ENDC
+ *        The conditional instruction is used to conditionally render some part of the text.
+ *        The <value1> and <value2> can be either a token or a simple string.
+ *        The operator can be one of the following: =  !=  <  >  <=  >=
+ *
+ *    FUNC#<functionName>
+ *        Function definition and calling instructions
+ *    ENDF
+ *        The function definition and calling instructions are used
+ *        to define a function which can be called later in the text.
+ *
+ *    CAll#<functionName>
+ *        The function call instruction is used to call a previously defined function.
+*/
 class HTextProcessor
 {
 public:
     HTextProcessor();
     ~HTextProcessor();
 
+    /** Process a whole document */
     QString processDoc(QString in);
+
     QString processLine(QString in);
     QString processToken(QString in);
 
@@ -391,6 +447,8 @@ public:
     void addValueMapPtr(QString name,QMap<QString,QString>* m);
     void clearValueMaps();
 
+    QMap<QString,QString> annotations();
+
 protected:
     QMap<QString, QMap<QString,QString> > smaps;
     QMap<QString, QMap<QString,QString> * > dmaps;
@@ -398,6 +456,8 @@ protected:
     QString definingFunctionName;
     QString definingFunctionBody;
     QMap<QString,QString> functions;
+
+    QMap<QString,QString> annot;
 };
 
 /** Frame to be render the pdf content. Used by HPdfPreviewDialog. */
