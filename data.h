@@ -35,7 +35,7 @@
 /*  @{  */
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "2.0.87"
+#define GSAFE_VERSION   "2.0.88"
 
 /** Converts a double value to char * string
  *  @param v the double value to convert
@@ -79,6 +79,7 @@ class GSafeException : public std::exception
 {
 public:
     GSafeException(const char* err);
+    GSafeException(QString err);
     virtual const char *what() const noexcept;
 private:
     char *errMsg;

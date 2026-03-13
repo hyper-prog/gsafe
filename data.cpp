@@ -36,6 +36,12 @@ GSafeException::GSafeException(const char* err)
     errMsg = strdup(err);
 }
 
+GSafeException::GSafeException(QString err)
+    : std::exception()
+{
+    errMsg = strdup(err.toLocal8Bit().constData());
+}
+
 const char *GSafeException::what() const noexcept
 {
     return errMsg;
