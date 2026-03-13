@@ -78,6 +78,7 @@ public:
     void newLine();
     void newPage();
     void newPageIfRequired(QString requiredHeight);
+    void newPageUntilCount(QString pageCount);
 
     void enterArea(QString width,QString height);
     void enterArea(QString xpos,QString ypos,QString width,QString height);
@@ -259,6 +260,9 @@ public:
      *   npif - New page if the required height is not enough
      *          npif#<rH>
      *          <rH> is POSITION STRING specify the height
+     *
+     *   npuc - Start new pages until the whole document page count is reached the parameter value
+     *          npuc#<pC>
      *
      *   setd - Set current and the default font family and size
      *          setd#<FontName>,<PointSize>

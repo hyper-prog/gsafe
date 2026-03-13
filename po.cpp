@@ -653,6 +653,13 @@ void HPageTileRenderer::newPageIfRequired(QString requiredHeight)
         newPage();
 }
 
+void HPageTileRenderer::newPageUntilCount(QString pageCount)
+{
+    int pc = pageCount.toInt();
+    while(currentPage < (pc - 1))
+        newPage();
+}
+
 int HPageTileRenderer::currentPageIndex()
 {
     return currentPage;
@@ -1006,6 +1013,11 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
     if(cmd == "npif")
     {
         newPageIfRequired(parts.at(1));
+        return;
+    }
+    if(cmd == "npuc")
+    {
+        newPageUntilCount(parts.at(1));
         return;
     }
 
