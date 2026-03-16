@@ -73,6 +73,7 @@ public:
     void addText(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
     void addImage(QString width,QImage image);
     void drawRect(QString xpos,QString ypos,QString width,QString height);
+    void drawGrid(QString xpos,QString ypos,QString width,QString height);
     void drawText(QString xpos,QString ypos,QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
     void drawImage(QString xpos,QString ypos,QString width,QImage image);
     void newLine();
@@ -282,6 +283,9 @@ public:
      *          (only affects "mm" and "cm" size classes)
      *          sizc#1.075
      *          Default is 1.000
+     *
+     *   grid - Draw a grid into the specified cell
+     *         grid#<sX>,<sY>,<w>,<h>
      *
      *   EVERYPAGE_START - Start a section which is re-played on every new page
      *          EVERYPAGE_START

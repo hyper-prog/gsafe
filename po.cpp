@@ -571,7 +571,66 @@ void HPageTileRenderer::drawRect(QString xpos,QString ypos,QString width,QString
     }
 }
 
-int  HPageTileRenderer::calcTextHeight(QString width,QString text,HPageTileRenderer_TextType type)
+void HPageTileRenderer::drawGrid(QString xpos,QString ypos,QString width,QString height)
+{
+    int x = sizeStrToInt(xpos,"x");
+    int y = sizeStrToInt(ypos,"y");
+    int w_px = sizeStrToInt(width,"x");
+    int h_px = sizeStrToInt(height,"y");
+
+    QPen pen1(Qt::black);
+    pen1.setWidth(1);
+    pen1.setStyle(Qt::SolidLine);
+
+    QPen pen2(Qt::black);
+    pen2.setWidth(1);
+    pen2.setStyle(Qt::CustomDashLine);
+    pen2.setDashPattern({1, 10});
+
+    int xi;
+    for(xi = 0; xi < w_px; xi += 50)
+    {
+        if(xi % 100 == 0)
+        {
+            p->setPen(pen1);
+            if(xi > 0)
+                p->drawText(QRect(marginLeft + x + xi,marginTop + y,40,40),
+                            QString("%1").arg((int)(xi/100)), QTextOption(Qt::AlignLeft | Qt::AlignTop));
+            if(h_px > 1000 && xi > 0)
+                p->drawText(QRect(marginLeft + x + xi,marginTop + y + 1000,40,40),
+                            QString("%1").arg((int)(xi/100)), QTextOption(Qt::AlignLeft | Qt::AlignTop));
+        }
+        else
+        {
+            p->setPen(pen2);
+        }
+        p->drawLine(marginLeft + x + xi,marginTop + y,
+                    marginLeft + x + xi,marginTop + y + h_px);
+    }
+    int yi;
+    for(yi = 0; yi < h_px; yi += 50)
+    {
+        if((yi % 100) == 0)
+        {
+            p->setPen(pen1);
+            if(yi > 0)
+                p->drawText(QRect(marginLeft + x,marginTop + y + yi + 5,40,40),
+                            QString("%1").arg((int)(yi/100)), QTextOption(Qt::AlignLeft | Qt::AlignTop));
+            if(w_px > 1000 && yi > 0)
+                p->drawText(QRect(marginLeft + x + 1000,marginTop + y + yi + 5,40,40),
+                            QString("%1").arg((int)(yi/100)), QTextOption(Qt::AlignLeft | Qt::AlignTop));
+        }
+        else
+        {
+            p->setPen(pen2);
+        }
+        p->drawLine(marginLeft + x,marginTop + y + yi,
+                    marginLeft + x + w_px,marginTop + y + yi);
+    }
+    p->setPen(Qt::SolidLine);
+}
+
+int HPageTileRenderer::calcTextHeight(QString width,QString text,HPageTileRenderer_TextType type)
 {
     int w_px = sizeStrToInt(width,"x");
 
@@ -1058,6 +1117,12 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
             addRect(fpp[0],fpp[1]);
         if(fpp.count() == 4)
             drawRect(fpp[0],fpp[1],fpp[2],fpp[3]);
+        return;
+    }
+    if(cmd == "grid")
+    {
+        if(fpp.count() == 4)
+            drawGrid(fpp[0],fpp[1],fpp[2],fpp[3]);
         return;
     }
     if(cmd == "fram")
