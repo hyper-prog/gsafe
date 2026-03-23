@@ -39,7 +39,7 @@ GSafeException::GSafeException(const char* err)
 GSafeException::GSafeException(QString err)
     : std::exception()
 {
-    errMsg = strdup(err.toLocal8Bit().constData());
+    errMsg = strdup(err.toUtf8().constData());
 }
 
 const char *GSafeException::what() const noexcept
