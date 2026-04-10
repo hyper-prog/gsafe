@@ -1,0 +1,88 @@
+/* gSAFE - LIB
+   general Sql dAtabase FrontEnd
+   http://hyperprog.com/gsafe/
+
+    (C) 2005-2026 Péter Deák (hyper80@gmail.com)
+
+   License: Apache 2.0
+
+   docas.h
+*/
+
+#ifndef GSAFE__DOCASSEMBLER_H
+#define GSAFE__DOCASSEMBLER_H
+
+#include <QtCore>
+#include <QtGui>
+#include <QtWidgets>
+
+#include "dm.h"
+#include "gui.h"
+#include "guiext.h"
+#include "po.h"
+
+/*  @{  */
+
+/** Helper class to generate gSafe HPageTileRenderer documents
+ *  Manage some annotations, underlay pdf merging, data requesting, etc */
+class DocAssembler : public QObject
+{
+    Q_OBJECT
+
+public:
+    DocAssembler(QString documentSource);
+    ~DocAssembler();
+
+    int  askRequestedData(QWidget *widgetParent);
+    void generatePdfDocument(QString outputFile);
+
+    void addValueMap(QString name,const QMap<QString,QString>& m);
+    void addValueList(QString name,const QList<QString>& l);
+    void addValueMapPtr(QString name,QMap<QString,QString>* m);
+    void clearValueMaps();
+
+    void setWorkingDirectory(QString dir);
+    void setSourceDocDirectory(QString dir);
+
+protected:
+    bool isMapKeyExists(QString fullname);
+    QString valueOfMapKey(QString fullname);
+    bool setValueOfMapKey(QString fullname,QString value);
+
+    QString rawDocumentSource;
+    HTextProcessor *textProcessor;
+    int minumimGenPageCount;
+
+    QString workingDirectory;
+    QString sourceDocDirectory;
+    
+    QString preprocessedDoc;
+    QMap<QString,QString> filenames;
+    QMap<QString,QString> read_annotations;
+    
+    int preprocessDocument();
+    int generateFilenames();
+    int generateBasePdf();
+    int finishingPdf();
+
+    int getPageCountOfPdf(QString filename);
+    int deleteWorkfileIfExists(QString filename);
+
+public:
+    bool enable_render_warnings;
+
+    QMap<QString,HPageTileRendererPosition> lastRenderStoredPositions;
+};
+
+QMap<QString,QString> getFilenameTitlePairsFromFolder(QString folder,QMap<QString,QString> restrict_annot_values = QMap<QString,QString>());
+QMap<QString,QString> getAnnotationValuesFromText(QString documentSource);
+QList<QString>        getAnnotationLinesFromText(QString documentSource);
+QMap<QString,QString> getAnnotationValuesFromFile(QString filename);
+
+QMap<QString, QString> merge_maps(const QMap<QString, QString> &base, const QMap<QString, QString> &overrides);
+QMap< QString, QMap<QString,QString> > split_stringmaps(QMap<QString,QString> input);
+
+/* @} */
+#endif // GSAFE__DOCASSEMBLER_H
+
+//End of gSAFE docas.h

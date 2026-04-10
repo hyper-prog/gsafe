@@ -16,6 +16,7 @@
 #include <quicktable.h>
 #include <xo.h>
 #include <po.h>
+#include <docas.h>
 
 #ifdef ENABLE_XBASE_SUPPORT
 #include <xbio.h>

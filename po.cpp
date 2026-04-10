@@ -1283,11 +1283,60 @@ void HTextProcessor::addValueList(QString name,const QList<QString>& l)
     slist[name] = l;
 }
 
+const QMap<QString,QString>& HTextProcessor::valueMap(QString name)
+{
+    return smaps[name];
+}
+
+const QList<QString>& HTextProcessor::valueList(QString name)
+{
+    return slist[name];
+}
+
+QMap<QString,QString>* HTextProcessor::valueMapPtr(QString name)
+{
+    return dmaps[name];
+}
+
 void HTextProcessor::clearValueMaps()
 {
     smaps.clear();
     dmaps.clear();
     slist.clear();
+}
+
+bool HTextProcessor::isMapKeyExists(QString name,QString key)
+{
+    if(smaps.contains(name))
+        return smaps[name].contains(key);
+    if(dmaps.contains(name))
+        return dmaps[name]->contains(key);
+    return false;
+}
+
+QString HTextProcessor::valueOfMapKey(QString name,QString key)
+{
+    if(smaps.contains(name))
+        return smaps[name][key];
+    if(dmaps.contains(name))
+        return (*dmaps[name])[key];
+    return QString("");
+}
+
+bool HTextProcessor::setValueOfMapKey(QString name,QString key,QString value)
+{
+    if(smaps.contains(name))
+    {
+        smaps[name][key] = value;
+        return true;
+    }
+    if(dmaps.contains(name))
+    {
+        (*dmaps[name])[key] = value;
+        return true;
+    }
+    smaps[name][key] = value;
+    return true;
 }
 
 QMap<QString,QString> HTextProcessor::annotations()

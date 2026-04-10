@@ -24,6 +24,7 @@ SOURCES += \
     dialog.cpp \
     xo.cpp \
     po.cpp \
+    docas.cpp \
     dconsole.cpp \
     xbio.cpp \
     xbioconn.cpp
@@ -42,6 +43,7 @@ HEADERS  += \
     dialog.h \
     xo.h \
     po.h \
+    docas.h \
     dconsole.h \
     xbio.h \
     xbioconn.h
