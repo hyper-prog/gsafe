@@ -454,6 +454,13 @@ public:
     void addValueList(QString name,const QList<QString>& l);
     void addValueMapPtr(QString name,QMap<QString,QString>* m);
     void clearValueMaps();
+    const QMap<QString,QString>& valueMap(QString name);
+    const QList<QString>& valueList(QString name);
+    QMap<QString,QString>* valueMapPtr(QString name);
+
+    bool isMapKeyExists(QString name,QString key);
+    QString valueOfMapKey(QString name,QString key);
+    bool setValueOfMapKey(QString name,QString key,QString value);
 
     QMap<QString,QString> annotations();
 
