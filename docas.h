@@ -16,9 +16,6 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include "dm.h"
-#include "gui.h"
-#include "guiext.h"
 #include "po.h"
 
 /*  @{  */
@@ -58,7 +55,7 @@ protected:
     
     QString preprocessedDoc;
     QMap<QString,QString> filenames;
-    QMap<QString,QString> read_annotations;
+    QMap<QString,QStringList> read_annotations;
     
     int preprocessDocument();
     int generateFilenames();
@@ -74,10 +71,10 @@ public:
     QMap<QString,HPageTileRendererPosition> lastRenderStoredPositions;
 };
 
-QMap<QString,QString> getFilenameTitlePairsFromFolder(QString folder,QMap<QString,QString> restrict_annot_values = QMap<QString,QString>());
-QMap<QString,QString> getAnnotationValuesFromText(QString documentSource);
-QList<QString>        getAnnotationLinesFromText(QString documentSource);
-QMap<QString,QString> getAnnotationValuesFromFile(QString filename);
+QMap<QString,QString>     getTitleFilenamePairsFromFolder(QString folder,QMap<QString,QString> restrict_annot_values = QMap<QString,QString>());
+QMap<QString,QStringList> getAnnotationValuesFromText(QString documentSource);
+QMap<QString,QStringList> getAnnotationValuesFromFile(QString filename);
+QList<QString>            getAnnotationLinesFromText(QString documentSource);
 
 QMap<QString, QString> merge_maps(const QMap<QString, QString> &base, const QMap<QString, QString> &overrides);
 QMap< QString, QMap<QString,QString> > split_stringmaps(QMap<QString,QString> input);

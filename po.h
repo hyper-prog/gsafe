@@ -462,7 +462,7 @@ public:
     QString valueOfMapKey(QString name,QString key);
     bool setValueOfMapKey(QString name,QString key,QString value);
 
-    QMap<QString,QString> annotations();
+    QMap<QString,QStringList> annotations();
 
 protected:
     QMap<QString, QMap<QString,QString> > smaps;
@@ -472,7 +472,7 @@ protected:
     QString definingFunctionBody;
     QMap<QString,QString> functions;
 
-    QMap<QString,QString> annot;
+    QMap<QString,QStringList> annot;
 };
 
 /** Frame to be render the pdf content. Used by HPdfPreviewDialog. */

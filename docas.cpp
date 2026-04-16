@@ -144,7 +144,7 @@ int DocAssembler::generateFilenames()
     filenames["result"] = filenames["base"];
     if(read_annotations.contains("UnderlayPdf"))
     {
-        filenames["original_underlay"] = sourceDocDirectory + QDir::separator() + read_annotations["UnderlayPdf"];
+        filenames["original_underlay"] = sourceDocDirectory + QDir::separator() + read_annotations["UnderlayPdf"].last();
         if(QFile(filenames["original_underlay"]).exists())
         {
             filenames["underlay"] = workingDirectory + QDir::separator() + "underlay.pdf";
@@ -251,7 +251,7 @@ void DocAssembler::clearValueMaps()
     textProcessor->clearValueMaps();
 }
 
-QMap<QString,QString> getFilenameTitlePairsFromFolder(QString folder,QMap<QString,QString> restrict_annot_values)
+QMap<QString,QString> getTitleFilenamePairsFromFolder(QString folder,QMap<QString,QString> restrict_annot_values)
 {
     QMap<QString,QString> result;
     QDir dir(folder);
@@ -264,29 +264,30 @@ QMap<QString,QString> getFilenameTitlePairsFromFolder(QString folder,QMap<QStrin
     foreach (const QFileInfo &fileInfo, fileList)
     {
         QString filename = fileInfo.fileName();
-        QMap<QString, QString> annotations = getAnnotationValuesFromFile(fileInfo.absoluteFilePath());
-        QString title = annotations.value("Title", fileInfo.baseName());
+        QMap<QString, QStringList> annotations = getAnnotationValuesFromFile(fileInfo.absoluteFilePath());
+        QStringList titles = annotations.value("Title", QStringList(fileInfo.baseName()));
 
-        bool restrict = true;
+        bool skip_by_restrict = false;
         QMap<QString, QString>::Iterator i;
         for(i = restrict_annot_values.begin() ; i != restrict_annot_values.end() ; ++i )
         {
-            if(annotations.value(i.key()) != i.value())
+            if(!annotations.value(i.key()).contains(i.value()))
             {
-                restrict = false;
+                skip_by_restrict = true;
                 break;
             }
         }
 
-        if(restrict)
-            result[filename] = title;
+        if(!skip_by_restrict)
+            for(const QString& title : titles)
+                result[title] = filename;
     }
     return result;
 }
 
-QMap<QString,QString> getAnnotationValuesFromFile(QString filename)
+QMap<QString,QStringList> getAnnotationValuesFromFile(QString filename)
 {
-    QMap<QString,QString> result;
+    QMap<QString,QStringList> result;
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return result;
@@ -297,9 +298,9 @@ QMap<QString,QString> getAnnotationValuesFromFile(QString filename)
     return result;
 }
 
-QMap<QString,QString> getAnnotationValuesFromText(QString documentSource)
+QMap<QString,QStringList> getAnnotationValuesFromText(QString documentSource)
 {
-    QMap<QString,QString> result;
+    QMap<QString,QStringList> result;
     QTextStream in(&documentSource);
     while (!in.atEnd())
     {
@@ -311,7 +312,7 @@ QMap<QString,QString> getAnnotationValuesFromText(QString documentSource)
             {
                 QStringList parts = commentsubline.mid(1).split(":");
                 if(parts.count() == 2)
-                    result[parts[0].trimmed()] = parts[1].trimmed();
+                    result[parts[0].trimmed()].push_back(parts[1].trimmed());
             }
             continue;
         }

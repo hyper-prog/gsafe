@@ -1339,7 +1339,7 @@ bool HTextProcessor::setValueOfMapKey(QString name,QString key,QString value)
     return true;
 }
 
-QMap<QString,QString> HTextProcessor::annotations()
+QMap<QString,QStringList> HTextProcessor::annotations()
 {
     return annot;
 }
@@ -1364,7 +1364,7 @@ QString HTextProcessor::processDoc(QString in)
             {
                 QStringList parts = commentsubline.mid(1).split(":");
                 if(parts.count() == 2)
-                    annot[parts[0].trimmed()] = parts[1].trimmed();
+                    annot[parts[0].trimmed()].push_back(parts[1].trimmed());
             }
             continue;
         }
