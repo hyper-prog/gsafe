@@ -33,6 +33,8 @@ public:
     int  askRequestedData(QWidget *widgetParent);
     void generatePdfDocument(QString outputFile);
 
+    void setTitleValues(QString selectedTitle);
+
     void addValueMap(QString name,const QMap<QString,QString>& m);
     void addValueList(QString name,const QList<QString>& l);
     void addValueMapPtr(QString name,QMap<QString,QString>* m);

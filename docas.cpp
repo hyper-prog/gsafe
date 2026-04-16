@@ -251,6 +251,26 @@ void DocAssembler::clearValueMaps()
     textProcessor->clearValueMaps();
 }
 
+void DocAssembler::setTitleValues(QString selectedTitle)
+{
+    QStringList titles = read_annotations["Title"];
+    for(const QString& title : std::as_const(titles))
+    {
+        QStringList tpt = title.split("|");
+        if(tpt.count() == 1 && title == selectedTitle)
+        {
+            setValueOfMapKey("document.title",title);
+            setValueOfMapKey("document.titlecode","");
+        }
+        if(tpt.count() > 1 && tpt.first() == selectedTitle)
+        {
+            setValueOfMapKey("document.title",tpt.first());
+            setValueOfMapKey("document.titlecode",tpt[1]);
+        }
+    }
+}
+
+
 QMap<QString,QString> getTitleFilenamePairsFromFolder(QString folder,QMap<QString,QString> restrict_annot_values)
 {
     QMap<QString,QString> result;
@@ -279,8 +299,14 @@ QMap<QString,QString> getTitleFilenamePairsFromFolder(QString folder,QMap<QStrin
         }
 
         if(!skip_by_restrict)
-            for(const QString& title : titles)
-                result[title] = filename;
+            for(const QString& title : std::as_const(titles))
+            {
+                QStringList tpt = title.split("|");
+                if(tpt.count() == 1)
+                    result[title] = filename;
+                if(tpt.count() > 1)
+                    result[tpt.first()] = filename;
+            }
     }
     return result;
 }
