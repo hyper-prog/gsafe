@@ -35,7 +35,7 @@
 /*  @{  */
 
 /** The version of gsafe */
-#define GSAFE_VERSION   "2.1.13"
+#define GSAFE_VERSION   "2.1.14"
 
 /** Converts a double value to char * string
  *  @param v the double value to convert

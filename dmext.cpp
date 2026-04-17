@@ -327,7 +327,7 @@ QString HDataMatrix::getCellByHeadStr(int row,QString colheader)
     int colIdx = getHeaderColIndex(colheader);
     if(colIdx < 0)
     {
-        throw GSafeException("Called HDataMatrix::getCellByHead with a not existing header text");
+        throw GSafeException(QString("Called HDataMatrix::getCellByHead with a not existing header text: %1").arg(colheader));
         return QString();
     }
     return getCellStr(row,colIdx);

@@ -583,7 +583,8 @@ void HQuickTable::keyPressEvent(QKeyEvent *e)
     if(e->key() == Qt::Key_Return || (e->key() == Qt::Key_Space && seek.isEmpty()))
     {
         seek = "";
-        emit activateItem(cur->key);
+        if(cur != NULL)
+            emit activateItem(cur->key);
         return;
     }
 
