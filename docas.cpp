@@ -253,7 +253,8 @@ void DocAssembler::clearValueMaps()
 
 void DocAssembler::setTitleValues(QString selectedTitle)
 {
-    QStringList titles = read_annotations["Title"];
+    QMap<QString,QStringList> temp_annots = getAnnotationValuesFromText(rawDocumentSource);
+    QStringList titles = temp_annots["Title"];
     for(const QString& title : std::as_const(titles))
     {
         QStringList tpt = title.split("|");
@@ -269,7 +270,6 @@ void DocAssembler::setTitleValues(QString selectedTitle)
         }
     }
 }
-
 
 QMap<QString,QString> getTitleFilenamePairsFromFolder(QString folder,QMap<QString,QString> restrict_annot_values)
 {
