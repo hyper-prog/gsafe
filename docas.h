@@ -30,7 +30,7 @@ public:
     DocAssembler(QString documentSource);
     ~DocAssembler();
 
-    int  askRequestedData(QWidget *widgetParent);
+    int  askRequestedData(QWidget *widgetParent, QSize dialogSize = QSize(500, 400));
     void generatePdfDocument(QString outputFile);
 
     void setTitleValues(QString selectedTitle);

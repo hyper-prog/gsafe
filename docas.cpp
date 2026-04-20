@@ -422,7 +422,7 @@ bool DocAssembler::setValueOfMapKey(QString fullname,QString value)
     return false;
 }
 
-int DocAssembler::askRequestedData(QWidget *widgetParent)
+int DocAssembler::askRequestedData(QWidget *widgetParent, QSize dialogSize)
 {
     QList<QString> annLin;
     QList<QString> setValKeys;
@@ -533,11 +533,12 @@ int DocAssembler::askRequestedData(QWidget *widgetParent)
 
     HDialog *dlg = new HDialog(widgetParent);
     dlg->setAttribute("window_title", tr("Input required data"));
+    dlg->setAttribute("window_resizebuttons","all");
     dlg->setAttribute("stretch_before_bottom_buttons","yes");
     dlg->setAttribute("button_1_text",tr("Ok"));
     dlg->setAttribute("button_1_action","accept");
     dlg->add(rec);
-    dlg->resize(400, 300);
+    dlg->resize(dialogSize);
     int modcount = 0;
     if(dlg->exec() == QDialog::Accepted)
     {
