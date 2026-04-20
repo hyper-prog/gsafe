@@ -208,6 +208,9 @@ class HQuickTable : public QFrame
         /** Sets the cursor to the absolute last element */
         int  cursorToEnd(void);
 
+        int  increaseSize();
+        int  decreaseSize();
+        int  originalSize();
     public:
 
         int mouseRightClickPosX;
@@ -259,6 +262,7 @@ class HQuickTable : public QFrame
         int  keycolumn;
         int  keycolumn2;
         int sortmode;    // 0-normal 1-dropchar
+        int originalFontSize;
 
         void q_sort    (void);
         void q_sort_run(HQuickTableElementPair *p);
@@ -309,8 +313,8 @@ class HQuickTable : public QFrame
         bool stepUp(void);
         /** Step one item down */
         bool stepDown(void);
-        /** Handle a mouse event */
 
+        /** Handle a mouse event */
         struct PointLocatorResult
         {
             PointLocatorResult(bool need_update_val,bool click_on_cell_val)
@@ -324,6 +328,8 @@ class HQuickTable : public QFrame
         PointLocatorResult pointLocator(QMouseEvent *e);
         bool inX(int a,int b,QMouseEvent *e);
         bool inY(int a,int b,QMouseEvent *e);
+
+        void recalcSizes(void);
 
     protected:
         void paintEvent(QPaintEvent *e);

@@ -91,6 +91,7 @@ HQuickTable::HQuickTable(QWidget *parent)
         pix_desc2= new QPixmap(":/GSAFEPIXMAPS/image_descend2.png");
     }
 
+    originalFontSize = font().pointSize();
     setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding));
     setMidLineWidth(100);
     setMinimumHeight(100);
@@ -477,6 +478,24 @@ void HQuickTable::keyPressEvent(QKeyEvent *e)
 
     fresh = false;
 
+    if(e->key() == Qt::Key_Plus && e->modifiers().testFlag(Qt::ControlModifier))
+    {
+        increaseSize();
+        return;
+    }
+
+    if(e->key() == Qt::Key_Minus && e->modifiers().testFlag(Qt::ControlModifier))
+    {
+        decreaseSize();
+        return;
+    }
+
+    if(e->key() == Qt::Key_0 && e->modifiers().testFlag(Qt::ControlModifier))
+    {
+        originalSize();
+        return;
+    }
+
     if(e->modifiers() == Qt::ControlModifier)
     {
         QFrame::keyPressEvent(e);
@@ -653,6 +672,75 @@ void HQuickTable::keyPressEvent(QKeyEvent *e)
             return;
         }
     }
+}
+
+void HQuickTable::recalcSizes(void)
+{
+    rowh = fm->height();
+    int i,l;
+    for(i=0;i<(int)head.size();++i)
+    {
+        l = fm->horizontalAdvance(head[i]) + BARW; //because the sort indicator
+        colw[i] = l;
+    }
+    HQuickTableElement *step = start;
+    while(step != NULL)
+    {
+        for(i=0;i<step->size();++i)
+        {
+            l = fm->horizontalAdvance((*step)[i]) + BARW; //because the sort indicator
+            if(l > colw[i])
+                colw[i] = l;
+        }
+        step = step->next;
+    }
+    fulshDrawingCache();
+    repaint();
+}
+
+int HQuickTable::increaseSize()
+{
+    int psize = this->font().pointSize();
+    psize += 2;
+    if(psize > 26)
+        psize = 26;
+    QFont f = this->font();
+    f.setPointSizeF(psize);
+    this->setFont(f);
+    if(fm != NULL)
+        delete fm;
+    this->fm = new QFontMetrics( this->font() );
+    recalcSizes();
+    return 0;
+}
+
+int HQuickTable::decreaseSize()
+{
+    int psize = this->font().pointSize();
+    psize -= 2;
+    if(psize < 10)
+        psize = 10;
+    QFont f = this->font();
+    f.setPointSizeF(psize);
+    this->setFont(f);
+    if(fm != NULL)
+        delete fm;
+    this->fm = new QFontMetrics( this->font() );
+    recalcSizes();
+    return 0;
+}
+
+int HQuickTable::originalSize()
+{
+    int psize = originalFontSize;
+    QFont f = this->font();
+    f.setPointSizeF(psize);
+    this->setFont(f);
+    if(fm != NULL)
+        delete fm;
+    this->fm = new QFontMetrics( this->font() );
+    recalcSizes();
+    return 0;
 }
 
 // Parameters: Lower limit, upper limit, value
@@ -1186,6 +1274,7 @@ void HQuickTable::paintEvent(QPaintEvent *e)
                 run->cachePixmap = pix = new QPixmap(width()-5,rowh + 2*CELLVMARGIN);
                 pix->fill(Qt::white);
                 QPainter *cP = new QPainter(pix);
+                cP->setFont(this->font());
 
                 //drawing cache pixmap..........................................
                 posX=0;
