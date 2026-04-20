@@ -418,7 +418,7 @@ int DocAssembler::askRequestedData(QWidget *widgetParent)
     QList<QString> setValKeys;
 
     HRecord *rec = new HRecord("get_data");
-    annLin = getAnnotationLinesFromText(rawDocumentSource);
+    annLin = getAnnotationLinesFromText(textProcessor->processLine(rawDocumentSource));
     int fileld_number_to_get = 0;
     for(auto it = annLin.constBegin(); it != annLin.constEnd(); ++it)
     {
