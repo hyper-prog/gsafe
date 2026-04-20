@@ -25,11 +25,21 @@ DocAssembler::DocAssembler(QString documentSource)
     workingDirectory = QDir::currentPath() + QDir::separator() + "work";
     sourceDocDirectory = QDir::currentPath() + QDir::separator() + "documents";
     enable_render_warnings = false;
+    monthNames = QStringList() << tr("error")
+                    << tr("january") << tr("february") << tr("march")
+                    << tr("april") << tr("may") << tr("june")
+                    << tr("july") << tr("august") << tr("september")
+                    << tr("october") << tr("november") << tr("december");
 }
 
 DocAssembler::~DocAssembler()
 {
     delete textProcessor;
+}
+
+void DocAssembler::setMonthNames(QStringList customMonthNames)
+{
+    monthNames = customMonthNames;
 }
 
 void DocAssembler::setWorkingDirectory(QString dir)
@@ -462,6 +472,7 @@ int DocAssembler::askRequestedData(QWidget *widgetParent)
                         HField *f = new HDateField(cparts[1],cparts[2],"title");
                         f->setColor(170,170,255);
                         rec->addField(f);
+                        rec->setStrValue(cparts[1],QDate::currentDate().toString(Qt::ISODate));
                         if(cparts.count() == 4)
                         {
                             QDate defDate = QDate::fromString(cparts[3], Qt::ISODate);
@@ -477,10 +488,6 @@ int DocAssembler::askRequestedData(QWidget *widgetParent)
                                 rec->setStrValue(cparts[1], getDate.toString(Qt::ISODate));
                             else
                                 rec->setStrValue(cparts[1],QDate::currentDate().toString(Qt::ISODate));
-                        }
-                        else
-                        {
-                            rec->setStrValue(cparts[1],QDate::currentDate().toString(Qt::ISODate));
                         }
                         setValKeys.push_back(cparts[1]);
                         fileld_number_to_get++;
@@ -544,8 +551,14 @@ int DocAssembler::askRequestedData(QWidget *widgetParent)
                     setValueOfMapKey(key,date.toString(Qt::ISODate));
                     setValueOfMapKey(key + "_fulldate",date.toString(Qt::ISODate));
                     setValueOfMapKey(key + "_year",date.toString("yyyy"));
+                    setValueOfMapKey(key + "_year2",date.toString("yy"));
                     setValueOfMapKey(key + "_month",date.toString("MM"));
+                    setValueOfMapKey(key + "_monthname",monthNames.value(date.month(), "Error"));
                     setValueOfMapKey(key + "_day",date.toString("dd"));
+                    setValueOfMapKey(key + "_fulldetailedname",QString("%1 %2 %3")
+                                            .arg(date.toString("yyyy"))
+                                            .arg(monthNames.value(date.month(), "Error"))
+                                            .arg(date.toString("dd")));
                     ++modcount;
                 }
             }

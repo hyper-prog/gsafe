@@ -40,6 +40,8 @@ public:
     void addValueMapPtr(QString name,QMap<QString,QString>* m);
     void clearValueMaps();
 
+    void setMonthNames(QStringList customMonthNames);
+
     void setWorkingDirectory(QString dir);
     void setSourceDocDirectory(QString dir);
 
@@ -58,6 +60,8 @@ protected:
     QString preprocessedDoc;
     QMap<QString,QString> filenames;
     QMap<QString,QStringList> read_annotations;
+
+    QStringList monthNames;
     
     int preprocessDocument();
     int generateFilenames();
