@@ -539,9 +539,10 @@ int DocAssembler::askRequestedData(QWidget *widgetParent, QSize dialogSize)
     dlg->setAttribute("button_1_action","accept");
     dlg->add(rec);
     dlg->resize(dialogSize);
-    int modcount = 0;
+    int modcount = -1;
     if(dlg->exec() == QDialog::Accepted)
     {
+        modcount = 0;
         foreach(const QString &key, setValKeys)
         {
             if(rec->fieldByName(key)->className() == "HDateField")
