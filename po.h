@@ -437,6 +437,9 @@ public:
  *
  *    CAll#<functionName>
  *        The function call instruction is used to call a previously defined function.
+ *
+ *    ALLVARIABLES
+ *        Print all variables into a table
 */
 class HTextProcessor
 {

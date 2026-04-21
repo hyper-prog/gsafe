@@ -1484,6 +1484,48 @@ QString HTextProcessor::processDoc(QString in)
             continue;
         }
 
+        if(cmd == "ALLVARIABLES")
+        {
+            out.append("fram#all\n");
+            QMap<QString,QMap<QString,QString> >::Iterator smi;
+            for(smi = smaps.begin() ; smi != smaps.end() ; ++smi)
+            {
+                QMap<QString,QString>::Iterator ini;
+                for(ini = smi.value().begin() ; ini != smi.value().end() ; ++ini)
+                {
+                    out.append("fixh\n");
+                    out.append("html#40%#{{" + smi.key() + "." + ini.key() + "}}\n");
+                    out.append("html#40%#" + ini.value()+"\n");
+                    out.append("html#20%#static\n");
+                    out.append("newl\n");
+                }
+            }
+            QMap<QString,QMap<QString,QString> * >::Iterator dmi;
+            for(dmi = dmaps.begin() ; dmi != dmaps.end() ; ++dmi)
+            {
+                QMap<QString,QString>::Iterator ini;
+                for(ini = dmi.value()->begin() ; ini != dmi.value()->end() ; ++ini)
+                {
+                    out.append("fixh\n");
+                    out.append("html#40%#{{" + dmi.key() + "." + ini.key() + "}}\n");
+                    out.append("html#40%#" + ini.value()+"\n");
+                    out.append("html#20%#dynamic\n");
+                    out.append("newl\n");
+                }
+            }
+            QMap<QString, QList<QString> >::Iterator li;
+            for(li = slist.begin() ; li != slist.end() ; ++li)
+            {
+                out.append("fixh\n");
+                out.append("html#40%#{{" + li.key() + "}}\n");
+                out.append("html#40%#" + li.value().join(",") + "\n");
+                out.append("html#20%#list\n");
+                out.append("newl\n");
+            }
+            out.append("fram#none\n");
+            continue;
+        }
+
         if(conds.empty() || conds.first())
         {
             out.append(processLine(*li));
