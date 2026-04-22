@@ -45,6 +45,11 @@ public:
     void setWorkingDirectory(QString dir);
     void setSourceDocDirectory(QString dir);
 
+    QString processLineByTextProcessor(QString line);
+    QString processTokenByTextProcessor(QString in);
+
+    QMap<QString,QStringList> getAnnotations();
+
 protected:
     bool isMapKeyExists(QString fullname);
     QString valueOfMapKey(QString fullname);

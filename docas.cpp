@@ -52,6 +52,21 @@ void DocAssembler::setSourceDocDirectory(QString dir)
     sourceDocDirectory = dir;
 }
 
+QString DocAssembler::processLineByTextProcessor(QString line)
+{
+    return textProcessor->processLine(line);
+}
+
+QString DocAssembler::processTokenByTextProcessor(QString in)
+{
+    return textProcessor->processToken(in);
+}
+
+QMap<QString,QStringList> DocAssembler::getAnnotations()
+{
+    return read_annotations;
+}
+
 void DocAssembler::generatePdfDocument(QString outputFile)
 {
     minumimGenPageCount = 0;

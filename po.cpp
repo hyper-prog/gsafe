@@ -1362,9 +1362,11 @@ QString HTextProcessor::processDoc(QString in)
             QString commentsubline = cmd.mid(2).trimmed();
             if(commentsubline.startsWith("@"))
             {
-                QStringList parts = commentsubline.mid(1).split(":");
+                QStringList parts = processLine(commentsubline).mid(1).split(":");
                 if(parts.count() == 2)
+                {
                     annot[parts[0].trimmed()].push_back(parts[1].trimmed());
+                }
             }
             continue;
         }
