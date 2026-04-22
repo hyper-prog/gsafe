@@ -181,7 +181,7 @@ void HRecordSkel::subspec_applyJson_inWork(QJsonObject *top)
 
 // //////// HRecord ///////////////////////////////////////////////////////////////////
 
-HRecord* HRecord::fromJson(QString jsonData,QString inDatabase)
+HRecord* HRecord::fromJson(const QString& jsonData,QString inDatabase)
 {
     if(jsonData.trimmed().isEmpty())
         return NULL;
@@ -243,7 +243,7 @@ void HRecord::subspec_applyJson_inWork(QJsonObject *top)
 
 // //////// HRecordLines //////////////////////////////////////////////////////////////
 
-HRecordLines* HRecordLines::fromJson(QString jsonData)
+HRecordLines* HRecordLines::fromJson(const QString& jsonData)
 {
     if(jsonData.trimmed().isEmpty())
         return NULL;
@@ -326,7 +326,7 @@ void HRecordLines::subspec_applyJson_inWork(QJsonObject *top)
 
 // //////// HField //////////////////////////////////////////////////////////////
 
-HField* HField::fromJson(QString jsonData)
+HField* HField::fromJson(const QString& jsonData)
 {
     if(jsonData.trimmed().isEmpty())
         return NULL;
@@ -361,7 +361,7 @@ HField* HField::fromJsonFile(QString jsonFileName)
     return field;
 }
 
-bool HField::applyJson(QString jsonData)
+bool HField::applyJson(const QString& jsonData)
 {
     QJsonDocument jdoc;
     QJsonParseError jpe;
@@ -791,7 +791,7 @@ void HSqlXChooseField::applyJson_inWork_spec(QJsonObject& fo)
 
 // //////// HDynTable /////////////////////////////////////////////////
 
-HDynTable* HDynTable::fromJson(QString jsonData,HDynTableCellType forceType)
+HDynTable* HDynTable::fromJson(const QString& jsonData,HDynTableCellType forceType)
 {
     if(jsonData.trimmed().isEmpty())
         return NULL;
@@ -992,7 +992,7 @@ QJsonValue HDynTable::toJson_inWork(HJsonFlag flags)
 
 // //////// HDialogData & HDialog /////////////////////////////////////////////////
 
-HDialogData* HDialogData::fromJson(QString jsonData)
+HDialogData* HDialogData::fromJson(const QString& jsonData)
 {
     if(jsonData.trimmed().isEmpty())
         return NULL;
@@ -1014,7 +1014,7 @@ HDialogData* HDialogData::fromJsonFile(QString jsonFileName)
     return dd;
 }
 
-HDialog* HDialog::fromJson(QWidget *parent,QString jsonData)
+HDialog* HDialog::fromJson(QWidget *parent,const QString& jsonData)
 {
     QJsonDocument jdoc;
     QJsonParseError jpe;
@@ -1034,7 +1034,7 @@ HDialog* HDialog::fromJsonFile(QWidget *parent,QString jsonFileName)
     return d;
 }
 
-bool HDialogData::applyJson(QString jsonData)
+bool HDialogData::applyJson(const QString& jsonData)
 {
     QJsonDocument jdoc;
     QJsonParseError jpe;

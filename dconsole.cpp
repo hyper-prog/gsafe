@@ -31,7 +31,7 @@ HDebugConsole * HDebugConsole::myself = NULL;
 #endif //GSAFE_DISABLE_DEBUG
 
 #ifndef DCONSOLE_NO_SQL
-void sqldebug(QString s)
+void sqldebug(const QString& s)
 {
 #ifndef GSAFE_DISABLE_DEBUG
     if(HDebugConsole::myself == NULL)
@@ -43,7 +43,7 @@ void sqldebug(QString s)
 }
 #endif // DCONSOLE_NO_SQL
 
-void sdebug(QString s)
+void sdebug(const QString& s)
 {
 #ifndef GSAFE_DISABLE_DEBUG
     if(HDebugConsole::myself == NULL)
@@ -54,7 +54,7 @@ void sdebug(QString s)
 #endif //GSAFE_DISABLE_DEBUG
 }
 
-void ssdebug(QString s,char type)
+void ssdebug(const QString& s,char type)
 {
 #ifndef GSAFE_DISABLE_DEBUG
     if(HDebugConsole::myself == NULL)
@@ -343,7 +343,7 @@ void HDebugConsole::popup(QString title,QString str)
 }
 
 //#define FILE_DEBUG
-void HDebugConsole::add_text(QString s,int type)
+void HDebugConsole::add_text(const QString& s,int type)
 {
     if(p->pushSyncwrite->isChecked())
     {
@@ -383,20 +383,20 @@ void HDebugConsole::closeEvent(QCloseEvent *e)
 }
 
 #ifndef DCONSOLE_NO_SQL
-void HDebugConsole::debug_sql(QString s)
+void HDebugConsole::debug_sql(const QString& s)
 {
     if(myself != NULL)
         myself->add_text(s,DCONSOLE_TYPE_SQL);
 }
 #endif // DCONSOLE_NO_SQL
 
-void HDebugConsole::debug_txt(QString s)
+void HDebugConsole::debug_txt(const QString& s)
 {
     if(myself != NULL)
         myself->add_text(s,DCONSOLE_TYPE_TEXT);
 }
 
-void HDebugConsole::debug_typedtxt(QString s,char type)
+void HDebugConsole::debug_typedtxt(const QString& s,char type)
 {
     if(myself != NULL)
         myself->add_text(s,type);
@@ -831,7 +831,7 @@ void HDebugConsolePrivate::command_synw(QString fcl)
 
 void HDebugConsolePrivate::command_write(QString fcl)
 {
-    sdebug(fcl);
+    HDebugConsole::debug_txt(fcl);
 }
 
 void HDebugConsolePrivate::command_save(QString fcl)
@@ -864,7 +864,7 @@ void HDebugConsolePrivate::command_run(QString fcl)
     {
         MOUT(QString("Starting command \"%1\"...").arg(fcl));
         HDConsoleCommandHolder *dcch = *i;
-        sdebug(dcch->donsole_command_interpreter(fcl));
+        HDebugConsole::debug_txt(dcch->donsole_command_interpreter(fcl));
         MOUT("finished.");
     }
     MOUT("");

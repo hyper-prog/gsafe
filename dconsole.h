@@ -31,18 +31,18 @@
 /** Puts a debug/info text as sql text.
  *  If there is no started HDebugConsole this function does nothing.
  *  @see HDebugConsole*/
-void sqldebug(QString s);
+void sqldebug(const QString& s);
 #endif // DCONSOLE_NO_SQL
 
 /** Puts a debug/info text as normal text.
  *  If there is no started HDebugConsole this function does nothing.
  *  @see HDebugConsole*/
-void sdebug(QString s);
+void sdebug(const QString& s);
 
 /** Puts a debug/info text as special text.
  *  If there is no started HDebugConsole this function does nothing.
  *  @see HDebugConsole*/
-void ssdebug(QString s,char type);
+void ssdebug(const QString& s,char type);
 
 /** Starts/Popup the HDebugConsole.
  *  If the console already run this function does nothing.
@@ -197,15 +197,15 @@ public:
     ~HDebugConsole(void);
 
     /** Write a text to the console. Don't use it directly. Use the sdebug() and sqldebug() instead */
-    void add_text(QString s,int type);
+    void add_text(const QString& s,int type);
 #ifndef DCONSOLE_NO_SQL
     /** Write an sql text to the console */
-    static void debug_sql(QString s);
+    static void debug_sql(const QString& s);
 #endif // DCONSOLE_NO_SQL
     /** Write a normal text to the console */
-    static void debug_txt(QString s);
+    static void debug_txt(const QString& s);
     /** Write a special typed text to the console */
-    static void debug_typedtxt(QString s,char type);
+    static void debug_typedtxt(const QString& s,char type);
     /** Popups a warning text */
     static void popup(QString title,QString str);
     /** You can disable the command excution if this function called with FALSE.

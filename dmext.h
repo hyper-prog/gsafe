@@ -544,7 +544,7 @@ public:
      *  @param If you give this bool pointer the pointer will be set to true any cases the element has been found */
     bool elementHasLabel(QString name,QString label,bool *found=NULL);
 
-    static HDynTable* fromJson(QString jsonData,HDynTableCellType forceType = HDynCellType_Undefined);
+    static HDynTable* fromJson(const QString& jsonData,HDynTableCellType forceType = HDynCellType_Undefined);
     static HDynTable* fromJsonFile(QString jsonFileName,HDynTableCellType forceType = HDynCellType_Undefined);
     virtual bool applyJson(QString jsonData,HDynTableCellType forceType = HDynCellType_Undefined);
     virtual bool applyJsonFile(QString jsonFileName,HDynTableCellType forceType = HDynCellType_Undefined);

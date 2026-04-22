@@ -293,9 +293,9 @@ public:
     HField& operator=(QString val);
     operator const QString();
 
-    static HField* fromJson(QString jsonData);
+    static HField* fromJson(const QString& jsonData);
     static HField* fromJsonFile(QString jsonFileName);
-    virtual bool applyJson(QString jsonData);
+    virtual bool applyJson(const QString& jsonData);
     virtual bool applyJsonFile(QString jsonFileName);
     virtual QString toJson(HJsonFlag flags = HJsonFlag_Default);
 
@@ -502,7 +502,7 @@ public:
     HRecord* setStrValue(QString sqlname,QString value);
     HRecord* setStrValue(int index,QString value);
 
-    static HRecord* fromJson(QString jsonData,QString inDatabase = "");
+    static HRecord* fromJson(const QString& jsonData,QString inDatabase = "");
     static HRecord* fromJsonFile(QString jsonFileName,QString inDatabase = "");
 
     virtual QString generateString(int verbose = 0);
@@ -564,7 +564,7 @@ public:
     HDataMatrix *dataMatrix();
     const QStringList& keyValueArray();
 
-    static HRecordLines* fromJson(QString jsonData);
+    static HRecordLines* fromJson(const QString& jsonData);
     static HRecordLines* fromJsonFile(QString jsonFileName);
 
     static HRecordLines* fromJson_embedded(QJsonObject jsonObject);

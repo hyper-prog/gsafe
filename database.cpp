@@ -414,12 +414,12 @@ QString HRestSqlDatabase::restAnswerReceived(QNetworkReply* restNetworkActionRep
     return QString();
 }
 
-QByteArray HRestSqlDatabase::processRequest(QString data)
+QByteArray HRestSqlDatabase::processRequest(const QString& data)
 {
     return data.toUtf8();
 }
 
-QString HRestSqlDatabase::processResponse(QByteArray response)
+QString HRestSqlDatabase::processResponse(const QByteArray& response)
 {
     return QString::fromUtf8(response);
 }
@@ -669,7 +669,7 @@ void HSqlConnector_HttpRest::exec(HSqlBuilder& request)
     parseAnswerTable(db.sendRequestJSON(request),request.query_field_list());
 }
 
-void HSqlConnector_HttpRest::parseAnswerTable(QString payload,QStringList fields)
+void HSqlConnector_HttpRest::parseAnswerTable(const QString& payload,QStringList fields)
 {
     processed_rtype = 0;
     processed_fields.clear();
@@ -685,7 +685,7 @@ void HSqlConnector_HttpRest::parseAnswerTable(QString payload,QStringList fields
     parseAnswerTable(answer,fields);
 }
 
-void HSqlConnector_HttpRest::parseAnswerTable(QJsonDocument parsedJson,QStringList fields)
+void HSqlConnector_HttpRest::parseAnswerTable(const QJsonDocument& parsedJson,QStringList fields)
 {
     processed_rtype = 0;
     processed_fields.clear();

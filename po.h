@@ -66,33 +66,33 @@ public:
     HPageTileRenderer(QPainter *configuredPainter);
     ~HPageTileRenderer();
 
-    void moveCursorRelative(QString x,QString y);
-    void moveCursorAbsolute(QString x,QString y);
-    void addSpace(QString width,QString height);
-    void addRect(QString width,QString height);
-    void addText(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
-    void addImage(QString width,QImage image);
-    void drawRect(QString xpos,QString ypos,QString width,QString height);
-    void drawGrid(QString xpos,QString ypos,QString width,QString height);
-    void drawText(QString xpos,QString ypos,QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
-    void drawImage(QString xpos,QString ypos,QString width,QImage image);
+    void moveCursorRelative(const QString& x,const QString& y);
+    void moveCursorAbsolute(const QString& x,const QString& y);
+    void addSpace(const QString& width,const QString& height);
+    void addRect(const QString& width,const QString& height);
+    void addText(const QString& width,const QString& text,HPageTileRenderer_TextType type = HTextType_Html);
+    void addImage(const QString& width,const QImage& image);
+    void drawRect(const QString& xpos,const QString& ypos,const QString& width,const QString& height);
+    void drawGrid(const QString& xpos,const QString& ypos,const QString& width,const QString& height);
+    void drawText(const QString& xpos,const QString& ypos,const QString& width,const QString& text,HPageTileRenderer_TextType type = HTextType_Html);
+    void drawImage(const QString& xpos,const QString& ypos,const QString& width,const QImage& image);
     void newLine();
     void newPage();
-    void newPageIfRequired(QString requiredHeight);
-    void newPageUntilCount(QString pageCount);
+    void newPageIfRequired(const QString& requiredHeight);
+    void newPageUntilCount(const QString& pageCount);
 
-    void enterArea(QString width,QString height);
-    void enterArea(QString xpos,QString ypos,QString width,QString height);
+    void enterArea(const QString& width,const QString& height);
+    void enterArea(const QString& xpos,const QString& ypos,const QString& width,const QString& height);
     void returnArea();
 
-    int  calcTextHeight(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
-    int  calcImageHeight(QString width,QImage image);
-    void incrementMinLineHeightToTextHeight(QString width,QString text,HPageTileRenderer_TextType type = HTextType_Html);
-    void incrementMinLineHeightToImageHeight(QString width,QImage image);
-    void incrementMinLineHeightToValue(QString height);
+    int  calcTextHeight(const QString& width,const QString& text,HPageTileRenderer_TextType type = HTextType_Html);
+    int  calcImageHeight(const QString& width,const QImage& image);
+    void incrementMinLineHeightToTextHeight(const QString& width,const QString& text,HPageTileRenderer_TextType type = HTextType_Html);
+    void incrementMinLineHeightToImageHeight(const QString& width,const QImage& image);
+    void incrementMinLineHeightToValue(const QString& height);
 
-    void storePositionOfNextAddElement(QString withName);
-    HPageTileRendererPosition storedPosition(QString withName);
+    void storePositionOfNextAddElement(const QString& withName);
+    HPageTileRendererPosition storedPosition(const QString& withName);
     QMap<QString,HPageTileRendererPosition> storedPositions();
 
     /** The numbering starts from 0
@@ -318,7 +318,7 @@ public:
      *        multiline texts!
      *    }
      */
-    void renderFromInstructions(QString txtintr);
+    void renderFromInstructions(const QString& txtintr);
 
     int currentPageIndex();
 
@@ -326,7 +326,7 @@ protected:
     void renderFromInstructionLineHL(const QStringList& parts);
     void renderFromInstructionLineLL(const QStringList& parts);
 
-    int sizeStrToInt(QString str,QString xy);
+    int sizeStrToInt(QString str,const QString& xy);
     void drawBorders(int w,int h);
     void storePos(int w,int h);
     QString strSubstTokens(QString in);
@@ -448,7 +448,7 @@ public:
     ~HTextProcessor();
 
     /** Process a whole document */
-    QString processDoc(QString in);
+    QString processDoc(const QString& in);
 
     QString processLine(QString in);
     QString processToken(QString in);
@@ -461,9 +461,9 @@ public:
     const QList<QString>& valueList(QString name);
     QMap<QString,QString>* valueMapPtr(QString name);
 
-    bool isMapKeyExists(QString name,QString key);
-    QString valueOfMapKey(QString name,QString key);
-    bool setValueOfMapKey(QString name,QString key,QString value);
+    bool isMapKeyExists(const QString& name,const QString& key);
+    QString valueOfMapKey(const QString& name,const QString& key);
+    bool setValueOfMapKey(const QString& name,const QString& key,const QString& value);
 
     QMap<QString,QStringList> annotations();
 
@@ -504,8 +504,8 @@ public:
     HPdfPreviewDialog(QWidget *parent,QString buttons = "print,generate,close");
     ~HPdfPreviewDialog();
 
-    void setRawContent(QString c);
-    void addAttachmentFile(QString name,QString content);
+    void setRawContent(const QString& c);
+    void addAttachmentFile(const QString& name,const QString& content);
 
     int generatePdfFile(QString filename);
 

@@ -153,7 +153,7 @@ class HQuickTable : public QFrame
         QString              *keyByIndex(int n);
 
         /** Returns true if the table has an element with a key passed in parameter, otherwise return false. */
-        bool hasKey(QString key);
+        bool hasKey(const QString& key);
 
     public slots:
 
@@ -373,14 +373,22 @@ class HQuickTableElement
         /** Creates an element. You have to specify the key of the element and a QString array which will be the visible fields.
          *  @param k the key of the item
          *  @param c the QString array of the visible field values. */
-        HQuickTableElement(QString k,QStringList *c);
+        HQuickTableElement(const QString& k,QStringList *c);
 
         /** Creates an element. You have to specify the key of the element and at least one visible value.
          *  You can specify the other visible value fields by adding more parameters.
          *  (Maximum 10 with this constructor. If you would like to more use the other constructor)
          *  @param k the key of the item */
-        HQuickTableElement(QString k,QString v1,QString v2="",QString v3="",QString v4="",QString v5="",
-                             QString v6="",QString v7="",QString v8="",QString v9="");
+        HQuickTableElement(const QString& k,
+                           const QString& v1,
+                           const QString& v2 = QString(""),
+                           const QString& v3 = QString(""),
+                           const QString& v4 = QString(""),
+                           const QString& v5 = QString(""),
+                           const QString& v6 = QString(""),
+                           const QString& v7 = QString(""),
+                           const QString& v8 = QString(""),
+                           const QString& v9 = QString(""));
         /** Desctructor */
         ~HQuickTableElement(void);
 

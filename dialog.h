@@ -52,9 +52,9 @@ public:
 
     static void addConfig(QString name,QString attributes);
 
-    static HDialogData* fromJson(QString jsonData);
+    static HDialogData* fromJson(const QString& jsonData);
     static HDialogData* fromJsonFile(QString jsonFileName);
-    virtual bool applyJson(QString jsonData);
+    virtual bool applyJson(const QString& jsonData);
     virtual bool applyJsonFile(QString jsonFileName);
     virtual QString toJson(HJsonFlag flags = HJsonFlag_Default);
 
@@ -97,7 +97,7 @@ public:
     ~HDialog();
     virtual QString className();
 
-    static HDialog* fromJson(QWidget *parent,QString jsonData);
+    static HDialog* fromJson(QWidget *parent,const QString& jsonData);
     static HDialog* fromJsonFile(QWidget *parent,QString jsonFileName);
 
     static HDialog* fromJson_inWork(QWidget *parent,QJsonValue jsonValue);

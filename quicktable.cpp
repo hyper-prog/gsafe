@@ -1517,7 +1517,7 @@ QString *HQuickTable::queryNextKey(void)
     return NULL;
 }
 
-bool HQuickTable::hasKey(QString key)
+bool HQuickTable::hasKey(const QString& key)
 {
     QString *strp;
 
@@ -1538,7 +1538,7 @@ bool HQuickTable::hasKey(QString key)
 }
 // /////////////////////////////////////////////////////////////////////////////////////////
 
-HQuickTableElement::HQuickTableElement(QString k,QStringList *c)
+HQuickTableElement::HQuickTableElement(const QString& k,QStringList *c)
 {
     key = k;
     rows = new QStringList(*c);
@@ -1549,8 +1549,9 @@ HQuickTableElement::HQuickTableElement(QString k,QStringList *c)
     cachePixmap = NULL;
 }
 
-HQuickTableElement::HQuickTableElement(QString k,QString v1,QString v2,QString v3,QString v4,QString v5,
-                                           QString v6,QString v7,QString v8,QString v9)
+HQuickTableElement::HQuickTableElement(const QString& k,const QString& v1,const QString& v2,
+                                       const QString& v3,const QString& v4,const QString& v5,
+                                       const QString& v6,const QString& v7,const QString& v8,const QString& v9)
 {
     key = k;
     rows = new QStringList();

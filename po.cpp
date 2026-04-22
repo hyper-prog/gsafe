@@ -103,12 +103,12 @@ void HPageTileRenderer::setUnknownCommandWarning(bool showWarnings)
     unknownCommandWarning = showWarnings;
 }
 
-void HPageTileRenderer::storePositionOfNextAddElement(QString withName)
+void HPageTileRenderer::storePositionOfNextAddElement(const QString& withName)
 {
     storePosOfNext = withName;
 }
 
-HPageTileRendererPosition HPageTileRenderer::storedPosition(QString withName)
+HPageTileRendererPosition HPageTileRenderer::storedPosition(const QString& withName)
 {
     if(storedPos.contains(withName))
         return storedPos[withName];
@@ -192,7 +192,7 @@ int HPageTileRenderer::areaHeight()
     return p->window().height() - (marginTop + marginBottom);
 }
 
-int HPageTileRenderer::sizeStrToInt(QString str,QString xy)
+int HPageTileRenderer::sizeStrToInt(QString str,const QString& xy)
 {
     if(str.isEmpty())
         return 0;
@@ -300,13 +300,13 @@ void HPageTileRenderer::storePos(int w,int h)
     storePosOfNext = "";
 }
 
-void HPageTileRenderer::moveCursorRelative(QString x,QString y)
+void HPageTileRenderer::moveCursorRelative(const QString& x,const QString& y)
 {
     cursorX += sizeStrToInt(x,"x");
     cursorY += sizeStrToInt(y,"y");
 }
 
-void HPageTileRenderer::moveCursorAbsolute(QString x,QString y)
+void HPageTileRenderer::moveCursorAbsolute(const QString& x,const QString& y)
 {
     cursorX = sizeStrToInt(x,"x");
     cursorY = sizeStrToInt(y,"y");
@@ -333,7 +333,7 @@ QString HPageTileRenderer::strSubstTokens(QString in)
     return strSubstTokens(in);
 }
 
-void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_TextType type)
+void HPageTileRenderer::addText(const QString& width,const QString& text,HPageTileRenderer_TextType type)
 {
     int w_px = sizeStrToInt(width,"x");
 
@@ -387,7 +387,7 @@ void HPageTileRenderer::addText(QString width,QString text,HPageTileRenderer_Tex
     cursorX += td.size().width();
 }
 
-void HPageTileRenderer::drawText(QString xpos,QString ypos,QString width,QString text,HPageTileRenderer_TextType type)
+void HPageTileRenderer::drawText(const QString& xpos,const QString& ypos,const QString& width,const QString& text,HPageTileRenderer_TextType type)
 {
     int x = sizeStrToInt(xpos,"x");
     int y = sizeStrToInt(ypos,"y");
@@ -416,7 +416,7 @@ void HPageTileRenderer::drawText(QString xpos,QString ypos,QString width,QString
     }
 }
 
-void HPageTileRenderer::addRect(QString width,QString height)
+void HPageTileRenderer::addRect(const QString& width,const QString& height)
 {
     int w_px = sizeStrToInt(width,"x");
     int h_px = sizeStrToInt(height,"y");
@@ -457,7 +457,7 @@ void HPageTileRenderer::addRect(QString width,QString height)
     cursorX += w_px;
 }
 
-void HPageTileRenderer::addSpace(QString width,QString height)
+void HPageTileRenderer::addSpace(const QString& width,const QString& height)
 {
     int w_px = sizeStrToInt(width,"x");
     int h_px = sizeStrToInt(height,"y");
@@ -497,7 +497,7 @@ void HPageTileRenderer::drawBorders(int w,int h)
         p->drawLine(0,0,0,h);
 }
 
-void HPageTileRenderer::addImage(QString width,QImage image)
+void HPageTileRenderer::addImage(const QString& width,const QImage& image)
 {
     int w_px = sizeStrToInt(width,"x");
 
@@ -530,7 +530,7 @@ void HPageTileRenderer::addImage(QString width,QImage image)
     cursorX += w_px;
 }
 
-void HPageTileRenderer::drawImage(QString xpos,QString ypos,QString width,QImage image)
+void HPageTileRenderer::drawImage(const QString& xpos,const QString& ypos,const QString& width,const QImage& image)
 {
     int x = sizeStrToInt(xpos,"x");
     int y = sizeStrToInt(ypos,"y");
@@ -546,13 +546,13 @@ void HPageTileRenderer::drawImage(QString xpos,QString ypos,QString width,QImage
     }
 }
 
-int HPageTileRenderer::calcImageHeight(QString width,QImage image)
+int HPageTileRenderer::calcImageHeight(const QString& width,const QImage& image)
 {
     int w_px = sizeStrToInt(width,"x");
     return (int)(((double)w_px / (double)image.width()) * (double)image.height());
 }
 
-void HPageTileRenderer::drawRect(QString xpos,QString ypos,QString width,QString height)
+void HPageTileRenderer::drawRect(const QString& xpos,const QString& ypos,const QString& width,const QString& height)
 {
     int x = sizeStrToInt(xpos,"x");
     int y = sizeStrToInt(ypos,"y");
@@ -571,7 +571,7 @@ void HPageTileRenderer::drawRect(QString xpos,QString ypos,QString width,QString
     }
 }
 
-void HPageTileRenderer::drawGrid(QString xpos,QString ypos,QString width,QString height)
+void HPageTileRenderer::drawGrid(const QString& xpos,const QString& ypos,const QString& width,const QString& height)
 {
     int x = sizeStrToInt(xpos,"x");
     int y = sizeStrToInt(ypos,"y");
@@ -630,7 +630,7 @@ void HPageTileRenderer::drawGrid(QString xpos,QString ypos,QString width,QString
     p->setPen(Qt::SolidLine);
 }
 
-int HPageTileRenderer::calcTextHeight(QString width,QString text,HPageTileRenderer_TextType type)
+int HPageTileRenderer::calcTextHeight(const QString& width,const QString& text,HPageTileRenderer_TextType type)
 {
     int w_px = sizeStrToInt(width,"x");
 
@@ -649,21 +649,21 @@ int HPageTileRenderer::calcTextHeight(QString width,QString text,HPageTileRender
     return td.size().height();
 }
 
-void HPageTileRenderer::incrementMinLineHeightToTextHeight(QString width,QString text,HPageTileRenderer_TextType type)
+void HPageTileRenderer::incrementMinLineHeightToTextHeight(const QString& width,const QString& text,HPageTileRenderer_TextType type)
 {
     int ch = calcTextHeight(width,text,type);
     if(minLineHeight < ch)
         minLineHeight = ch;
 }
 
-void HPageTileRenderer::incrementMinLineHeightToImageHeight(QString width,QImage image)
+void HPageTileRenderer::incrementMinLineHeightToImageHeight(const QString& width,const QImage& image)
 {
     int ch = calcImageHeight(width,image);
     if(minLineHeight < ch)
         minLineHeight = ch;
 }
 
-void HPageTileRenderer::incrementMinLineHeightToValue(QString height)
+void HPageTileRenderer::incrementMinLineHeightToValue(const QString& height)
 {
     int h = sizeStrToInt(height,"y");
     if(minLineHeight < h)
@@ -706,13 +706,13 @@ void HPageTileRenderer::newPage()
     playPageBoot();
 }
 
-void HPageTileRenderer::newPageIfRequired(QString requiredHeight)
+void HPageTileRenderer::newPageIfRequired(const QString& requiredHeight)
 {
     if(sizeStrToInt(requiredHeight,"y") + cursorY > areaHeight())
         newPage();
 }
 
-void HPageTileRenderer::newPageUntilCount(QString pageCount)
+void HPageTileRenderer::newPageUntilCount(const QString& pageCount)
 {
     int pc = pageCount.toInt();
     while(currentPage < (pc - 1))
@@ -734,7 +734,7 @@ QColor HPageTileRenderer::getFontColor()
     return fontColor;
 }
 
-void HPageTileRenderer::enterArea(QString width,QString height)
+void HPageTileRenderer::enterArea(const QString& width,const QString& height)
 {
     int w_px = sizeStrToInt(width,"x");
     int h_px = sizeStrToInt(height,"y");
@@ -783,7 +783,7 @@ void HPageTileRenderer::enterArea(QString width,QString height)
     currentLineHeight = 0;
 }
 
-void HPageTileRenderer::enterArea(QString xpos,QString ypos,QString width,QString height)
+void HPageTileRenderer::enterArea(const QString& xpos,const QString& ypos,const QString& width,const QString& height)
 {
     int x = sizeStrToInt(xpos,"x");
     int y = sizeStrToInt(ypos,"y");
@@ -837,7 +837,7 @@ void HPageTileRenderer::returnArea()
     p->restore();
 }
 
-void HPageTileRenderer::renderFromInstructions(QString txtintr)
+void HPageTileRenderer::renderFromInstructions(const QString& txtintr)
 {
     QString concatenated = "";
     QList<QString> lines = txtintr.split("\n");
@@ -1305,7 +1305,7 @@ void HTextProcessor::clearValueMaps()
     slist.clear();
 }
 
-bool HTextProcessor::isMapKeyExists(QString name,QString key)
+bool HTextProcessor::isMapKeyExists(const QString& name,const QString& key)
 {
     if(smaps.contains(name))
         return smaps[name].contains(key);
@@ -1314,7 +1314,7 @@ bool HTextProcessor::isMapKeyExists(QString name,QString key)
     return false;
 }
 
-QString HTextProcessor::valueOfMapKey(QString name,QString key)
+QString HTextProcessor::valueOfMapKey(const QString& name,const QString& key)
 {
     if(smaps.contains(name))
         return smaps[name][key];
@@ -1323,7 +1323,7 @@ QString HTextProcessor::valueOfMapKey(QString name,QString key)
     return QString("");
 }
 
-bool HTextProcessor::setValueOfMapKey(QString name,QString key,QString value)
+bool HTextProcessor::setValueOfMapKey(const QString& name,const QString& key,const QString& value)
 {
     if(smaps.contains(name))
     {
@@ -1344,7 +1344,7 @@ QMap<QString,QStringList> HTextProcessor::annotations()
     return annot;
 }
 
-QString HTextProcessor::processDoc(QString in)
+QString HTextProcessor::processDoc(const QString& in)
 {
     QString out = "";
     QList<QString> lines = in.split("\n");
@@ -1734,7 +1734,7 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
     pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
 }
 
-void HPdfPreviewDialog::setRawContent(QString c)
+void HPdfPreviewDialog::setRawContent(const QString& c)
 {
     ppf->rawContent = c;
     if(rawEditor != NULL)
@@ -1749,7 +1749,7 @@ int HPdfPreviewDialog::editorTextChanged()
     return 0;
 }
 
-void HPdfPreviewDialog::addAttachmentFile(QString name,QString content)
+void HPdfPreviewDialog::addAttachmentFile(const QString& name,const QString& content)
 {
     attachmentFiles[name] = content;
 }

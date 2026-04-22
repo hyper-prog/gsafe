@@ -203,8 +203,8 @@ protected:
     static void registerDatabase(HRestSqlDatabase *new_instance);
 
     QString restAnswerReceived(QNetworkReply* restNetworkActionReply);
-    virtual QByteArray processRequest(QString data);
-    virtual QString processResponse(QByteArray response);
+    virtual QByteArray processRequest(const QString& data);
+    virtual QString processResponse(const QByteArray& response);
     virtual QString buildDataReqMessageFromRequest(HSqlBuilder& request,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
     virtual QString buildDataReqMessageFromFlExChRequest(QString tablename,QStringList fields,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
     virtual QString buildDataReqMessageFromCustomRequest(QString reqId,QString& request,QMap<QString,QString> toplevelExtraFields = QMap<QString,QString>());
@@ -266,8 +266,8 @@ protected:
     QList<QString>        processed_fields;
     QList<QList<HValue> > processed_data;
 
-    void parseAnswerTable(QString payload,QStringList fields);
-    void parseAnswerTable(QJsonDocument parsedJson,QStringList fields);
+    void parseAnswerTable(const QString& payload,QStringList fields);
+    void parseAnswerTable(const QJsonDocument& parsedJson,QStringList fields);
 };
 
 /** The Native Qt Sql implementation of HSqlConnector */
