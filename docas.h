@@ -50,6 +50,8 @@ public:
 
     QMap<QString,QStringList> getAnnotations();
 
+    static QMap<QString,QString> extractDate(QString isodate,QString keyprefix);
+
 protected:
     bool isMapKeyExists(QString fullname);
     QString valueOfMapKey(QString fullname);
@@ -66,7 +68,7 @@ protected:
     QMap<QString,QString> filenames;
     QMap<QString,QStringList> read_annotations;
 
-    QStringList monthNames;
+    static QStringList monthNames;
     
     int preprocessDocument();
     int generateFilenames();

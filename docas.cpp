@@ -18,6 +18,12 @@
 #include "dconsole.h"
 #include "dialog.h"
 
+QStringList DocAssembler::monthNames = {"error",
+                                        "january","february","march",
+                                        "april","may","june",
+                                        "july","august","september",
+                                        "october","november","december"};
+
 DocAssembler::DocAssembler(QString documentSource)
 {
     rawDocumentSource = documentSource;
@@ -25,11 +31,7 @@ DocAssembler::DocAssembler(QString documentSource)
     workingDirectory = QDir::currentPath() + QDir::separator() + "work";
     sourceDocDirectory = QDir::currentPath() + QDir::separator() + "documents";
     enable_render_warnings = false;
-    monthNames = QStringList() << tr("error")
-                    << tr("january") << tr("february") << tr("march")
-                    << tr("april") << tr("may") << tr("june")
-                    << tr("july") << tr("august") << tr("september")
-                    << tr("october") << tr("november") << tr("december");
+
 }
 
 DocAssembler::~DocAssembler()
@@ -566,16 +568,10 @@ int DocAssembler::askRequestedData(QWidget *widgetParent, QSize dialogSize)
                 if(date.isValid())
                 {
                     setValueOfMapKey(key,date.toString(Qt::ISODate));
-                    setValueOfMapKey(key + "_fulldate",date.toString(Qt::ISODate));
-                    setValueOfMapKey(key + "_year",date.toString("yyyy"));
-                    setValueOfMapKey(key + "_year2",date.toString("yy"));
-                    setValueOfMapKey(key + "_month",date.toString("MM"));
-                    setValueOfMapKey(key + "_monthname",monthNames.value(date.month(), "Error"));
-                    setValueOfMapKey(key + "_day",date.toString("dd"));
-                    setValueOfMapKey(key + "_fulldetailedname",QString("%1 %2 %3")
-                                            .arg(date.toString("yyyy"))
-                                            .arg(monthNames.value(date.month(), "Error"))
-                                            .arg(date.toString("dd")));
+                    QMap<QString,QString> ds = extractDate(rec->strValue(key), key);
+                    QMap<QString,QString>::Iterator i;
+                    for( i = ds.begin() ; i != ds.end() ; ++i )
+                        setValueOfMapKey(i.key(), i.value());
                     ++modcount;
                 }
             }
@@ -593,6 +589,26 @@ int DocAssembler::askRequestedData(QWidget *widgetParent, QSize dialogSize)
     }
     delete dlg;
     return modcount;
+}
+
+QMap<QString,QString> DocAssembler::extractDate(QString isodate,QString keyprefix)
+{
+    QMap<QString,QString> r;
+    QDate date = QDate::fromString(isodate, Qt::ISODate);
+    if(date.isValid())
+    {
+        r[keyprefix + "_fulldate"] = date.toString(Qt::ISODate);
+        r[keyprefix + "_year"] = date.toString("yyyy");
+        r[keyprefix + "_year2"] = date.toString("yy");
+        r[keyprefix + "_month"] = date.toString("MM");
+        r[keyprefix + "_monthname"] = monthNames.value(date.month(), "Error");
+        r[keyprefix + "_day"] = date.toString("dd");
+        r[keyprefix + "_fulldetailedname"] =QString("%1 %2 %3")
+                                                        .arg(r[keyprefix + "_year"])
+                                                        .arg(monthNames.value(date.month(), "Error"))
+                                                        .arg(r[keyprefix + "_day"]);
+    }
+    return r;
 }
 
 QMap<QString, QString> merge_maps(const QMap<QString, QString> &base, const QMap<QString, QString> &overrides)
