@@ -554,6 +554,7 @@ int DocAssembler::askRequestedData(QWidget *widgetParent, QSize dialogSize)
     dlg->setAttribute("stretch_before_bottom_buttons","yes");
     dlg->setAttribute("button_1_text",tr("Ok"));
     dlg->setAttribute("button_1_action","accept");
+    dlg->setAttribute("scrollable_1","yes");
     dlg->add(rec);
     dlg->resize(dialogSize);
     int modcount = -1;

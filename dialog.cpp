@@ -279,7 +279,7 @@ void HDialogData::makeGui(QWidget *base)
         }
     }
 
-    mlay->addLayout(coreLay);
+    mlay->addLayout(coreLay,1);
 
     if(attribute("progress_indicator") == "after_core")
         addProgressIndicator(base,mlay);
