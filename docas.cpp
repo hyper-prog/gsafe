@@ -549,6 +549,7 @@ int DocAssembler::askRequestedData(QWidget *widgetParent, QSize dialogSize)
     }
 
     HDialog *dlg = new HDialog(widgetParent);
+    dlg->setDisplayFlags(HDispFlag_Default | HDispFlag_AddStretchAfterFields);
     dlg->setAttribute("window_title", tr("Input required data"));
     dlg->setAttribute("window_resizebuttons","all");
     dlg->setAttribute("stretch_before_bottom_buttons","yes");

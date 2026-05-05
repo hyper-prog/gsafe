@@ -1464,6 +1464,8 @@ QString HTextProcessor::processDoc(const QString& in)
 
         if(cmd == "ENDC")
         {
+            if(conds.isEmpty())
+                continue;
             conds.pop_front();
             continue;
         }
