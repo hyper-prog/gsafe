@@ -104,6 +104,9 @@ public:
 
     using HDialogData::setAttribute;
 
+protected:
+    void changeEvent(QEvent *event);
+
 public slots:
     virtual int exec();
 

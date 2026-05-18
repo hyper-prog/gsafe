@@ -461,6 +461,8 @@ public:
     const QList<QString>& valueList(QString name);
     QMap<QString,QString>* valueMapPtr(QString name);
 
+    QMap<QString,QString> extractValuesFiltered(QString prefix);
+
     bool isMapKeyExists(const QString& name,const QString& key);
     QString valueOfMapKey(const QString& name,const QString& key);
     bool setValueOfMapKey(const QString& name,const QString& key,const QString& value);

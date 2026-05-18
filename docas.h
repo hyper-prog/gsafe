@@ -40,6 +40,8 @@ public:
     void addValueMapPtr(QString name,QMap<QString,QString>* m);
     void clearValueMaps();
 
+    QMap<QString,QString> extractValuesFiltered(QString prefix);
+
     void setMonthNames(QStringList customMonthNames);
 
     void setWorkingDirectory(QString dir);

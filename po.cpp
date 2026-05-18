@@ -1298,6 +1298,24 @@ QMap<QString,QString>* HTextProcessor::valueMapPtr(QString name)
     return dmaps[name];
 }
 
+QMap<QString,QString> HTextProcessor::extractValuesFiltered(QString prefix)
+{
+    QMap<QString,QString> result;
+    if(smaps.contains(prefix))
+    {
+        QMap<QString,QString>::Iterator i;
+        for(i = smaps[prefix].begin() ; i != smaps[prefix].end() ; ++i)
+            result[i.key()] = i.value();
+    }
+    if(dmaps.contains(prefix))
+    {
+        QMap<QString,QString>::Iterator i;
+        for(i = dmaps[prefix]->begin() ; i != dmaps[prefix]->end() ; ++i)
+            result[i.key()] = i.value();
+    }
+    return result;
+}
+
 void HTextProcessor::clearValueMaps()
 {
     smaps.clear();

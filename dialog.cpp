@@ -169,6 +169,7 @@ void HDialogData::makeGui(QWidget *base)
             base->setWindowFlag(Qt::WindowMinMaxButtonsHint,false);
         }
     }
+
     QVBoxLayout *mlay = new QVBoxLayout(base);
     if(!attribute("title").isEmpty())
     {
@@ -316,8 +317,15 @@ void HDialogData::makeGui(QWidget *base)
     if(attribute("progress_indicator") == "after_all")
         addProgressIndicator(base,mlay);
 
-    if(!attribute("width").isEmpty() && !attribute("height").isEmpty())
-        base->resize(attribute("width").toInt(),attribute("height").toInt());
+    if(!attribute("window_sizestate").isEmpty() && attribute("window_sizestate") == "maximized")
+    {
+        base->showMaximized();
+    }
+    else
+    {
+        if(!attribute("width").isEmpty() && !attribute("height").isEmpty())
+            base->resize(attribute("width").toInt(),attribute("height").toInt());
+    }
 }
 
 void HDialogData::addProgressIndicator(QWidget *base,QVBoxLayout *mlay)
@@ -360,6 +368,22 @@ HDialog::HDialog(QString configName,QWidget *parent)
  : QDialog(parent)
 {
     setConfig(configName);
+}
+
+void HDialog::changeEvent(QEvent *event)
+{
+    if(event->type() == QEvent::WindowStateChange)
+    {
+        if(isMaximized())
+        {
+            setAttribute("state-window-maximized","yes");
+        }
+        else
+        {
+            setAttribute("state-window-maximized","no");
+        }
+    }
+    QWidget::changeEvent(event);
 }
 
 QString HDialog::className()

@@ -278,6 +278,11 @@ void DocAssembler::clearValueMaps()
     textProcessor->clearValueMaps();
 }
 
+QMap<QString,QString> DocAssembler::extractValuesFiltered(QString prefix)
+{
+    return textProcessor->extractValuesFiltered(prefix);
+}
+
 void DocAssembler::setTitleValues(QString selectedTitle)
 {
     QMap<QString,QStringList> temp_annots = getAnnotationValuesFromText(rawDocumentSource);
