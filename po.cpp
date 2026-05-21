@@ -1656,6 +1656,21 @@ HPdfPreviewFrame::HPdfPreviewFrame(QWidget *parent)
  : QFrame(parent)
 {
     showPageIndex = 0;
+    maxPage = 0;
+    logicalPageWidth = 1652;
+    logicalPageHeight = 2338;
+    zoomPercent = 100;
+
+    setFrameShape(QFrame::Box);
+    setLineWidth(1);
+    setAutoFillBackground(true);
+    setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
+
+    QPalette pal = palette();
+    pal.setColor(QPalette::Window,QColor(255,255,255));
+    setPalette(pal);
+
+    setZoomPercent(zoomPercent);
 }
 
 HPdfPreviewFrame::~HPdfPreviewFrame()
@@ -1663,35 +1678,165 @@ HPdfPreviewFrame::~HPdfPreviewFrame()
 
 }
 
+void HPdfPreviewFrame::setLogicalPageSize(int w,int h)
+{
+    if(w < 1)
+        w = 1;
+    if(h < 1)
+        h = 1;
+    logicalPageWidth = w;
+    logicalPageHeight = h;
+    setZoomPercent(zoomPercent);
+}
+
+void HPdfPreviewFrame::setZoomPercent(int zp)
+{
+    if(zp < 1)
+        zp = 1;
+    zoomPercent = zp;
+
+    int w = (logicalPageWidth * zoomPercent) / 100;
+    int h = (logicalPageHeight * zoomPercent) / 100;
+    if(w < 1)
+        w = 1;
+    if(h < 1)
+        h = 1;
+
+    setMinimumSize(w,h);
+    setMaximumSize(w,h);
+    resize(w,h);
+    updateGeometry();
+    update();
+}
+
+int HPdfPreviewFrame::getZoomPercent() const
+{
+    return zoomPercent;
+}
+
+int HPdfPreviewFrame::getLogicalPageWidth() const
+{
+    return logicalPageWidth;
+}
+
+int HPdfPreviewFrame::getLogicalPageHeight() const
+{
+    return logicalPageHeight;
+}
+
 void HPdfPreviewFrame::paintEvent(QPaintEvent *e)
 {
+    QFrame::paintEvent(e);
+
     QPainter pp(this);
-    pp.setWindow(0,0,1652,2338); // PageSite A4 on 200 dpi
+    pp.setWindow(0,0,logicalPageWidth,logicalPageHeight); // PageSize A4 on 200 dpi
     HPageTileRenderer renderer(&pp);
     renderer.setPageFilter(showPageIndex);
     renderer.renderFromInstructions(rawContent);
     if(renderer.currentPageIndex() != maxPage)
         maxPage = renderer.currentPageIndex();
-    QFrame::paintEvent(e);
 }
 
 HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
  : QDialog(parent)
 {
     pdfWriter = NULL;
+    previewContainer = NULL;
+    previewScrollArea = NULL;
+    wheelModeGroup = NULL;
+    modeZoomButton = NULL;
+    modeScrollButton = NULL;
     rawEditor = NULL;
     enable_render_warnings = false;
+    wheelMode = WheelMode_Scroll;
+    wheelPageDeltaAccumulator = 0;
+    autoFitToViewport = true;
+    previewBoundaryPadding = 18;
+    ctrlTemporaryZoomActive = false;
+    ctrlTemporaryPreviousMode = WheelMode_Scroll;
+    oneFingerScrollActive = false;
+    oneFingerLastPos = QPointF(0.0,0.0);
+    oneFingerRemainderY = 0.0;
+    oneFingerDirection = 0;
+    oneFingerPageDeltaAccumulator = 0;
+    oneFingerDeadZonePx = 3;
+    oneFingerReverseHysteresisPx = 10;
+    oneFingerPageFlipThreshold = 220;
+    oneFingerLockAfterPageFlip = false;
+    setWindowFlag(Qt::WindowMaximizeButtonHint,true);
+    setWindowFlag(Qt::WindowMinimizeButtonHint,true);
+    setWindowFlag(Qt::WindowMinMaxButtonsHint,true);
     attachmentFiles.clear();
     lastRenderStoredPositions.clear();
     main_horizontal_layout = new QHBoxLayout(this);
     main_vertical_layout = new QVBoxLayout(0);
     main_horizontal_layout->addLayout(main_vertical_layout);
     toplay = new QHBoxLayout(0);
-    QStringList btns = buttons.split(",",Qt::SkipEmptyParts); // "print,generate"
+    statuslay = new QHBoxLayout(0);
+    QStringList btns = buttons.split(",",Qt::SkipEmptyParts);
 
     ppf = new HPdfPreviewFrame(this);
-
     ppf->maxPage = 0;
+
+    previewContainer = new QWidget(this);
+    previewContainer->setAutoFillBackground(true);
+    QPalette containerPal = previewContainer->palette();
+    containerPal.setColor(QPalette::Window,QColor(80,80,80));
+    previewContainer->setPalette(containerPal);
+    QVBoxLayout *previewContainerLayout = new QVBoxLayout(previewContainer);
+    previewContainerLayout->setContentsMargins(previewBoundaryPadding,previewBoundaryPadding,previewBoundaryPadding,previewBoundaryPadding);
+    previewContainerLayout->setSpacing(0);
+    previewContainerLayout->addWidget(ppf,0,Qt::AlignHCenter | Qt::AlignTop);
+
+    previewScrollArea = new QScrollArea(this);
+    previewScrollArea->setWidget(previewContainer);
+    previewScrollArea->setWidgetResizable(false);
+    previewScrollArea->setAlignment(Qt::AlignCenter);
+    previewScrollArea->setFrameShape(QFrame::NoFrame);
+    previewScrollArea->viewport()->setAutoFillBackground(true);
+    QPalette scrollPal = previewScrollArea->viewport()->palette();
+    scrollPal.setColor(QPalette::Window,QColor(80,80,80));
+    previewScrollArea->viewport()->setPalette(scrollPal);
+    previewScrollArea->viewport()->setAttribute(Qt::WA_AcceptTouchEvents,true);
+    previewScrollArea->viewport()->grabGesture(Qt::PinchGesture);
+    previewScrollArea->viewport()->installEventFilter(this);
+    previewScrollArea->setFocusPolicy(Qt::StrongFocus);
+    previewScrollArea->viewport()->setFocusPolicy(Qt::StrongFocus);
+    ppf->setAttribute(Qt::WA_AcceptTouchEvents,true);
+    ppf->grabGesture(Qt::PinchGesture);
+    ppf->installEventFilter(this);
+    ppf->setFocusPolicy(Qt::StrongFocus);
+
+    wheelModeGroup = new QButtonGroup(this);
+    wheelModeGroup->setExclusive(true);
+    modeZoomButton = new QToolButton(this);
+    modeScrollButton = new QToolButton(this);
+    modeZoomButton->setCheckable(true);
+    modeScrollButton->setCheckable(true);
+    modeZoomButton->setText(tr("Zoom"));
+    modeScrollButton->setText(tr("Scroll"));
+    wheelModeGroup->addButton(modeZoomButton,WheelMode_Zoom);
+    wheelModeGroup->addButton(modeScrollButton,WheelMode_Scroll);
+    connect(wheelModeGroup,SIGNAL(idClicked(int)),this,SLOT(setWheelMode(int)));
+
+    QPushButton *zoomInButton = new QPushButton(tr("Zoom In"),this);
+    QPushButton *zoomOutButton = new QPushButton(tr("Zoom Out"),this);
+    QPushButton *fitPageButton = new QPushButton(tr("Fit Page"),this);
+    QPushButton *prevPageButton = new QPushButton(tr("Prev Page"),this);
+    QPushButton *nextPageButton = new QPushButton(tr("Next Page"),this);
+    connect(zoomInButton,SIGNAL(clicked()),this,SLOT(zoomIn()));
+    connect(zoomOutButton,SIGNAL(clicked()),this,SLOT(zoomOut()));
+    connect(fitPageButton,SIGNAL(clicked()),this,SLOT(fitPage()));
+    connect(prevPageButton,SIGNAL(clicked()),this,SLOT(prevPage()));
+    connect(nextPageButton,SIGNAL(clicked()),this,SLOT(nextPage()));
+
+    toplay->addWidget(zoomInButton);
+    toplay->addWidget(zoomOutButton);
+    toplay->addWidget(fitPageButton);
+    toplay->addWidget(prevPageButton);
+    toplay->addWidget(nextPageButton);
+    toplay->addStretch();
+
     if(btns.contains("generate"))
     {
         QPushButton *generateButton = new QPushButton(tr("Generate Pdf"),this);
@@ -1716,18 +1861,12 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
         main_horizontal_layout->addWidget(rawEditor);
     }
 
-    QPushButton *prevpButton = new QPushButton("<",this);
-    QPushButton *nextpButton = new QPushButton(">",this);
     pageShow = new QLabel("",this);
 
-    connect(prevpButton,SIGNAL(clicked()),this,SLOT(prevPage()));
-    connect(nextpButton,SIGNAL(clicked()),this,SLOT(nextPage()));
-
-    toplay->addStretch();
-    toplay->addWidget(prevpButton);
-    toplay->addWidget(pageShow);
-    toplay->addWidget(nextpButton);
-    toplay->addStretch();
+    statuslay->addWidget(pageShow);
+    statuslay->addStretch();
+    statuslay->addWidget(modeZoomButton);
+    statuslay->addWidget(modeScrollButton);
 
     if(btns.contains("accept"))
     {
@@ -1749,23 +1888,57 @@ HPdfPreviewDialog::HPdfPreviewDialog(QWidget *parent,QString buttons)
     }
 
     main_vertical_layout->addLayout(toplay);
-    main_vertical_layout->addWidget(ppf);
+    main_vertical_layout->addWidget(previewScrollArea);
+    main_vertical_layout->addLayout(statuslay);
 
-    pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
+    QShortcut *scZoomIn = new QShortcut(QKeySequence::ZoomIn,this);
+    scZoomIn->setContext(Qt::WidgetShortcut);
+    connect(scZoomIn,SIGNAL(activated()),this,SLOT(zoomIn()));
+
+    QShortcut *scZoomOut = new QShortcut(QKeySequence::ZoomOut,this);
+    scZoomOut->setContext(Qt::WidgetShortcut);
+    connect(scZoomOut,SIGNAL(activated()),this,SLOT(zoomOut()));
+
+    QShortcut *scPrevPage = new QShortcut(QKeySequence(Qt::Key_PageUp),this);
+    scPrevPage->setContext(Qt::WidgetShortcut);
+    connect(scPrevPage,SIGNAL(activated()),this,SLOT(prevPage()));
+
+    QShortcut *scNextPage = new QShortcut(QKeySequence(Qt::Key_PageDown),this);
+    scNextPage->setContext(Qt::WidgetShortcut);
+    connect(scNextPage,SIGNAL(activated()),this,SLOT(nextPage()));
+
+    QShortcut *scFirstPage = new QShortcut(QKeySequence(Qt::Key_Home),this);
+    scFirstPage->setContext(Qt::WidgetShortcut);
+    connect(scFirstPage,SIGNAL(activated()),this,SLOT(firstPage()));
+
+    QShortcut *scLastPage = new QShortcut(QKeySequence(Qt::Key_End),this);
+    scLastPage->setContext(Qt::WidgetShortcut);
+    connect(scLastPage,SIGNAL(activated()),this,SLOT(lastPage()));
+
+    modeScrollButton->setChecked(true);
+    setWheelMode(WheelMode_Scroll);
+    updatePageShow();
+    QTimer::singleShot(0,this,SLOT(fitPage()));
 }
 
 void HPdfPreviewDialog::setRawContent(const QString& c)
 {
     ppf->rawContent = c;
+    ppf->showPageIndex = 0;
+    ppf->maxPage = 0;
+    wheelPageDeltaAccumulator = 0;
     if(rawEditor != NULL)
         rawEditor->setPlainText(c);
-    update();
+    ppf->update();
+    updatePageShow();
 }
 
 int HPdfPreviewDialog::editorTextChanged()
 {
     ppf->rawContent = rawEditor->toPlainText();
-    update();
+    ppf->maxPage = qMax(ppf->showPageIndex,0);
+    ppf->update();
+    updatePageShow();
     return 0;
 }
 
@@ -1811,10 +1984,183 @@ int HPdfPreviewDialog::generatePdf(void)
 
 int HPdfPreviewDialog::changePage(int p)
 {
+    if(p < 0)
+        p = 0;
+    if(p > ppf->maxPage)
+        p = ppf->maxPage;
+
     ppf->showPageIndex = p;
-    pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
-    update();
+    updatePageShow();
+    ppf->update();
     return 0;
+}
+
+int HPdfPreviewDialog::firstPage()
+{
+    return changePage(0);
+}
+
+int HPdfPreviewDialog::lastPage()
+{
+    return changePage(ppf->maxPage);
+}
+
+int HPdfPreviewDialog::zoomIn()
+{
+    if(previewScrollArea == NULL)
+        return 0;
+    return applyZoomPercent(ppf->getZoomPercent() + 10,QPoint(previewScrollArea->viewport()->width() / 2,previewScrollArea->viewport()->height() / 2),true);
+}
+
+int HPdfPreviewDialog::zoomOut()
+{
+    if(previewScrollArea == NULL)
+        return 0;
+    return applyZoomPercent(ppf->getZoomPercent() - 10,QPoint(previewScrollArea->viewport()->width() / 2,previewScrollArea->viewport()->height() / 2),true);
+}
+
+int HPdfPreviewDialog::fitPage()
+{
+    if(previewScrollArea == NULL || ppf == NULL)
+        return 0;
+
+    QSize vp = previewScrollArea->viewport()->size();
+    if(vp.width() < 10 || vp.height() < 10)
+        return 0;
+
+    int fitW = vp.width() - (previewBoundaryPadding * 2);
+    int fitH = vp.height() - (previewBoundaryPadding * 2);
+    if(fitW < 10)
+        fitW = 10;
+    if(fitH < 10)
+        fitH = 10;
+
+    int zw = (fitW * 100) / ppf->getLogicalPageWidth();
+    int zh = (fitH * 100) / ppf->getLogicalPageHeight();
+    int target = qMin(zw,zh);
+    if(target < 25)
+        target = 25;
+    if(target > 400)
+        target = 400;
+
+    autoFitToViewport = true;
+    return applyZoomPercent(target,QPoint(vp.width() / 2,vp.height() / 2),false);
+}
+
+int HPdfPreviewDialog::setWheelMode(int wm)
+{
+    if(wm != WheelMode_Zoom && wm != WheelMode_Scroll)
+        return 0;
+
+    wheelMode = wm;
+    wheelPageDeltaAccumulator = 0;
+    return 0;
+}
+
+int HPdfPreviewDialog::setZoomMode()
+{
+    if(modeZoomButton != NULL)
+        modeZoomButton->setChecked(true);
+    return setWheelMode(WheelMode_Zoom);
+}
+
+int HPdfPreviewDialog::setScrollMode()
+{
+    if(modeScrollButton != NULL)
+        modeScrollButton->setChecked(true);
+    return setWheelMode(WheelMode_Scroll);
+}
+
+void HPdfPreviewDialog::beginTemporaryCtrlZoom()
+{
+    if(ctrlTemporaryZoomActive)
+        return;
+    if(wheelMode != WheelMode_Scroll)
+        return;
+
+    ctrlTemporaryPreviousMode = wheelMode;
+    ctrlTemporaryZoomActive = true;
+    setZoomMode();
+}
+
+void HPdfPreviewDialog::endTemporaryCtrlZoom()
+{
+    if(!ctrlTemporaryZoomActive)
+        return;
+
+    ctrlTemporaryZoomActive = false;
+    if(ctrlTemporaryPreviousMode == WheelMode_Scroll)
+        setScrollMode();
+}
+
+int HPdfPreviewDialog::applyZoomPercent(int newZoomPercent,const QPoint& viewportAnchorPoint,bool manualZoom)
+{
+    if(previewScrollArea == NULL || ppf == NULL)
+        return 0;
+
+    int targetZoom = newZoomPercent;
+    if(targetZoom < 25)
+        targetZoom = 25;
+    if(targetZoom > 400)
+        targetZoom = 400;
+
+    if(targetZoom == ppf->getZoomPercent())
+    {
+        if(manualZoom)
+            autoFitToViewport = false;
+        updatePageShow();
+        return 0;
+    }
+
+    QWidget *zoomContent = (previewContainer != NULL ? previewContainer : static_cast<QWidget *>(ppf));
+    int oldW = zoomContent->width();
+    int oldH = zoomContent->height();
+    double relX = -1.0;
+    double relY = -1.0;
+
+    if(viewportAnchorPoint.x() >= 0 && viewportAnchorPoint.y() >= 0 && oldW > 0 && oldH > 0)
+    {
+        QScrollBar *hs = previewScrollArea->horizontalScrollBar();
+        QScrollBar *vs = previewScrollArea->verticalScrollBar();
+        if(hs != NULL && vs != NULL)
+        {
+            relX = double(hs->value() + viewportAnchorPoint.x()) / double(oldW);
+            relY = double(vs->value() + viewportAnchorPoint.y()) / double(oldH);
+        }
+    }
+
+    ppf->setZoomPercent(targetZoom);
+    if(previewContainer != NULL)
+    {
+        previewContainer->updateGeometry();
+        previewContainer->adjustSize();
+    }
+
+    if(relX >= 0.0 && relY >= 0.0)
+    {
+        QScrollBar *hs = previewScrollArea->horizontalScrollBar();
+        QScrollBar *vs = previewScrollArea->verticalScrollBar();
+        if(hs != NULL && vs != NULL)
+        {
+            int newW = zoomContent->width();
+            int newH = zoomContent->height();
+            hs->setValue(int(relX * newW) - viewportAnchorPoint.x());
+            vs->setValue(int(relY * newH) - viewportAnchorPoint.y());
+        }
+    }
+
+    wheelPageDeltaAccumulator = 0;
+    if(manualZoom)
+        autoFitToViewport = false;
+    updatePageShow();
+    return 0;
+}
+
+void HPdfPreviewDialog::updatePageShow()
+{
+    int currentPage = ppf->showPageIndex + 1;
+    int maxPageValue = qMax(ppf->maxPage + 1,currentPage);
+    pageShow->setText(QString("%1 / %2   %3").arg(currentPage).arg(maxPageValue).arg(ppf->getZoomPercent()) + "%");
 }
 
 int HPdfPreviewDialog::print()
@@ -1848,26 +2194,12 @@ int HPdfPreviewDialog::print()
 
 int HPdfPreviewDialog::nextPage()
 {
-    setUpdatesEnabled(false);
-    ppf->showPageIndex++;
-    if(ppf->showPageIndex > ppf->maxPage)
-        ppf->showPageIndex = ppf->maxPage;
-    pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
-    setUpdatesEnabled(true);
-    update();
-    return 0;
+    return changePage(ppf->showPageIndex + 1);
 }
 
 int HPdfPreviewDialog::prevPage()
 {
-    setUpdatesEnabled(false);
-    ppf->showPageIndex--;
-    if(ppf->showPageIndex < 0)
-        ppf->showPageIndex = 0;
-    pageShow->setText(QString("%1").arg(ppf->showPageIndex + 1));
-    setUpdatesEnabled(true);
-    update();
-    return 0;
+    return changePage(ppf->showPageIndex - 1);
 }
 
 int HPdfPreviewDialog::startNewPage()
@@ -1883,10 +2215,418 @@ int HPdfPreviewDialog::startNewPage()
 
 void HPdfPreviewDialog::wheelEvent(QWheelEvent *e)
 {
-    if(e->angleDelta().y() < 0)
+    if(processWheelEvent(e))
+        return;
+    QDialog::wheelEvent(e);
+}
+
+void HPdfPreviewDialog::resizeEvent(QResizeEvent *e)
+{
+    QDialog::resizeEvent(e);
+    if(autoFitToViewport)
+        fitPage();
+}
+
+void HPdfPreviewDialog::keyPressEvent(QKeyEvent *e)
+{
+    if(processPreviewKeyPress(e))
+    {
+        e->accept();
+        return;
+    }
+    QDialog::keyPressEvent(e);
+}
+
+void HPdfPreviewDialog::keyReleaseEvent(QKeyEvent *e)
+{
+    if(processPreviewKeyRelease(e))
+    {
+        e->accept();
+        return;
+    }
+    QDialog::keyReleaseEvent(e);
+}
+
+bool HPdfPreviewDialog::event(QEvent *e)
+{
+    if(e != NULL && e->type() == QEvent::Gesture)
+    {
+        if(processGestureEvent(static_cast<QGestureEvent *>(e)))
+            return true;
+    }
+
+    return QDialog::event(e);
+}
+
+bool HPdfPreviewDialog::eventFilter(QObject *watched,QEvent *event)
+{
+    if(event == NULL)
+        return QDialog::eventFilter(watched,event);
+
+    if(watched == ppf)
+    {
+        if(event->type() == QEvent::TouchBegin || event->type() == QEvent::TouchUpdate ||
+           event->type() == QEvent::TouchEnd || event->type() == QEvent::TouchCancel)
+        {
+            if(processPreviewTouch(static_cast<QTouchEvent *>(event)))
+            {
+                event->accept();
+                return true;
+            }
+        }
+    }
+
+    if(watched == ppf || (previewScrollArea != NULL && watched == previewScrollArea->viewport()))
+    {
+        if(event->type() == QEvent::Wheel)
+            return processWheelEvent(static_cast<QWheelEvent *>(event));
+        if(event->type() == QEvent::Gesture)
+            return processGestureEvent(static_cast<QGestureEvent *>(event));
+        if(event->type() == QEvent::KeyPress)
+        {
+            if(processPreviewKeyPress(static_cast<QKeyEvent *>(event)))
+            {
+                event->accept();
+                return true;
+            }
+        }
+        if(event->type() == QEvent::KeyRelease)
+        {
+            if(processPreviewKeyRelease(static_cast<QKeyEvent *>(event)))
+            {
+                event->accept();
+                return true;
+            }
+        }
+    }
+
+    return QDialog::eventFilter(watched,event);
+}
+
+bool HPdfPreviewDialog::processPreviewKeyPress(QKeyEvent *e)
+{
+    if(e == NULL)
+        return false;
+
+    Qt::KeyboardModifiers mods = e->modifiers();
+
+    if(e->key() == Qt::Key_Control)
+    {
+        beginTemporaryCtrlZoom();
+        return true;
+    }
+
+    if((mods & Qt::ControlModifier) != 0)
+    {
+        if(e->key() == Qt::Key_Minus)
+        {
+            zoomOut();
+            return true;
+        }
+        if(e->key() == Qt::Key_Equal || e->key() == Qt::Key_Plus)
+        {
+            zoomIn();
+            return true;
+        }
+        if(e->key() == Qt::Key_0)
+        {
+            fitPage();
+            return true;
+        }
+    }
+
+    if((mods & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier)) == 0)
+    {
+        if(e->key() == Qt::Key_Up || e->key() == Qt::Key_Down)
+        {
+            int step = 20;
+            if(previewScrollArea != NULL)
+            {
+                QScrollBar *vs = previewScrollArea->verticalScrollBar();
+                if(vs != NULL && vs->singleStep() > 0)
+                    step = vs->singleStep();
+            }
+            processScrollDelta((e->key() == Qt::Key_Up ? step : -step),120,&wheelPageDeltaAccumulator,NULL,false);
+            return true;
+        }
+        if(e->key() == Qt::Key_Left || e->key() == Qt::Key_P)
+        {
+            prevPage();
+            return true;
+        }
+        if(e->key() == Qt::Key_Right || e->key() == Qt::Key_N)
+        {
+            nextPage();
+            return true;
+        }
+        if(e->key() == Qt::Key_Z)
+        {
+            setZoomMode();
+            return true;
+        }
+        if(e->key() == Qt::Key_S)
+        {
+            setScrollMode();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool HPdfPreviewDialog::processPreviewKeyRelease(QKeyEvent *e)
+{
+    if(e == NULL)
+        return false;
+
+    if(e->key() == Qt::Key_Control)
+    {
+        endTemporaryCtrlZoom();
+        return true;
+    }
+
+    return false;
+}
+
+bool HPdfPreviewDialog::processPreviewTouch(QTouchEvent *e)
+{
+    if(e == NULL || previewScrollArea == NULL)
+        return false;
+
+    const QList<QEventPoint> points = e->points();
+    if(points.count() != 1)
+    {
+        resetOneFingerTouchState();
+        return false;
+    }
+
+    const QEventPoint p = points.first();
+
+    if(e->type() == QEvent::TouchBegin)
+    {
+        resetOneFingerTouchState();
+        oneFingerScrollActive = true;
+        oneFingerLastPos = p.position();
+        return true;
+    }
+
+    if(e->type() == QEvent::TouchUpdate)
+    {
+        if(!oneFingerScrollActive)
+            return false;
+
+        if(oneFingerLockAfterPageFlip)
+            return true;
+
+        qreal dy = p.position().y() - oneFingerLastPos.y();
+        oneFingerLastPos = p.position();
+
+        if(qAbs(dy) < oneFingerDeadZonePx)
+            return true;
+
+        int newDir = (dy > 0.0 ? 1 : -1);
+        if(oneFingerDirection == 0)
+        {
+            oneFingerDirection = newDir;
+        }
+        else if(newDir != oneFingerDirection)
+        {
+            if(qAbs(dy) < oneFingerReverseHysteresisPx)
+                return true;
+
+            oneFingerDirection = newDir;
+            oneFingerRemainderY = 0.0;
+            oneFingerPageDeltaAccumulator = 0;
+        }
+
+        oneFingerRemainderY += dy;
+        int deltaInt = int(oneFingerRemainderY);
+        oneFingerRemainderY -= deltaInt;
+
+        if(deltaInt != 0)
+        {
+            bool didPageFlip = false;
+            processScrollDelta(deltaInt,oneFingerPageFlipThreshold,&oneFingerPageDeltaAccumulator,&didPageFlip,true);
+            if(didPageFlip)
+            {
+                oneFingerLockAfterPageFlip = true;
+                oneFingerRemainderY = 0.0;
+                oneFingerDirection = 0;
+            }
+        }
+        return true;
+    }
+
+    if(e->type() == QEvent::TouchEnd || e->type() == QEvent::TouchCancel)
+    {
+        if(!oneFingerScrollActive)
+            return false;
+
+        resetOneFingerTouchState();
+        return true;
+    }
+
+    return false;
+}
+
+void HPdfPreviewDialog::resetOneFingerTouchState()
+{
+    oneFingerScrollActive = false;
+    oneFingerDirection = 0;
+    oneFingerRemainderY = 0.0;
+    oneFingerPageDeltaAccumulator = 0;
+    oneFingerLockAfterPageFlip = false;
+}
+
+bool HPdfPreviewDialog::processGestureEvent(QGestureEvent *e)
+{
+    if(e == NULL || previewScrollArea == NULL || ppf == NULL)
+        return false;
+
+    QGesture *gesture = e->gesture(Qt::PinchGesture);
+    if(gesture == NULL)
+        return false;
+
+    QPinchGesture *pinch = static_cast<QPinchGesture *>(gesture);
+    qreal scaleFactor = pinch->scaleFactor();
+    if(scaleFactor <= 0.0)
+        scaleFactor = 1.0;
+
+    QPoint anchorPoint(previewScrollArea->viewport()->width() / 2,previewScrollArea->viewport()->height() / 2);
+    if(!pinch->hotSpot().isNull())
+        anchorPoint = previewScrollArea->viewport()->mapFromGlobal(pinch->hotSpot().toPoint());
+
+    applyZoomPercent(int(ppf->getZoomPercent() * scaleFactor),anchorPoint,true);
+    e->accept(gesture);
+    return true;
+}
+
+bool HPdfPreviewDialog::processWheelEvent(QWheelEvent *e)
+{
+    if(e == NULL || previewScrollArea == NULL || ppf == NULL)
+        return false;
+
+    if(wheelMode == WheelMode_Zoom)
+    {
+        int deltaY = e->angleDelta().y();
+        if(deltaY == 0)
+            deltaY = e->pixelDelta().y();
+        if(deltaY == 0)
+            return false;
+
+        int stepCount = deltaY / 120;
+        if(stepCount == 0)
+            stepCount = (deltaY > 0 ? 1 : -1);
+
+        QPoint anchorPoint = previewScrollArea->viewport()->mapFromGlobal(e->globalPosition().toPoint());
+        applyZoomPercent(ppf->getZoomPercent() + (stepCount * 10),anchorPoint,true);
+        e->accept();
+        return true;
+    }
+
+    int deltaY = e->pixelDelta().y();
+    if(deltaY == 0)
+        deltaY = e->angleDelta().y();
+    if(!processScrollDelta(deltaY,120,&wheelPageDeltaAccumulator,NULL,false))
+        return false;
+    e->accept();
+    return true;
+}
+
+bool HPdfPreviewDialog::processScrollDelta(int deltaY,int pageFlipThreshold,int *pageDeltaAccumulator,bool *didPageFlip,bool singlePageFlipPerCall)
+{
+    if(previewScrollArea == NULL || ppf == NULL)
+        return false;
+    if(deltaY == 0)
+        return false;
+    if(pageFlipThreshold < 1)
+        pageFlipThreshold = 1;
+
+    int *accumulator = pageDeltaAccumulator;
+    if(accumulator == NULL)
+        accumulator = &wheelPageDeltaAccumulator;
+
+    bool pageFlipOccurred = false;
+    if(didPageFlip != NULL)
+        *didPageFlip = false;
+
+    QScrollBar *vs = previewScrollArea->verticalScrollBar();
+    if(vs == NULL)
+        return false;
+
+    if(vs->maximum() <= vs->minimum())
+    {
+        pageFlipOccurred = applyPageFallbackDelta(deltaY,pageFlipThreshold,accumulator,singlePageFlipPerCall,vs);
+        if(didPageFlip != NULL)
+            *didPageFlip = pageFlipOccurred;
+        return true;
+    }
+
+    int oldScrollValue = vs->value();
+    int newScrollValue = oldScrollValue - deltaY;
+    if(newScrollValue < vs->minimum())
+        newScrollValue = vs->minimum();
+    if(newScrollValue > vs->maximum())
+        newScrollValue = vs->maximum();
+    vs->setValue(newScrollValue);
+
+    if(newScrollValue == oldScrollValue)
+    {
+        pageFlipOccurred = applyPageFallbackDelta(deltaY,pageFlipThreshold,accumulator,singlePageFlipPerCall,vs);
+        if(didPageFlip != NULL)
+            *didPageFlip = pageFlipOccurred;
+        return true;
+    }
+
+    *accumulator = 0;
+    if(didPageFlip != NULL)
+        *didPageFlip = pageFlipOccurred;
+    return true;
+}
+
+bool HPdfPreviewDialog::applyPageFallbackDelta(int sourceDeltaY,int pageFlipThreshold,int *accumulator,bool singlePageFlipPerCall,QScrollBar *vs)
+{
+    if(accumulator == NULL || vs == NULL)
+        return false;
+
+    bool pageFlipOccurred = false;
+    *accumulator += sourceDeltaY;
+
+    while(*accumulator <= -pageFlipThreshold)
+    {
+        int oldPage = ppf->showPageIndex;
         nextPage();
-    if(e->angleDelta().y() > 0)
+        if(ppf->showPageIndex != oldPage)
+        {
+            vs->setValue(vs->minimum());
+            pageFlipOccurred = true;
+        }
+        *accumulator += pageFlipThreshold;
+        if(singlePageFlipPerCall && pageFlipOccurred)
+        {
+            *accumulator = 0;
+            break;
+        }
+    }
+
+    while(*accumulator >= pageFlipThreshold)
+    {
+        int oldPage = ppf->showPageIndex;
         prevPage();
+        if(ppf->showPageIndex != oldPage)
+        {
+            vs->setValue(vs->maximum());
+            pageFlipOccurred = true;
+        }
+        *accumulator -= pageFlipThreshold;
+        if(singlePageFlipPerCall && pageFlipOccurred)
+        {
+            *accumulator = 0;
+            break;
+        }
+    }
+
+    return pageFlipOccurred;
 }
 
 HPdfPreviewDialog::~HPdfPreviewDialog()

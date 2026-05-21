@@ -405,6 +405,9 @@ HSmallTextDisplay::HSmallTextDisplay(QWidget *parent,HField *data,HDispObjectFla
         valueSetOnGui_internal();
         connect(valueEditor,SIGNAL(textChanged(QString)),this,SLOT(valueUpdatedOnGui(QString)));
         layout->addWidget(valueEditor,stretch);
+
+        if(dLink->attribute("initial_focus") == "yes")
+            valueEditor->setFocus();
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
     {
@@ -536,6 +539,9 @@ HLargeTextDisplay::HLargeTextDisplay(QWidget *parent,HField *data,HDispObjectFla
                 valueEditor->setMaximumSize(maxw,maxh);
             connect(valueEditor,SIGNAL(textChanged()),this,SLOT(valueUpdatedOnGui()));
             layout->addWidget(valueEditor,stretch);
+
+            if(dLink->attribute("initial_focus") == "yes")
+                valueEditor->setFocus();
         }
         if(data->fieldEditType() == HFieldEdit_ShowReadonly)
         {
@@ -726,6 +732,9 @@ HNumberDisplay::HNumberDisplay(QWidget *parent,HField *data,HDispObjectFlags fla
             valueSetOnGui_internal();
             connect(valueEditor,SIGNAL(textChanged(QString)),this,SLOT(valueUpdatedOnGui(QString)));
             layout->addWidget(valueEditor,stretch);
+
+            if(dLink->attribute("initial_focus") == "yes")
+                valueEditor->setFocus();
         }
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
@@ -870,6 +879,9 @@ HFloatingDisplay::HFloatingDisplay(QWidget *parent,HField *data,HDispObjectFlags
         valueSetOnGui_internal();
         connect(valueEditor,SIGNAL(textChanged(QString)),this,SLOT(valueUpdatedOnGui(QString)));
         layout->addWidget(valueEditor,stretch);
+
+        if(dLink->attribute("initial_focus") == "yes")
+            valueEditor->setFocus();
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
     {
@@ -971,6 +983,9 @@ HDateDisplay::HDateDisplay(QWidget *parent,HField *data,HDispObjectFlags flags)
 
         connect(valueEditor,SIGNAL(dateChanged(const QDate)),this,SLOT(valueUpdatedOnGui(const QDate)));
         layout->addWidget(valueEditor,stretch);
+
+        if(dLink->attribute("initial_focus") == "yes")
+            valueEditor->setFocus();
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
     {
@@ -1115,6 +1130,9 @@ HCheckDisplay::HCheckDisplay(QWidget *parent,HField *data,HDispObjectFlags flags
         valueSetOnGui_internal();
         connect(valueEditor,SIGNAL(clicked()),this,SLOT(valueUpdatedOnGui()));
         layout->addWidget(valueEditor,stretch);
+
+        if(dLink->attribute("initial_focus") == "yes")
+            valueEditor->setFocus();
     }
     if(data->fieldEditType() == HFieldEdit_ShowReadonly)
     {
