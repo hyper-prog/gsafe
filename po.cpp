@@ -2535,6 +2535,17 @@ bool HPdfPreviewDialog::processWheelEvent(QWheelEvent *e)
 
 bool HPdfPreviewDialog::processScrollDelta(int deltaY,int pageFlipThreshold,int *pageDeltaAccumulator,bool *didPageFlip,bool singlePageFlipPerCall)
 {
+    // Unified delta handler used by wheel, keyboard and one-finger touch.
+    //
+    // 1) Try to scroll inside the current page.
+    // 2) If scroll range is unavailable or boundary is reached, accumulate
+    //    input delta and trigger page turns through applyPageFallbackDelta().
+    //
+    // Note about accumulator selection:
+    // - pageDeltaAccumulator is optional so callers can keep separate state
+    //   (wheel vs. touch).
+    // - when null, the dialog-level wheelPageDeltaAccumulator is used.
+    // This keeps one code path while preserving per-input threshold behavior.
     if(previewScrollArea == NULL || ppf == NULL)
         return false;
     if(deltaY == 0)
@@ -2542,9 +2553,9 @@ bool HPdfPreviewDialog::processScrollDelta(int deltaY,int pageFlipThreshold,int 
     if(pageFlipThreshold < 1)
         pageFlipThreshold = 1;
 
-    int *accumulator = pageDeltaAccumulator;
-    if(accumulator == NULL)
-        accumulator = &wheelPageDeltaAccumulator;
+    int *selectedAccumulator = pageDeltaAccumulator;
+    if(selectedAccumulator == NULL)
+        selectedAccumulator = &wheelPageDeltaAccumulator;
 
     bool pageFlipOccurred = false;
     if(didPageFlip != NULL)
@@ -2556,7 +2567,7 @@ bool HPdfPreviewDialog::processScrollDelta(int deltaY,int pageFlipThreshold,int 
 
     if(vs->maximum() <= vs->minimum())
     {
-        pageFlipOccurred = applyPageFallbackDelta(deltaY,pageFlipThreshold,accumulator,singlePageFlipPerCall,vs);
+        pageFlipOccurred = applyPageFallbackDelta(deltaY,pageFlipThreshold,selectedAccumulator,singlePageFlipPerCall,vs);
         if(didPageFlip != NULL)
             *didPageFlip = pageFlipOccurred;
         return true;
@@ -2572,13 +2583,14 @@ bool HPdfPreviewDialog::processScrollDelta(int deltaY,int pageFlipThreshold,int 
 
     if(newScrollValue == oldScrollValue)
     {
-        pageFlipOccurred = applyPageFallbackDelta(deltaY,pageFlipThreshold,accumulator,singlePageFlipPerCall,vs);
+        pageFlipOccurred = applyPageFallbackDelta(deltaY,pageFlipThreshold,selectedAccumulator,singlePageFlipPerCall,vs);
         if(didPageFlip != NULL)
             *didPageFlip = pageFlipOccurred;
         return true;
     }
 
-    *accumulator = 0;
+    // Any successful in-page scroll clears page-turn accumulation.
+    *selectedAccumulator = 0;
     if(didPageFlip != NULL)
         *didPageFlip = pageFlipOccurred;
     return true;
@@ -2586,6 +2598,15 @@ bool HPdfPreviewDialog::processScrollDelta(int deltaY,int pageFlipThreshold,int 
 
 bool HPdfPreviewDialog::applyPageFallbackDelta(int sourceDeltaY,int pageFlipThreshold,int *accumulator,bool singlePageFlipPerCall,QScrollBar *vs)
 {
+    // Boundary fallback page-turn engine.
+    //
+    // The accumulator integrates deltas while we cannot continue in-page scroll.
+    // Threshold crossings trigger page navigation:
+    // - negative threshold => next page and jump to top
+    // - positive threshold => previous page and jump to bottom
+    //
+    // singlePageFlipPerCall is mainly for touch, where one update event should
+    // not chain multiple page changes.
     if(accumulator == NULL || vs == NULL)
         return false;
 

@@ -641,7 +641,28 @@ protected:
 
     bool processWheelEvent(QWheelEvent *e);
     bool processGestureEvent(QGestureEvent *e);
+    /**
+     * Unified scroll/page routing for wheel, keyboard and one-finger touch deltas.
+     *
+     * The method first tries vertical scrolling inside the current page.
+     * If no vertical scrolling is possible (fit-page) or a boundary is reached,
+     * it falls back to thresholded page changes via applyPageFallbackDelta().
+     *
+     * @param deltaY Signed vertical delta in "scroll up/down" convention used by inputs.
+     * @param pageFlipThreshold Absolute accumulator threshold to trigger page turn.
+     * @param pageDeltaAccumulator Optional external accumulator.
+     *        If null, wheelPageDeltaAccumulator is used.
+     * @param didPageFlip Optional out-flag, set true when a page turn happened.
+     * @param singlePageFlipPerCall If true, stop after first page turn in this call.
+     */
     bool processScrollDelta(int deltaY,int pageFlipThreshold,int *pageDeltaAccumulator,bool *didPageFlip,bool singlePageFlipPerCall);
+    /**
+     * Applies boundary fallback by accumulating delta and turning pages on threshold.
+     *
+     * Negative accumulator turns to next page, positive to previous page.
+     * After a successful page turn, vertical scrollbar is snapped to the matching
+     * reading boundary (top for next page, bottom for previous page).
+     */
     bool applyPageFallbackDelta(int sourceDeltaY,int pageFlipThreshold,int *accumulator,bool singlePageFlipPerCall,QScrollBar *vs);
     bool processPreviewTouch(QTouchEvent *e);
     void resetOneFingerTouchState();
@@ -653,8 +674,8 @@ protected:
     void updatePageShow();
 
     QMap<QString,QString> attachmentFiles;
-    int wheelMode;
-    int wheelPageDeltaAccumulator;
+    int wheelMode;                    // Active wheel behavior (Zoom or Scroll).
+    int wheelPageDeltaAccumulator;    // Threshold accumulator used for wheel-driven page fallback.
     QLabel *pageShow;
     QPdfWriter *pdfWriter;
 #ifndef GSAFE_DISABLE_PRINTERMODULE
@@ -671,19 +692,19 @@ protected:
     QVBoxLayout *main_vertical_layout;
     QHBoxLayout *toplay;
     QHBoxLayout *statuslay;
-    bool autoFitToViewport;
-    int previewBoundaryPadding;
-    bool ctrlTemporaryZoomActive;
-    int ctrlTemporaryPreviousMode;
-    bool oneFingerScrollActive;
-    QPointF oneFingerLastPos;
-    qreal oneFingerRemainderY;
-    int oneFingerDirection;
-    int oneFingerPageDeltaAccumulator;
-    int oneFingerDeadZonePx;
-    int oneFingerReverseHysteresisPx;
-    int oneFingerPageFlipThreshold;
-    bool oneFingerLockAfterPageFlip;
+    bool autoFitToViewport;           // Keeps fit-page mode sticky across resize until manual zoom.
+    int previewBoundaryPadding;       // Visual dark-grey margin around white page.
+    bool ctrlTemporaryZoomActive;     // True while Ctrl-hold temporary zoom override is active.
+    int ctrlTemporaryPreviousMode;    // Mode restored on Ctrl release.
+    bool oneFingerScrollActive;       // True between one-finger touch begin/end.
+    QPointF oneFingerLastPos;         // Last touch point for delta computation.
+    qreal oneFingerRemainderY;        // Sub-pixel Y accumulator for smooth slow touch drags.
+    int oneFingerDirection;           // Last accepted touch direction (+1 down, -1 up, 0 unknown).
+    int oneFingerPageDeltaAccumulator;// Threshold accumulator for one-finger boundary page turns.
+    int oneFingerDeadZonePx;          // Ignores tiny touch noise below this delta.
+    int oneFingerReverseHysteresisPx; // Required opposite-direction movement before reversing direction.
+    int oneFingerPageFlipThreshold;   // Touch-specific page-turn threshold (larger than wheel).
+    bool oneFingerLockAfterPageFlip;  // After touch page turn, require finger lift before next action.
 
 public:
     bool enable_render_warnings;
