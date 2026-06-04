@@ -1517,7 +1517,7 @@ QString HTextProcessor::processDoc(const QString& in)
                 {
                     out.append("fixh\n");
                     out.append("html#40%#{{" + smi.key() + "." + ini.key() + "}}\n");
-                    out.append("html#40%#" + ini.value()+"\n");
+                    out.append("html#40%#" + ini.value().replace("\n","<br/>") + "\n");
                     out.append("html#20%#static\n");
                     out.append("newl\n");
                 }
@@ -1530,7 +1530,7 @@ QString HTextProcessor::processDoc(const QString& in)
                 {
                     out.append("fixh\n");
                     out.append("html#40%#{{" + dmi.key() + "." + ini.key() + "}}\n");
-                    out.append("html#40%#" + ini.value()+"\n");
+                    out.append("html#40%#" + ini.value().replace("\n","<br/>")+"\n");
                     out.append("html#20%#dynamic\n");
                     out.append("newl\n");
                 }
@@ -1540,7 +1540,7 @@ QString HTextProcessor::processDoc(const QString& in)
             {
                 out.append("fixh\n");
                 out.append("html#40%#{{" + li.key() + "}}\n");
-                out.append("html#40%#" + li.value().join(",") + "\n");
+                out.append("html#40%#" + li.value().join(",").replace("\n","<br/>") + "\n");
                 out.append("html#20%#list\n");
                 out.append("newl\n");
             }
