@@ -546,6 +546,38 @@ void HPageTileRenderer::drawImage(const QString& xpos,const QString& ypos,const 
     }
 }
 
+void HPageTileRenderer::drawImage4(const QString& xpos,const QString& ypos,const QString& width,const QString& height,const QImage& image)
+{
+    if(image.width() < 1 || image.height() < 1)
+        return;
+
+    int x = sizeStrToInt(xpos,"x");
+    int y = sizeStrToInt(ypos,"y");
+    int w_px = sizeStrToInt(width,"x");
+    int h_px = sizeStrToInt(height,"y");
+
+    if(w_px < 1 || h_px < 1)
+        return;
+
+    double scaleX = (double)w_px / (double)image.width();
+    double scaleY = (double)h_px / (double)image.height();
+    double scale = qMin(scaleX,scaleY);
+
+    int drawW = (int)((double)image.width() * scale);
+    int drawH = (int)((double)image.height() * scale);
+    if(drawW < 1)
+        drawW = 1;
+    if(drawH < 1)
+        drawH = 1;
+
+    QRect r(marginLeft + x,marginTop + y,drawW,drawH);
+
+    if(pageFilter == -1 || pageFilter == currentPage)
+    {
+        p->drawImage(r,image);
+    }
+}
+
 int HPageTileRenderer::calcImageHeight(const QString& width,const QImage& image)
 {
     int w_px = sizeStrToInt(width,"x");
@@ -1207,7 +1239,9 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
     }
     if(cmd == "imgr")
     {
-        if(fpp.count() > 2)
+        if(fpp.count() > 3)
+            drawImage4(fpp[0],fpp[1],fpp[2],fpp[3],QImage(parts.at(2)));
+        else if(fpp.count() > 2)
             drawImage(fpp[0],fpp[1],fpp[2],QImage(parts.at(2)));
         else
             addImage(parts.at(1),QImage(parts.at(2)));
@@ -1216,7 +1250,9 @@ void HPageTileRenderer::renderFromInstructionLineLL(const QStringList& parts)
     if(cmd == "imgb")
     {
         QImage img = QImage::fromData(QByteArray::fromBase64(parts.at(2).toLocal8Bit()));
-        if(fpp.count() > 2)
+        if(fpp.count() > 3)
+            drawImage4(fpp[0],fpp[1],fpp[2],fpp[3],img);
+        else if(fpp.count() > 2)
             drawImage(fpp[0],fpp[1],fpp[2],img);
         else
             addImage(parts.at(1),img);

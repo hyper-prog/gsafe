@@ -76,6 +76,7 @@ public:
     void drawGrid(const QString& xpos,const QString& ypos,const QString& width,const QString& height);
     void drawText(const QString& xpos,const QString& ypos,const QString& width,const QString& text,HPageTileRenderer_TextType type = HTextType_Html);
     void drawImage(const QString& xpos,const QString& ypos,const QString& width,const QImage& image);
+    void drawImage4(const QString& xpos,const QString& ypos,const QString& width,const QString& height,const QImage& image);
     void newLine();
     void newPage();
     void newPageIfRequired(const QString& requiredHeight);
@@ -180,15 +181,19 @@ public:
      *   imgr - Adds an image at he cursor position or absolute position from file (Or Qt resource)
      *          imgr#<sX>#<filename>
      *          imgr#<pX>,<pY>,<sX>#<filename>
+    *          imgr#<pX>,<pY>,<sX>,<sY>#<filename>
      *          <sX> is POSITION STRING specify the width of the image
-     *          The height is automatically calculated
+    *          For 3-parameter absolute form (<pX>,<pY>,<sX>) the height is automatically calculated
+    *          For 4-parameter absolute form (<pX>,<pY>,<sX>,<sY>) the image keeps aspect ratio and fits into the box
      *          The filename can be Qt resource too, and box can have frame
      *
      *   imgb - Adds an image at he cursor position or absolute position from base64 string
      *          imgb#<sX>#<base64 encoded image>
-     *          imgr#<pX>,<pY>,<sX>#<base64 encoded image>
+    *          imgb#<pX>,<pY>,<sX>#<base64 encoded image>
+    *          imgb#<pX>,<pY>,<sX>,<sY>#<base64 encoded image>
      *          <sX> is POSITION STRING specify the width of the image
-     *          The height is automatically calculated
+    *          For 3-parameter absolute form (<pX>,<pY>,<sX>) the height is automatically calculated
+    *          For 4-parameter absolute form (<pX>,<pY>,<sX>,<sY>) the image keeps aspect ratio and fits into the box
      *
      *   smhr - Increment minimum line height to the calculated heigt of the image passed by filename
      *          smhf#<sX>#<filename>
